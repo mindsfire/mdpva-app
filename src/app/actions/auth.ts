@@ -2,19 +2,14 @@
 
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { z } from "zod";
 
 import { auth, signIn } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { computePasswordChange } from "@/lib/password-change";
 import { requireRole } from "@/lib/rbac";
 
 const BCRYPT_COST = 12;
-
-const changePasswordSchema = z.object({
-  current: z.string().min(1, "Current password is required."),
-  next: z.string().min(10, "New password must be at least 10 characters."),
-});
 
 export interface ChangePasswordState {
   error?: string;
@@ -31,11 +26,6 @@ export async function changePasswordAction(
 ): Promise<ChangePasswordState> {
   const sessionUser = await requireRole("viewer");
 
-  const parsed = changePasswordSchema.safeParse({ current, next });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
-  }
-
   const [user] = await db
     .select()
     .from(users)
@@ -46,21 +36,31 @@ export async function changePasswordAction(
     return { error: "Invalid current password." };
   }
 
-  const currentMatches = await bcrypt.compare(
-    parsed.data.current,
-    user.passwordHash,
+  const result = await computePasswordChange(
+    user,
+    { current, next },
+    {
+      compare: (plain, hash) => bcrypt.compare(plain, hash),
+      hash: (plain) => bcrypt.hash(plain, BCRYPT_COST),
+    },
   );
-  if (!currentMatches) {
-    return { error: "Invalid current password." };
+
+  if (!result.ok) {
+    return { error: result.error };
   }
 
-  const nextHash = await bcrypt.hash(parsed.data.next, BCRYPT_COST);
-
+  // Bumping token_version invalidates every *other* session carrying the
+  // old value on its next recheck (a stolen cookie stops working); the
+  // current session stays valid because the client calls the session
+  // `update()` trigger right after this resolves, which adopts the new
+  // token_version instead of treating the mismatch as invalidation — see
+  // the `trigger === "update"` branch in the `jwt` callback in `src/auth.ts`.
   await db
     .update(users)
     .set({
-      passwordHash: nextHash,
-      mustChangePassword: false,
+      passwordHash: result.passwordHash,
+      tokenVersion: result.tokenVersion,
+      mustChangePassword: result.mustChangePassword,
       updatedAt: new Date(),
     })
     .where(eq(users.id, user.id));

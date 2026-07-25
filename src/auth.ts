@@ -34,7 +34,14 @@ class LockedError extends CredentialsSignin {
 /** Re-check `token_version` against the db at most this often (ms). */
 const TOKEN_VERSION_RECHECK_MS = 15 * 60 * 1000;
 
-/** Best-effort client IP from proxy headers; used only for rate-limit bucketing. */
+/**
+ * Best-effort client IP from proxy headers; used only for rate-limit
+ * bucketing. This trusts `x-forwarded-for` as-is, which is only safe behind
+ * a platform proxy that overwrites (rather than appends to) the header
+ * before it reaches this code — Vercel does this. Self-hosting behind a
+ * different/no reverse proxy would let a client spoof this header and
+ * evade IP-based rate limiting (the per-email limit is unaffected).
+ */
 function getClientIp(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) return forwardedFor.split(",")[0]!.trim();
@@ -42,6 +49,16 @@ function getClientIp(request: Request): string {
   if (realIp) return realIp.trim();
   return "unknown";
 }
+
+/**
+ * A bcrypt hash of an arbitrary constant, compared against on the
+ * not-found/inactive-user path so `authorize` takes ~the same amount of
+ * time whether or not the account exists — otherwise the missing
+ * `bcrypt.compare` call on that path is a timing side-channel that lets an
+ * attacker enumerate valid emails by measuring response latency.
+ */
+const DUMMY_PASSWORD_HASH =
+  "$2b$12$I.xaVRJFhQbzKVrpvcsbAebDFTuwsElBpQR8.tu/KXeJvpi6IyYEy";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: env.AUTH_SECRET,
@@ -74,6 +91,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .limit(1);
 
         if (!user || user.status !== "active") {
+          // Always pay the bcrypt cost, even when there's no real hash to
+          // check against, so response timing doesn't reveal whether the
+          // account exists.
+          await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
           await recordFailure(email, ip, dbRateLimitStore);
           throw new InvalidCredentialsError();
         }
@@ -131,12 +152,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .where(eq(users.id, token.userId as string))
           .limit(1);
 
-        if (
-          !current ||
-          current.status !== "active" ||
-          current.tokenVersion !== token.tokenVersion
-        ) {
+        if (!current || current.status !== "active") {
           // Signal an invalid session; session callback below strips it.
+          token.invalid = true;
+        } else if (trigger === "update") {
+          // Explicit client-initiated refresh (e.g. right after this same
+          // session changed its own password): adopt the current db values,
+          // including a bumped token_version, instead of invalidating —
+          // otherwise the session that *just* changed the password would
+          // immediately kill itself along with every other session.
+          token.role = current.role;
+          token.tokenVersion = current.tokenVersion;
+          token.mustChangePassword = current.mustChangePassword;
+        } else if (current.tokenVersion !== token.tokenVersion) {
+          // Periodic background recheck: a mismatch here means some *other*
+          // action changed token_version (password change from another
+          // session, admin disabling/role-changing the user, etc.) — kill
+          // this session.
           token.invalid = true;
         } else {
           token.role = current.role;

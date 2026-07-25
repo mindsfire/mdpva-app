@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { loginAction } from "@/app/actions/auth";
+import { sanitizeCallbackUrl } from "@/lib/safe-redirect";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -45,7 +46,7 @@ export function LoginForm() {
         setFormError(result.error);
         return;
       }
-      const callbackUrl = searchParams.get("callbackUrl") || "/";
+      const callbackUrl = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
       router.push(callbackUrl);
       router.refresh();
     } finally {
