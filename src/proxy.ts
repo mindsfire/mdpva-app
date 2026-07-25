@@ -39,6 +39,9 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    // icon.svg replaced the old favicon.ico (see src/app/icon.svg) — the
+    // browser requests it from the login page itself, before any session
+    // exists, so it must stay excluded the same way favicon.ico was.
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|icon.svg|sitemap.xml|robots.txt).*)",
   ],
 };
