@@ -30,14 +30,14 @@ const mainNav = [
   { title: "Members", href: "/members", icon: ContactIcon },
 ];
 
-const adminNav = [{ title: "Users", href: "/users", icon: UsersIcon }];
+const adminNav = [
+  { title: "Users", href: "/users", icon: UsersIcon },
+  { title: "Import / Export", href: "/import", icon: ArrowDownUpIcon },
+];
 
 // Visible-but-disabled entries so the shell already reads as the full
 // product; each activates when its milestone lands.
-const upcomingNav = [
-  { title: "Photos", icon: ImageIcon },
-  { title: "Import / Export", icon: ArrowDownUpIcon },
-];
+const upcomingNav = [{ title: "Photos", icon: ImageIcon }];
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);

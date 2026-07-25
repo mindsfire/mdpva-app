@@ -18,6 +18,15 @@ import { SearchInput } from "@/components/members/search-input";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
+function exportHref(currentParams: Record<string, string | undefined>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(currentParams)) {
+    if (value) params.set(key, value);
+  }
+  const query = params.toString();
+  return query ? `/api/export/members?${query}` : "/api/export/members";
+}
+
 function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
@@ -90,12 +99,23 @@ export default async function MembersDirectoryPage({
           <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground">
             Members
           </h1>
-          {hasRole(sessionUser.role, "editor") ? (
-            <Button render={<Link href="/members?member=new" />} size="sm">
-              <PlusIcon />
-              Add member
-            </Button>
-          ) : null}
+          <div className="flex items-center gap-2">
+            {hasRole(sessionUser.role, "admin") ? (
+              <Button
+                variant="outline"
+                size="sm"
+                render={<a href={exportHref(currentParams)} download />}
+              >
+                Export CSV
+              </Button>
+            ) : null}
+            {hasRole(sessionUser.role, "editor") ? (
+              <Button render={<Link href="/members?member=new" />} size="sm">
+                <PlusIcon />
+                Add member
+              </Button>
+            ) : null}
+          </div>
         </div>
         <Suspense fallback={null}>
           <MemberFilters />
