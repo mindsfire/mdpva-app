@@ -47,17 +47,57 @@ describe("buildMembersWhere", () => {
     expect(sql).toContain("death_fund_covered");
   });
 
-  it("adds a keyset cursor condition on (last_name, id) when cursor is provided", () => {
+  it("adds a keyset cursor condition on (last_name, id) for the default (name) sort", () => {
     const withCursor = render({
-      cursor: JSON.stringify({ lastName: "Rao", id: "abc-123" }),
+      cursor: JSON.stringify({ sort: "name", key: "Rao", id: "abc-123" }),
     });
     const withoutCursor = render({});
     expect(withCursor.length).toBeGreaterThan(withoutCursor.length);
     expect(withCursor).toContain("last_name");
+    expect(withCursor).toContain(">");
+  });
+
+  it("flips the cursor comparison to `<` for name_desc", () => {
+    const sql = render({
+      sort: "name_desc",
+      cursor: JSON.stringify({ sort: "name_desc", key: "Rao", id: "abc-123" }),
+    });
+    expect(sql).toContain("last_name");
+    expect(sql).toContain("<");
+  });
+
+  it("keysets on created_at for the newest sort", () => {
+    const sql = render({
+      sort: "newest",
+      cursor: JSON.stringify({
+        sort: "newest",
+        key: "2026-01-01T00:00:00.000Z",
+        id: "abc-123",
+      }),
+    });
+    expect(sql).toContain("created_at");
+    expect(sql).toContain("<");
+  });
+
+  it("ignores a cursor minted for a different sort (stale cursor after switching sort)", () => {
+    const withStaleCursor = render({
+      sort: "newest",
+      cursor: JSON.stringify({ sort: "name", key: "Rao", id: "abc-123" }),
+    });
+    const withoutCursor = render({ sort: "newest" });
+    expect(withStaleCursor).toBe(withoutCursor);
   });
 
   it("ignores an unparsable cursor rather than throwing", () => {
     expect(() => buildMembersWhere({ cursor: "not-json" })).not.toThrow();
+  });
+
+  it("ignores a cursor with an unknown sort value rather than throwing", () => {
+    expect(() =>
+      buildMembersWhere({
+        cursor: JSON.stringify({ sort: "bogus", key: "x", id: "y" }),
+      }),
+    ).not.toThrow();
   });
 
   it("combines multiple filters together", () => {

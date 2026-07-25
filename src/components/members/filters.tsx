@@ -30,9 +30,9 @@ const TOGGLE_OPTIONS: ChipOption[] = [
 ];
 
 const SORT_OPTIONS: { label: string; value: string }[] = [
-  { label: "Name", value: "name" },
-  { label: "Fees", value: "fees" },
-  { label: "Status", value: "status" },
+  { label: "Name A–Z", value: "name" },
+  { label: "Name Z–A", value: "name_desc" },
+  { label: "Newest", value: "newest" },
 ];
 
 function Chip({

@@ -1,4 +1,4 @@
-import { and, asc, ilike, isNull, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, ilike, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import { members } from "@/db/schema";
@@ -8,13 +8,19 @@ export const MEMBERS_PAGE_SIZE = 50;
 export type MemberStatusFilter = "active" | "inactive" | "suspended";
 export type ProfessionFilter = "photographer" | "videographer" | "both";
 
+/**
+ * `name` (last_name asc, default) / `name_desc` (last_name desc) / `newest`
+ * (created_at desc). Each has its own keyset tuple — see `SORT_CONFIG`.
+ */
+export type MembersSort = "name" | "name_desc" | "newest";
+
 export interface MembersQueryParams {
   q?: string;
   status?: MemberStatusFilter;
   profession?: ProfessionFilter;
   feesDue?: boolean;
   deathFund?: boolean;
-  sort?: "name" | "fees" | "status";
+  sort?: MembersSort;
   cursor?: string;
 }
 
@@ -37,8 +43,26 @@ export interface MembersSearchResult {
   nextCursor: string | null;
 }
 
+const DEFAULT_SORT: MembersSort = "name";
+
+/**
+ * Per-sort keyset config: the sort column + comparison direction, plus
+ * `id` as the tiebreaker (same direction as the sort column, so the
+ * combined `(sortColumn, id)` tuple is strictly monotonic either way).
+ */
+const SORT_CONFIG = {
+  name: { column: members.lastName, direction: "asc" as const },
+  name_desc: { column: members.lastName, direction: "desc" as const },
+  newest: { column: members.createdAt, direction: "desc" as const },
+} satisfies Record<
+  MembersSort,
+  { column: typeof members.lastName | typeof members.createdAt; direction: "asc" | "desc" }
+>;
+
 interface KeysetCursor {
-  lastName: string;
+  sort: MembersSort;
+  /** String form of the sort column's value (ISO string for timestamps). */
+  key: string;
   id: string;
 }
 
@@ -47,13 +71,16 @@ function parseCursor(cursor: string | undefined): KeysetCursor | null {
   if (!cursor) return null;
   try {
     const parsed: unknown = JSON.parse(cursor);
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const record = parsed as Record<string, unknown>;
+    const sort = record.sort;
     if (
-      parsed &&
-      typeof parsed === "object" &&
-      typeof (parsed as Record<string, unknown>).lastName === "string" &&
-      typeof (parsed as Record<string, unknown>).id === "string"
+      typeof sort === "string" &&
+      Object.prototype.hasOwnProperty.call(SORT_CONFIG, sort) &&
+      typeof record.key === "string" &&
+      typeof record.id === "string"
     ) {
-      return parsed as KeysetCursor;
+      return { sort: sort as MembersSort, key: record.key, id: record.id };
     }
     return null;
   } catch {
@@ -109,15 +136,15 @@ export function buildMembersWhere(params: MembersQueryParams): SQL {
     conditions.push(sql`${members.deathFundCovered} = true`);
   }
 
+  const activeSort = params.sort ?? DEFAULT_SORT;
   const cursor = parseCursor(params.cursor);
-  if (cursor) {
+  if (cursor && cursor.sort === activeSort) {
+    const { column, direction } = SORT_CONFIG[activeSort];
+    const op = direction === "asc" ? sql`>` : sql`<`;
     conditions.push(
       or(
-        sql`${members.lastName} > ${cursor.lastName}`,
-        and(
-          sql`${members.lastName} = ${cursor.lastName}`,
-          sql`${members.id} > ${cursor.id}`,
-        )!,
+        sql`${column} ${op} ${cursor.key}`,
+        and(sql`${column} = ${cursor.key}`, sql`${members.id} ${op} ${cursor.id}`)!,
       )!,
     );
   }
@@ -133,6 +160,9 @@ export async function searchMembers(
   params: MembersQueryParams,
 ): Promise<MembersSearchResult> {
   const where = buildMembersWhere(params);
+  const activeSort = params.sort ?? DEFAULT_SORT;
+  const { column, direction } = SORT_CONFIG[activeSort];
+  const orderFn = direction === "asc" ? asc : desc;
 
   const rows = await db
     .select({
@@ -147,10 +177,11 @@ export async function searchMembers(
       feesPaidUpto: members.feesPaidUpto,
       deathFundCovered: members.deathFundCovered,
       photoKey: members.photoKey,
+      createdAt: members.createdAt,
     })
     .from(members)
     .where(where)
-    .orderBy(asc(members.lastName), asc(members.id))
+    .orderBy(orderFn(column), orderFn(members.id))
     .limit(MEMBERS_PAGE_SIZE + 1);
 
   const hasMore = rows.length > MEMBERS_PAGE_SIZE;
@@ -158,10 +189,21 @@ export async function searchMembers(
   const last = page[page.length - 1];
 
   return {
-    rows: page,
+    rows: page.map((row) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- createdAt is query-internal, not part of the public MemberRow shape
+      const { createdAt, ...rest } = row;
+      return rest;
+    }),
     nextCursor:
       hasMore && last
-        ? encodeCursor({ lastName: last.lastName, id: last.id })
+        ? encodeCursor({
+            sort: activeSort,
+            key:
+              activeSort === "newest"
+                ? last.createdAt.toISOString()
+                : last.lastName,
+            id: last.id,
+          })
         : null,
   };
 }

@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { requireRole } from "@/lib/rbac";
 import { searchMembers, type MembersQueryParams } from "@/lib/members-query";
+import { Button } from "@/components/ui/button";
 import { MemberFilters } from "@/components/members/filters";
 import { MemberCard } from "@/components/members/member-card";
 import { MemberTable } from "@/components/members/member-table";
@@ -32,7 +34,10 @@ function toQueryParams(searchParams: SearchParams): MembersQueryParams {
         : undefined,
     feesDue: first(searchParams.feesDue) === "true",
     deathFund: first(searchParams.deathFund) === "true",
-    sort: sort === "name" || sort === "fees" || sort === "status" ? sort : undefined,
+    sort:
+      sort === "name" || sort === "name_desc" || sort === "newest"
+        ? sort
+        : undefined,
     cursor: first(searchParams.cursor),
   };
 }
@@ -75,10 +80,11 @@ export default async function MembersDirectoryPage({
       </div>
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border">
-          <p className="text-muted-foreground">
-            No members match — clear filters
-          </p>
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border">
+          <p className="text-muted-foreground">No members match.</p>
+          <Button variant="outline" render={<Link href="/" />}>
+            Clear filters
+          </Button>
         </div>
       ) : (
         <>
