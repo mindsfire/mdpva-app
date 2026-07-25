@@ -70,6 +70,22 @@ export function DirectoryResults({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative" aria-busy={isPending}>
+      {isPending ? (
+        // Sticky, and placed *before* the rows: the controls that trigger
+        // this sit at the bottom of a long list, so a pill anchored to the
+        // top of the container would be scrolled out of sight exactly when
+        // it matters. Sticking from the top of the container keeps it in
+        // view for the whole list. `h-0` keeps it out of the layout so
+        // nothing shifts when it appears, and staying in flow (rather than
+        // `fixed`) centres it on the content column instead of the
+        // viewport, which the sidebar would skew.
+        <div className="pointer-events-none sticky top-20 z-50 flex h-0 justify-center">
+          <span className="flex items-center gap-2 rounded-full border border-mdpva-border bg-mdpva-white px-3 py-1.5 text-sm text-muted-foreground shadow-md dark:border-border dark:bg-card">
+            <Loader2Icon className="size-3.5 animate-spin" />
+            Loading…
+          </span>
+        </div>
+      ) : null}
       <div
         className={cn(
           "transition-opacity duration-150",
@@ -78,14 +94,6 @@ export function DirectoryResults({ children }: { children: React.ReactNode }) {
       >
         {children}
       </div>
-      {isPending ? (
-        <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-16">
-          <span className="flex items-center gap-2 rounded-full border border-mdpva-border bg-mdpva-white px-3 py-1.5 text-sm text-muted-foreground shadow-sm dark:border-border dark:bg-card">
-            <Loader2Icon className="size-3.5 animate-spin" />
-            Loading…
-          </span>
-        </div>
-      ) : null}
     </div>
   );
 }
