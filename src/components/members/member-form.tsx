@@ -413,7 +413,11 @@ export function MemberForm({
             )}
           />
           <div className="sm:col-span-2">
-            <PhotoUploader />
+            <PhotoUploader
+              key={member?.id ?? "new"}
+              memberId={member?.id}
+              photoKey={member?.photoKey ?? null}
+            />
           </div>
         </Section>
 

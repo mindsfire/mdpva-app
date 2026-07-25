@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   UploadIcon,
   FileDownIcon,
@@ -286,7 +287,7 @@ export function ImportView() {
               members successfully.
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" render={<a href="/members" />}>
+              <Button variant="outline" render={<Link href="/members" />}>
                 View members
               </Button>
               <Button variant="ghost" onClick={reset}>

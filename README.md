@@ -10,6 +10,7 @@ tracking, and a small admin panel for managing staff accounts.
 - Auth.js v5 (credentials provider, JWT sessions, RBAC)
 - Drizzle ORM + Neon Postgres (serverless HTTP driver)
 - Tailwind CSS v4 + shadcn/ui on `@base-ui/react`
+- Cloudflare R2 (S3-compatible) for member photos, processed with `sharp`
 - Vitest
 
 ## Setup
@@ -34,8 +35,34 @@ Set these in `.env.local` (never commit real values):
 | `SEED_ADMIN2_EMAIL` | no (default `admin2@mdpva.org`) | Email for the second seed admin account. |
 | `SEED_ADMIN2_PASSWORD` | yes, no default | Password for the second seed admin, same rule as above. |
 | `AUTH_SECRET` | yes | Auth.js session-encryption secret. Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. |
+| `R2_ACCESS_KEY_ID` | yes | R2 API token access key. Cloudflare dashboard → R2 → Manage API Tokens → create an **Account** token, Object Read & Write, scoped to the one bucket. |
+| `R2_SECRET_ACCESS_KEY` | yes | R2 API token secret (shown once at creation). |
+| `R2_ENDPOINT` | yes | The bucket's S3 API endpoint, e.g. `https://<account-id>.r2.cloudflarestorage.com`. |
+| `R2_BUCKET` | yes | R2 bucket name. This app writes only under the `app/members/` prefix, so the bucket can be shared with other projects. |
 
 See `.env.example` for the same table inline.
+
+## Member photos
+
+Upload only from a member's edit form (editor+), once the member exists —
+photos are keyed by member id (`app/members/<id>.webp`), so a new/unsaved
+member has nowhere to key one to yet.
+
+Pipeline, entirely server-side (`src/lib/photo-processing.ts`,
+`src/app/actions/photo.ts`):
+
+1. 8 MB input cap.
+2. Magic-byte sniff (JPEG/PNG/WebP) — the file extension and browser
+   `Content-Type` are never trusted.
+3. `sharp` decodes and re-encodes to WebP, downscaled to fit 1200×1200
+   (aspect ratio preserved, never upscaled, never cropped) — this also
+   catches files that pass the magic-byte check but aren't real images.
+4. Written to a **fixed key per member** — replacing a photo overwrites the
+   same object, so storage never grows per re-upload.
+
+The bucket is private. Photos are served through `/api/photos/[...key]`,
+which requires a logged-in session and only ever serves objects under
+`app/members/` — the R2 bucket itself is never public.
 
 ## Commands
 

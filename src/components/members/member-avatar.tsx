@@ -29,7 +29,7 @@ export function MemberAvatar({
     >
       {photoKey ? (
         <AvatarImage
-          src={`/uploads/${photoKey}`}
+          src={`/api/photos/${photoKey}`}
           alt={`${firstName} ${lastName}`}
         />
       ) : null}

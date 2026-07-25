@@ -10,7 +10,8 @@ import { generateMemberId } from "@/lib/member-id";
 import { requireRole } from "@/lib/rbac";
 import { memberInputSchema, type MemberInput } from "@/lib/validation/member";
 
-const DIRECTORY_PATH = "/";
+const DIRECTORY_PATH = "/members";
+const DASHBOARD_PATH = "/";
 
 export interface MemberActionSuccess {
   ok: true;
@@ -79,6 +80,7 @@ export async function createMember(
       .returning({ id: members.id, memberId: members.memberId });
 
     revalidatePath(DIRECTORY_PATH);
+    revalidatePath(DASHBOARD_PATH);
     return { ok: true, id: inserted.id, memberId: inserted.memberId };
   } catch (err) {
     const mapped = mapUniqueViolation(err);
@@ -120,6 +122,7 @@ export async function updateMember(
     }
 
     revalidatePath(DIRECTORY_PATH);
+    revalidatePath(DASHBOARD_PATH);
     return { ok: true, id: updated.id, memberId: updated.memberId };
   } catch (err) {
     const mapped = mapUniqueViolation(err);
@@ -150,6 +153,7 @@ export async function softDeleteMember(id: string): Promise<SoftDeleteResult> {
   }
 
   revalidatePath(DIRECTORY_PATH);
+  revalidatePath(DASHBOARD_PATH);
   return { ok: true };
 }
 

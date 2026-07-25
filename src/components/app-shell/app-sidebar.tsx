@@ -6,7 +6,6 @@ import {
   LayoutDashboardIcon,
   ContactIcon,
   UsersIcon,
-  ImageIcon,
   ArrowDownUpIcon,
 } from "lucide-react";
 
@@ -19,7 +18,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
@@ -34,10 +32,6 @@ const adminNav = [
   { title: "Users", href: "/users", icon: UsersIcon },
   { title: "Import / Export", href: "/import", icon: ArrowDownUpIcon },
 ];
-
-// Visible-but-disabled entries so the shell already reads as the full
-// product; each activates when its milestone lands.
-const upcomingNav = [{ title: "Photos", icon: ImageIcon }];
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -92,25 +86,6 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
             </SidebarGroupContent>
           </SidebarGroup>
         ) : null}
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Coming soon</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {upcomingNav.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton disabled tooltip={`${item.title} — coming soon`}>
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                  <SidebarMenuBadge className="group-data-[collapsible=icon]:hidden">
-                    Soon
-                  </SidebarMenuBadge>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
