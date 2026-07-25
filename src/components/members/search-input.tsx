@@ -5,36 +5,73 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchIcon } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { reconcileSearchValue } from "@/lib/search-sync";
 
 const DEBOUNCE_MS = 300;
 
-function SearchInputField({ initialQ }: { initialQ: string }) {
+/**
+ * Debounced (300ms) search box that writes `q` to the URL.
+ *
+ * Deliberately NOT keyed on `q`: a changing key remounts the input, which
+ * destroys the focused DOM node and drops the caret every time the debounce
+ * fires. External `q` changes are adopted during render instead — see
+ * `reconcileSearchValue`.
+ */
+export function SearchInput() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [value, setValue] = React.useState(initialQ);
+
+  const urlQuery = searchParams.get("q") ?? "";
+  const [draft, setDraft] = React.useState(urlQuery);
+  // State, not refs: these are read during render, and refs are not safe to
+  // read there (React may render without committing).
+  const [prevUrlQuery, setPrevUrlQuery] = React.useState(urlQuery);
+  const [lastPushed, setLastPushed] = React.useState<string | null>(null);
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Adjust state during render (React's documented alternative to a
+  // sync-ing effect): re-renders immediately without a paint in between.
+  const { value, changed } = reconcileSearchValue({
+    urlQuery,
+    prevUrlQuery,
+    lastPushed,
+    draft,
+  });
+  if (urlQuery !== prevUrlQuery) {
+    setPrevUrlQuery(urlQuery);
+  }
+  if (changed) {
+    setDraft(value);
+  }
+
+  function commit(next: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (next) {
+      params.set("q", next);
+    } else {
+      params.delete("q");
+    }
+    // A new query means a new result set — go back to the first page
+    // rather than stranding the user on page 3 of something else.
+    params.delete("page");
+    setLastPushed(next);
+
+    // Searching from any other page (dashboard, users, profile) jumps to
+    // the directory; on the directory itself it narrows in place,
+    // preserving active filters.
+    if (pathname !== "/members") {
+      const query = params.toString();
+      router.push(query ? `/members?${query}` : "/members");
+      return;
+    }
+    router.replace(`${pathname}?${params.toString()}`);
+  }
+
   function handleChange(next: string) {
-    setValue(next);
+    setDraft(next);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      // Searching from any other page (dashboard, users, profile) jumps to
-      // the directory with a fresh query; on the directory itself it
-      // narrows in place, preserving active filters.
-      if (pathname !== "/members") {
-        router.push(next ? `/members?q=${encodeURIComponent(next)}` : "/members");
-        return;
-      }
-      const params = new URLSearchParams(searchParams.toString());
-      if (next) {
-        params.set("q", next);
-      } else {
-        params.delete("q");
-      }
-      params.delete("cursor");
-      router.replace(`${pathname}?${params.toString()}`);
-    }, DEBOUNCE_MS);
+    timeoutRef.current = setTimeout(() => commit(next), DEBOUNCE_MS);
   }
 
   React.useEffect(() => {
@@ -49,22 +86,10 @@ function SearchInputField({ initialQ }: { initialQ: string }) {
       <Input
         value={value}
         onChange={(e) => handleChange(e.target.value)}
-        placeholder="Search name, phone, member ID…"
+        placeholder="Search members…"
         aria-label="Search members"
         className="pl-8"
       />
     </div>
   );
-}
-
-/**
- * Debounced (300ms) search box that writes `q` to the URL via
- * `router.replace`. Keyed on the current `q` value so external changes to
- * it (e.g. "Clear filters") reset the field's local draft state instead of
- * fighting with it.
- */
-export function SearchInput() {
-  const searchParams = useSearchParams();
-  const q = searchParams.get("q") ?? "";
-  return <SearchInputField key={q} initialQ={q} />;
 }
