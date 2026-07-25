@@ -19,6 +19,13 @@ function SearchInputField({ initialQ }: { initialQ: string }) {
     setValue(next);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
+      // Searching from any other page (dashboard, users, profile) jumps to
+      // the directory with a fresh query; on the directory itself it
+      // narrows in place, preserving active filters.
+      if (pathname !== "/members") {
+        router.push(next ? `/members?q=${encodeURIComponent(next)}` : "/members");
+        return;
+      }
       const params = new URLSearchParams(searchParams.toString());
       if (next) {
         params.set("q", next);

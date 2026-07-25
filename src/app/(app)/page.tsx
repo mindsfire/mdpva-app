@@ -1,137 +1,185 @@
 import Link from "next/link";
-import { Suspense } from "react";
-import { PlusIcon } from "lucide-react";
+import {
+  ContactIcon,
+  UserCheckIcon,
+  AlertCircleIcon,
+  HeartHandshakeIcon,
+  PlusIcon,
+  ArrowRightIcon,
+} from "lucide-react";
 
 import { hasRole, requireRole } from "@/lib/rbac";
-import {
-  getMemberById,
-  searchMembers,
-  type MembersQueryParams,
-} from "@/lib/members-query";
+import { getDashboardStats } from "@/lib/dashboard-query";
 import { Button } from "@/components/ui/button";
-import { MemberFilters } from "@/components/members/filters";
-import { MemberCard } from "@/components/members/member-card";
-import { MemberTable } from "@/components/members/member-table";
-import { MemberSheet } from "@/components/members/member-sheet";
-import { LoadMore } from "@/components/members/load-more";
-import { SearchInput } from "@/components/members/search-input";
+import { MemberAvatar } from "@/components/members/member-avatar";
+import { ProfessionLabel } from "@/components/members/member-badges";
 
-type SearchParams = Record<string, string | string[] | undefined>;
+const dateFmt = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
 
-function first(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-function toQueryParams(searchParams: SearchParams): MembersQueryParams {
-  const status = first(searchParams.status);
-  const profession = first(searchParams.profession);
-  const sort = first(searchParams.sort);
-  return {
-    q: first(searchParams.q),
-    status:
-      status === "active" || status === "inactive" || status === "suspended"
-        ? status
-        : undefined,
-    profession:
-      profession === "photographer" ||
-      profession === "videographer" ||
-      profession === "both"
-        ? profession
-        : undefined,
-    feesDue: first(searchParams.feesDue) === "true",
-    deathFund: first(searchParams.deathFund) === "true",
-    sort:
-      sort === "name" || sort === "name_desc" || sort === "newest"
-        ? sort
-        : undefined,
-    cursor: first(searchParams.cursor),
-  };
-}
-
-export default async function MembersDirectoryPage({
-  searchParams,
+function StatTile({
+  label,
+  value,
+  hint,
+  href,
+  icon: Icon,
 }: {
-  searchParams: Promise<SearchParams>;
+  label: string;
+  value: number;
+  hint?: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
 }) {
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col gap-3 rounded-lg border border-mdpva-border bg-mdpva-white p-4 transition-colors hover:border-mdpva-accent/40 sm:p-5 dark:border-border dark:bg-card dark:hover:border-mdpva-gold/40"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          {label}
+        </span>
+        <Icon className="size-4 text-mdpva-accent/70 dark:text-mdpva-gold/70" />
+      </div>
+      <div className="flex items-baseline gap-2">
+        <span className="font-serif text-3xl leading-none font-medium tabular-nums sm:text-4xl">
+          {value.toLocaleString("en-IN")}
+        </span>
+        {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
+      </div>
+    </Link>
+  );
+}
+
+export default async function DashboardPage() {
   const sessionUser = await requireRole("viewer");
-
-  const resolvedSearchParams = await searchParams;
-  const params = toQueryParams(resolvedSearchParams);
-  const { rows, nextCursor } = await searchMembers(params);
-
-  const memberParam =
-    typeof resolvedSearchParams.member === "string"
-      ? resolvedSearchParams.member
-      : undefined;
-  const selectedMember =
-    memberParam && memberParam !== "new"
-      ? await getMemberById(memberParam)
-      : null;
-
-  const currentParams: Record<string, string | undefined> = {
-    q: params.q,
-    status: params.status,
-    profession: params.profession,
-    feesDue: params.feesDue ? "true" : undefined,
-    deathFund: params.deathFund ? "true" : undefined,
-    sort: params.sort,
-  };
+  const stats = await getDashboardStats();
+  const year = new Date().getFullYear();
+  const isEditor = hasRole(sessionUser.role, "editor");
+  const professionMax = Math.max(1, ...stats.professions.map((p) => p.count));
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="sm:hidden">
-        <Suspense fallback={null}>
-          <SearchInput />
-        </Suspense>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground">
-            Members
-          </h1>
-          {hasRole(sessionUser.role, "editor") ? (
-            <Button render={<Link href="/?member=new" />} size="sm">
-              <PlusIcon />
-              Add member
-            </Button>
-          ) : null}
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-serif text-2xl font-medium tracking-tight">Dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Association members at a glance.
+          </p>
         </div>
-        <Suspense fallback={null}>
-          <MemberFilters />
-        </Suspense>
-      </div>
-
-      {rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border">
-          <p className="text-muted-foreground">No members match.</p>
-          <Button variant="outline" render={<Link href="/" />}>
-            Clear filters
+        {isEditor ? (
+          <Button render={<Link href="/members?member=new" />} size="sm">
+            <PlusIcon />
+            Add member
           </Button>
-        </div>
-      ) : (
-        <>
-          <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
-            <MemberTable rows={rows} />
-          </div>
-          <div className="flex flex-col gap-2.5 md:hidden">
-            {rows.map((row) => (
-              <MemberCard key={row.id} row={row} />
-            ))}
-          </div>
-          {nextCursor ? (
-            <LoadMore currentParams={currentParams} nextCursor={nextCursor} />
-          ) : null}
-        </>
-      )}
+        ) : null}
+      </div>
 
-      {memberParam ? (
-        <MemberSheet
-          memberId={memberParam}
-          member={selectedMember}
-          role={sessionUser.role}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <StatTile
+          label="Total members"
+          value={stats.total}
+          href="/members"
+          icon={ContactIcon}
         />
-      ) : null}
+        <StatTile
+          label="Active"
+          value={stats.active}
+          href="/members?status=active"
+          icon={UserCheckIcon}
+        />
+        <StatTile
+          label={`Fees due ${year}`}
+          value={stats.feesDue}
+          hint="active members"
+          href="/members?feesDue=true&status=active"
+          icon={AlertCircleIcon}
+        />
+        <StatTile
+          label="Death fund covered"
+          value={stats.deathFundCovered}
+          href="/members?deathFund=true"
+          icon={HeartHandshakeIcon}
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-5">
+        <section className="rounded-lg border border-mdpva-border bg-mdpva-white p-4 sm:p-5 lg:col-span-2 dark:border-border dark:bg-card">
+          <h2 className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
+            By profession
+          </h2>
+          <ul className="mt-4 flex flex-col gap-4">
+            {stats.professions.map((p) => (
+              <li key={p.profession} className="flex flex-col gap-1.5">
+                <div className="flex items-baseline justify-between gap-2 text-sm">
+                  <ProfessionLabel profession={p.profession} />
+                  <span className="font-medium tabular-nums">{p.count}</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-mdpva-border-tile dark:bg-muted">
+                  <div
+                    className="h-full rounded-full bg-mdpva-accent dark:bg-mdpva-gold"
+                    style={{ width: `${(p.count / professionMax) * 100}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="rounded-lg border border-mdpva-border bg-mdpva-white lg:col-span-3 dark:border-border dark:bg-card">
+          <div className="flex items-center justify-between gap-2 p-4 pb-0 sm:p-5 sm:pb-0">
+            <h2 className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
+              Recently added
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              render={<Link href="/members?sort=newest" />}
+              className="text-mdpva-accent dark:text-mdpva-gold"
+            >
+              View all
+              <ArrowRightIcon />
+            </Button>
+          </div>
+          {stats.recent.length === 0 ? (
+            <p className="p-4 text-sm text-muted-foreground sm:p-5">
+              No members yet — add the first one.
+            </p>
+          ) : (
+            <ul className="divide-y divide-mdpva-border p-2 dark:divide-border">
+              {stats.recent.map((m) => (
+                <li key={m.id}>
+                  <Link
+                    href={`/members?member=${m.id}`}
+                    className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-mdpva-border-tile/50 dark:hover:bg-muted/50"
+                  >
+                    <MemberAvatar
+                      firstName={m.firstName}
+                      lastName={m.lastName}
+                      photoKey={m.photoKey}
+                      size="sm"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {m.firstName} {m.lastName}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {m.memberId} · <ProfessionLabel profession={m.profession} />
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {dateFmt.format(m.createdAt)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

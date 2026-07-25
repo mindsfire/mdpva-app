@@ -32,7 +32,7 @@ export default function GlobalError({
         <Button variant="outline" onClick={() => reset()}>
           Try again
         </Button>
-        <Button render={<Link href="/" />}>Back to directory</Button>
+        <Button render={<Link href="/" />}>Back to dashboard</Button>
       </div>
     </div>
   );

@@ -21,7 +21,7 @@ export function LoadMore({
 
   return (
     <div className="flex justify-center pt-4">
-      <Button variant="outline" render={<Link href={`/?${params.toString()}`} />}>
+      <Button variant="outline" render={<Link href={`/members?${params.toString()}`} />}>
         Load more
       </Button>
     </div>
