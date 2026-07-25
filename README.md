@@ -70,6 +70,29 @@ is blocked server-side with `Cannot remove the last admin`. A disabled
 admin doesn't count toward that minimum, so disabling the second-to-last
 active admin is blocked the same way.
 
+## CSV import / export (admin)
+
+`/import` (sidebar → Import / Export):
+
+- **Template**: download `mdpva-import-template.csv` for the exact column
+  format. `member_id` is never imported — the app generates it.
+- **Import** is a two-step dry run: upload → preview (valid rows, duplicates
+  against both the file and existing members, per-row validation errors) →
+  confirm. Nothing is written until you confirm; duplicate/error rows are
+  skipped, the rest import. Limits: 10 MB, 5,000 rows per file.
+- **Export**: `Export CSV` on the Members page exports exactly the filtered
+  view you're looking at; `/import` has an export-everything button.
+
+## Deployment (Vercel)
+
+1. Push this repo to GitHub and import it in Vercel.
+2. Set env vars in Vercel: `DATABASE_URL` (Neon pooled string) and
+   `AUTH_SECRET` (generate with `openssl rand -base64 32`). The `SEED_*`
+   vars are **not** needed in Vercel — seeding is run once from a local
+   machine with `npm run db:seed`.
+3. Add `app.mdpva.org` as the project domain and point the DNS record at
+   Vercel from the Cloudflare dashboard (CNAME, DNS-only/grey cloud).
+
 ## Password flows
 
 - **New user**: an admin creates the account from `/users`; a crypto-random

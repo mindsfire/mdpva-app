@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { eq } from "drizzle-orm";
 
 import { generateMemberId } from "../src/lib/member-id";
-import { env } from "../src/lib/env";
+import { env, seedEnv } from "../src/lib/env";
 import { members, users } from "../src/db/schema";
 
 const BCRYPT_COST = 12;
@@ -116,13 +116,14 @@ async function seedDemoMembers(adminId: string) {
 
 async function main() {
   const demo = process.argv.includes("--demo");
+  const seeds = seedEnv();
 
   const admin1Id = await upsertAdmin(
-    env.SEED_ADMIN1_EMAIL,
-    env.SEED_ADMIN1_PASSWORD,
+    seeds.SEED_ADMIN1_EMAIL,
+    seeds.SEED_ADMIN1_PASSWORD,
     "Admin One",
   );
-  await upsertAdmin(env.SEED_ADMIN2_EMAIL, env.SEED_ADMIN2_PASSWORD, "Admin Two");
+  await upsertAdmin(seeds.SEED_ADMIN2_EMAIL, seeds.SEED_ADMIN2_PASSWORD, "Admin Two");
 
   if (demo) {
     await seedDemoMembers(admin1Id);
