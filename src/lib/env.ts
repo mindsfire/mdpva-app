@@ -16,6 +16,7 @@ const envSchema = z.object({
   SEED_ADMIN2_PASSWORD: z
     .string()
     .min(1, "SEED_ADMIN2_PASSWORD is required (no default — set it explicitly in every environment)"),
+  AUTH_SECRET: z.string().min(1, "AUTH_SECRET is required"),
 });
 
 export const env = envSchema.parse(process.env);
