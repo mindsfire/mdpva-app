@@ -26,6 +26,11 @@ describe("sanitizeCallbackUrl", () => {
     expect(sanitizeCallbackUrl("//evil.com/path")).toBe("/");
   });
 
+  it("rejects backslash-based bypasses (browsers normalize \\ to /)", () => {
+    expect(sanitizeCallbackUrl("/\\evil.com")).toBe("/");
+    expect(sanitizeCallbackUrl("/\\/evil.com")).toBe("/");
+  });
+
   it("rejects paths not starting with /", () => {
     expect(sanitizeCallbackUrl("evil.com")).toBe("/");
     expect(sanitizeCallbackUrl("javascript:alert(1)")).toBe("/");
