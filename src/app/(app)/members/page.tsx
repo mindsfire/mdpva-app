@@ -16,6 +16,10 @@ import { MemberCard } from "@/components/members/member-card";
 import { MemberTable } from "@/components/members/member-table";
 import { MemberSheet } from "@/components/members/member-sheet";
 import { MembersPagination } from "@/components/members/members-pagination";
+import {
+  DirectoryResults,
+  DirectoryTransitionProvider,
+} from "@/components/members/directory-transition";
 import { SearchInput } from "@/components/members/search-input";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 import { parsePeekWidthCookie, PEEK_WIDTH_COOKIE } from "@/lib/peek-prefs";
@@ -153,22 +157,26 @@ export default async function MembersDirectoryPage({
           </Button>
         </div>
       ) : (
-        <>
-          <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
-            <MemberTable rows={rows} />
+        <DirectoryTransitionProvider>
+          <div className="flex flex-col gap-5">
+            <DirectoryResults>
+              <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
+                <MemberTable rows={rows} />
+              </div>
+              <div className="flex flex-col gap-2.5 md:hidden">
+                {rows.map((row) => (
+                  <MemberCard key={row.id} row={row} />
+                ))}
+              </div>
+            </DirectoryResults>
+            <MembersPagination
+              page={page}
+              perPage={perPage}
+              total={total}
+              totalPages={totalPages}
+            />
           </div>
-          <div className="flex flex-col gap-2.5 md:hidden">
-            {rows.map((row) => (
-              <MemberCard key={row.id} row={row} />
-            ))}
-          </div>
-          <MembersPagination
-            page={page}
-            perPage={perPage}
-            total={total}
-            totalPages={totalPages}
-          />
-        </>
+        </DirectoryTransitionProvider>
       )}
 
       {memberParam ? (

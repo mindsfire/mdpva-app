@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PER_PAGE_OPTIONS, type PerPage } from "@/lib/members-params";
+import {
+  TransitionLink,
+  useDirectoryTransition,
+} from "@/components/members/directory-transition";
 import { cn } from "@/lib/utils";
 
 /**
@@ -44,9 +47,9 @@ export function MembersPagination({
   total: number;
   totalPages: number;
 }) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { isPending, navigate } = useDirectoryTransition();
 
   function hrefFor(nextPage: number): string {
     const params = new URLSearchParams(searchParams.toString());
@@ -61,7 +64,7 @@ export function MembersPagination({
     params.set("perPage", String(next));
     // Row count changed, so the old page number is meaningless.
     params.delete("page");
-    router.push(`${pathname}?${params.toString()}`);
+    navigate(`${pathname}?${params.toString()}`);
   }
 
   const firstRow = total === 0 ? 0 : (page - 1) * perPage + 1;
@@ -90,6 +93,9 @@ export function MembersPagination({
           <DropdownMenuTrigger
             render={
               <Button variant="outline" size="sm" className="cursor-pointer">
+                {isPending ? (
+                  <Loader2Icon className="animate-spin" />
+                ) : null}
                 {perPage} / page
               </Button>
             }
@@ -117,7 +123,9 @@ export function MembersPagination({
             aria-label="Previous page"
             disabled={page <= 1}
             className="cursor-pointer"
-            render={page <= 1 ? undefined : <Link href={hrefFor(page - 1)} />}
+            render={
+              page <= 1 ? undefined : <TransitionLink href={hrefFor(page - 1)} />
+            }
           >
             <ChevronLeftIcon />
           </Button>
@@ -139,7 +147,7 @@ export function MembersPagination({
                 aria-label={`Page ${item}`}
                 aria-current={item === page ? "page" : undefined}
                 className={cn("cursor-pointer tabular-nums")}
-                render={<Link href={hrefFor(item)} />}
+                render={<TransitionLink href={hrefFor(item)} />}
               >
                 {item}
               </Button>
@@ -153,7 +161,9 @@ export function MembersPagination({
             disabled={page >= totalPages}
             className="cursor-pointer"
             render={
-              page >= totalPages ? undefined : <Link href={hrefFor(page + 1)} />
+              page >= totalPages ? undefined : (
+                <TransitionLink href={hrefFor(page + 1)} />
+              )
             }
           >
             <ChevronRightIcon />
