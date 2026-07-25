@@ -1,0 +1,77 @@
+import { PgDialect } from "drizzle-orm/pg-core";
+import { describe, expect, it } from "vitest";
+
+import { buildMembersWhere, type MembersQueryParams } from "./members-query";
+
+/**
+ * `buildMembersWhere` returns a drizzle `SQL` condition tree. We compile it
+ * to its parameterized query text via `PgDialect` (no live connection
+ * needed) so this stays a pure, db-free unit test of the query-param → SQL
+ * mapping.
+ */
+const dialect = new PgDialect();
+
+function render(params: MembersQueryParams): string {
+  const condition = buildMembersWhere(params);
+  return dialect.sqlToQuery(condition).sql;
+}
+
+describe("buildMembersWhere", () => {
+  it("always excludes soft-deleted members", () => {
+    const sql = render({});
+    expect(sql).toContain("deleted_at");
+  });
+
+  it("adds an ILIKE clause across name/phone/member_id/legacy_id for q", () => {
+    const sql = render({ q: "sha" });
+    expect(sql).toContain("ilike");
+  });
+
+  it("filters by status when provided", () => {
+    const sql = render({ status: "active" });
+    expect(sql).toContain("status");
+  });
+
+  it("filters by profession when provided", () => {
+    const sql = render({ profession: "photographer" });
+    expect(sql).toContain("profession");
+  });
+
+  it("filters fees due (feesPaidUpto < current year or null) when feesDue is true", () => {
+    const sql = render({ feesDue: true });
+    expect(sql).toContain("fees_paid_upto");
+  });
+
+  it("filters death fund covered when deathFund is true", () => {
+    const sql = render({ deathFund: true });
+    expect(sql).toContain("death_fund_covered");
+  });
+
+  it("adds a keyset cursor condition on (last_name, id) when cursor is provided", () => {
+    const withCursor = render({
+      cursor: JSON.stringify({ lastName: "Rao", id: "abc-123" }),
+    });
+    const withoutCursor = render({});
+    expect(withCursor.length).toBeGreaterThan(withoutCursor.length);
+    expect(withCursor).toContain("last_name");
+  });
+
+  it("ignores an unparsable cursor rather than throwing", () => {
+    expect(() => buildMembersWhere({ cursor: "not-json" })).not.toThrow();
+  });
+
+  it("combines multiple filters together", () => {
+    const sql = render({
+      q: "sha",
+      status: "active",
+      profession: "both",
+      feesDue: true,
+      deathFund: true,
+    });
+    expect(sql).toContain("ilike");
+    expect(sql).toContain("status");
+    expect(sql).toContain("profession");
+    expect(sql).toContain("fees_paid_upto");
+    expect(sql).toContain("death_fund_covered");
+  });
+});
