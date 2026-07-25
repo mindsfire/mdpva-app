@@ -1,0 +1,60 @@
+const UNIQUE_VIOLATION = "23505";
+
+const CONSTRAINT_MESSAGES: Record<string, { field?: string; error: string }> = {
+  members_email_active: {
+    field: "email",
+    error: "A member with this email already exists.",
+  },
+  members_phone_active: {
+    field: "phone",
+    error: "A member with this phone number already exists.",
+  },
+  members_legacy_id_active: {
+    field: "legacyId",
+    error: "A member with this legacy ID already exists.",
+  },
+  members_member_id_unique: {
+    error: "That member ID is already in use. Please try again.",
+  },
+};
+
+interface PgErrorShape {
+  code?: unknown;
+  constraint?: unknown;
+}
+
+/** Best-effort extraction of `{ code, constraint }` from a driver error, unwrapping one level of `cause` if present. */
+function extractPgError(err: unknown): PgErrorShape | null {
+  if (typeof err !== "object" || err === null) return null;
+  const candidate = err as Record<string, unknown>;
+  if (typeof candidate.code === "string") {
+    return { code: candidate.code, constraint: candidate.constraint };
+  }
+  if (typeof candidate.cause === "object" && candidate.cause !== null) {
+    const cause = candidate.cause as Record<string, unknown>;
+    if (typeof cause.code === "string") {
+      return { code: cause.code, constraint: cause.constraint };
+    }
+  }
+  return null;
+}
+
+/**
+ * Maps a Postgres unique-violation (23505) on one of the `members` table's
+ * partial unique indexes to a friendly `{ field, error }` message. Returns
+ * `null` for any other error shape/code/constraint so callers can fall back
+ * to a generic error.
+ */
+export function mapUniqueViolation(
+  err: unknown,
+): { field?: string; error: string } | null {
+  const pgError = extractPgError(err);
+  if (!pgError || pgError.code !== UNIQUE_VIOLATION) return null;
+
+  const constraint =
+    typeof pgError.constraint === "string" ? pgError.constraint : undefined;
+  if (!constraint) return null;
+
+  const message = CONSTRAINT_MESSAGES[constraint];
+  return message ? { field: message.field, error: message.error } : null;
+}

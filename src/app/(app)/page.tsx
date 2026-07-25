@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { PlusIcon } from "lucide-react";
 
-import { requireRole } from "@/lib/rbac";
-import { searchMembers, type MembersQueryParams } from "@/lib/members-query";
+import { hasRole, requireRole } from "@/lib/rbac";
+import {
+  getMemberById,
+  searchMembers,
+  type MembersQueryParams,
+} from "@/lib/members-query";
 import { Button } from "@/components/ui/button";
 import { MemberFilters } from "@/components/members/filters";
 import { MemberCard } from "@/components/members/member-card";
 import { MemberTable } from "@/components/members/member-table";
+import { MemberSheet } from "@/components/members/member-sheet";
 import { LoadMore } from "@/components/members/load-more";
 import { SearchInput } from "@/components/members/search-input";
 
@@ -47,11 +53,20 @@ export default async function MembersDirectoryPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  await requireRole("viewer");
+  const sessionUser = await requireRole("viewer");
 
   const resolvedSearchParams = await searchParams;
   const params = toQueryParams(resolvedSearchParams);
   const { rows, nextCursor } = await searchMembers(params);
+
+  const memberParam =
+    typeof resolvedSearchParams.member === "string"
+      ? resolvedSearchParams.member
+      : undefined;
+  const selectedMember =
+    memberParam && memberParam !== "new"
+      ? await getMemberById(memberParam)
+      : null;
 
   const currentParams: Record<string, string | undefined> = {
     q: params.q,
@@ -71,9 +86,17 @@ export default async function MembersDirectoryPage({
       </div>
 
       <div className="flex flex-col gap-3">
-        <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground">
-          Members
-        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground">
+            Members
+          </h1>
+          {hasRole(sessionUser.role, "editor") ? (
+            <Button render={<Link href="/?member=new" />} size="sm">
+              <PlusIcon />
+              Add member
+            </Button>
+          ) : null}
+        </div>
         <Suspense fallback={null}>
           <MemberFilters />
         </Suspense>
@@ -101,6 +124,14 @@ export default async function MembersDirectoryPage({
           ) : null}
         </>
       )}
+
+      {memberParam ? (
+        <MemberSheet
+          memberId={memberParam}
+          member={selectedMember}
+          role={sessionUser.role}
+        />
+      ) : null}
     </div>
   );
 }

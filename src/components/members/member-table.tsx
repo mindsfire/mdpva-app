@@ -1,3 +1,7 @@
+"use client";
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
 import {
   Table,
   TableBody,
@@ -16,6 +20,16 @@ import {
 } from "./member-badges";
 
 export function MemberTable({ rows }: { rows: MemberRow[] }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  function openMember(id: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("member", id);
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -32,7 +46,11 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
       </TableHeader>
       <TableBody>
         {rows.map((row) => (
-          <TableRow key={row.id}>
+          <TableRow
+            key={row.id}
+            onClick={() => openMember(row.id)}
+            className="cursor-pointer"
+          >
             <TableCell>
               <div className="flex items-center gap-2.5">
                 <MemberAvatar

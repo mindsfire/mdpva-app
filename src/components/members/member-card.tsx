@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { MemberRow } from "@/lib/members-query";
 import { MemberAvatar } from "./member-avatar";
 import {
@@ -9,7 +11,10 @@ import {
 
 export function MemberCard({ row }: { row: MemberRow }) {
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-mdpva-border bg-card p-3.5 dark:border-border">
+    <Link
+      href={`/members/${row.id}`}
+      className="flex items-start gap-3 rounded-lg border border-mdpva-border bg-card p-3.5 dark:border-border"
+    >
       <MemberAvatar
         firstName={row.firstName}
         lastName={row.lastName}
@@ -43,6 +48,6 @@ export function MemberCard({ row }: { row: MemberRow }) {
           <DeathFundBadge covered={row.deathFundCovered} />
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

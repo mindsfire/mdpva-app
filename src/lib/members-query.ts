@@ -1,4 +1,4 @@
-import { and, asc, desc, ilike, isNull, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import { members } from "@/db/schema";
@@ -41,6 +41,67 @@ export interface MemberRow {
 export interface MembersSearchResult {
   rows: MemberRow[];
   nextCursor: string | null;
+}
+
+export interface MemberDetail {
+  id: string;
+  memberId: string;
+  legacyId: string | null;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  profession: "photographer" | "videographer" | "both" | null;
+  businessName: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  area: string | null;
+  city: string;
+  state: string;
+  pincode: string | null;
+  dob: string | null;
+  bloodGroup: string | null;
+  status: "active" | "inactive" | "suspended";
+  feesPaidUpto: number | null;
+  deathFundCovered: boolean;
+  photoKey: string | null;
+  notes: string | null;
+}
+
+/** Full profile record for the member sheet/page. Excludes soft-deleted members. */
+export async function getMemberById(id: string): Promise<MemberDetail | null> {
+  const [row] = await db
+    .select()
+    .from(members)
+    .where(and(eq(members.id, id), isNull(members.deletedAt)))
+    .limit(1);
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    memberId: row.memberId,
+    legacyId: row.legacyId,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    email: row.email,
+    phone: row.phone,
+    profession: row.profession,
+    businessName: row.businessName,
+    addressLine1: row.addressLine1,
+    addressLine2: row.addressLine2,
+    area: row.area,
+    city: row.city,
+    state: row.state,
+    pincode: row.pincode,
+    dob: row.dob,
+    bloodGroup: row.bloodGroup,
+    status: row.status,
+    feesPaidUpto: row.feesPaidUpto,
+    deathFundCovered: row.deathFundCovered,
+    photoKey: row.photoKey,
+    notes: row.notes,
+  };
 }
 
 const DEFAULT_SORT: MembersSort = "name";
