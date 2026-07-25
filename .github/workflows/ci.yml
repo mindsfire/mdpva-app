@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    # Placeholder values, not secrets: env.ts validates process.env at
+    # import time, and members-query.ts pulls in the db client (which
+    # imports env.ts) even though the unit tests never open a real
+    # connection. Real credentials have no reason to exist in CI.
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      AUTH_SECRET: ci-placeholder-secret-not-used
+      R2_ACCESS_KEY_ID: ci-placeholder
+      R2_SECRET_ACCESS_KEY: ci-placeholder
+      R2_ENDPOINT: https://ci-placeholder.r2.cloudflarestorage.com
+      R2_BUCKET: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npx vitest run
