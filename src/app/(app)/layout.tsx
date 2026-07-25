@@ -1,10 +1,15 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 
 import { auth } from "@/auth";
 import { hasRole } from "@/lib/rbac";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileMenu } from "@/components/app-shell/profile-menu";
 import { AppSidebar } from "@/components/app-shell/app-sidebar";
+import {
+  parseSidebarWidthCookie,
+  SIDEBAR_STATE_COOKIE,
+  SIDEBAR_WIDTH_COOKIE,
+} from "@/lib/sidebar-prefs";
 import { SearchInput } from "@/components/members/search-input";
 import {
   SidebarInset,
@@ -22,8 +27,23 @@ export default async function AppLayout({
   const name = session?.user?.name ?? session?.user?.email ?? "Member";
   const isAdmin = session?.user ? hasRole(session.user.role, "admin") : false;
 
+  // Read both sidebar preferences server-side so the first paint already has
+  // the user's width and open/collapsed state — no flash, no layout shift.
+  const cookieStore = await cookies();
+  const storedWidth = parseSidebarWidthCookie(
+    cookieStore.get(SIDEBAR_WIDTH_COOKIE)?.value,
+  );
+  const defaultOpen = cookieStore.get(SIDEBAR_STATE_COOKIE)?.value !== "false";
+
   return (
-    <SidebarProvider>
+    <SidebarProvider
+      defaultOpen={defaultOpen}
+      style={
+        storedWidth
+          ? ({ "--sidebar-width": storedWidth } as React.CSSProperties)
+          : undefined
+      }
+    >
       <AppSidebar isAdmin={isAdmin} />
       <SidebarInset className="bg-mdpva-paper text-mdpva-ink dark:bg-background dark:text-foreground">
         <header className="sticky top-0 z-40 border-b border-mdpva-border bg-mdpva-paper/95 backdrop-blur supports-backdrop-filter:bg-mdpva-paper/80 dark:border-border dark:bg-background/95 dark:supports-backdrop-filter:bg-background/80">
@@ -36,7 +56,6 @@ export default async function AppLayout({
               </Suspense>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <ThemeToggle />
               <ProfileMenu name={name} isAdmin={isAdmin} />
             </div>
           </div>

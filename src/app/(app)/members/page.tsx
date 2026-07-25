@@ -15,6 +15,7 @@ import { MemberTable } from "@/components/members/member-table";
 import { MemberSheet } from "@/components/members/member-sheet";
 import { LoadMore } from "@/components/members/load-more";
 import { SearchInput } from "@/components/members/search-input";
+import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -91,6 +92,7 @@ export default async function MembersDirectoryPage({
 
   return (
     <div className="flex flex-col gap-5">
+      <PageBreadcrumb items={[{ label: "Dashboard", href: "/" }, { label: "Members" }]} />
       <div className="sm:hidden">
         <Suspense fallback={null}>
           <SearchInput />

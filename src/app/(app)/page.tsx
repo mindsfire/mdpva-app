@@ -13,6 +13,7 @@ import { getDashboardStats } from "@/lib/dashboard-query";
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/members/member-avatar";
 import { ProfessionLabel } from "@/components/members/member-badges";
+import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 
 const dateFmt = new Intl.DateTimeFormat("en-IN", {
   day: "numeric",
@@ -63,6 +64,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <PageBreadcrumb items={[{ label: "Dashboard" }]} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-serif text-2xl font-medium tracking-tight">Dashboard</h1>

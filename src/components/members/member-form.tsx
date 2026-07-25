@@ -155,6 +155,16 @@ export function MemberForm({
           </div>
         ) : null}
 
+        <Section title="Profile photo">
+          <div className="sm:col-span-2">
+            <PhotoUploader
+              key={member?.id ?? "new"}
+              memberId={member?.id}
+              photoKey={member?.photoKey ?? null}
+            />
+          </div>
+        </Section>
+
         <div className="grid items-start gap-5 lg:grid-cols-2">
           <Section title="Contact">
             <FormField
@@ -413,13 +423,6 @@ export function MemberForm({
                 </FormItem>
               )}
             />
-            <div className="sm:col-span-2">
-              <PhotoUploader
-                key={member?.id ?? "new"}
-                memberId={member?.id}
-                photoKey={member?.photoKey ?? null}
-              />
-            </div>
           </Section>
 
           <Section title="Fees & notes">

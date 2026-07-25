@@ -1,7 +1,11 @@
 import { PgDialect } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 
-import { buildMembersWhere, type MembersQueryParams } from "./members-query";
+import {
+  buildMembersWhere,
+  isUuid,
+  type MembersQueryParams,
+} from "./members-query";
 
 /**
  * `buildMembersWhere` returns a drizzle `SQL` condition tree. We compile it
@@ -113,5 +117,22 @@ describe("buildMembersWhere", () => {
     expect(sql).toContain("profession");
     expect(sql).toContain("fees_paid_upto");
     expect(sql).toContain("death_fund_covered");
+  });
+});
+
+describe("isUuid", () => {
+  it("accepts a real uuid in either case", () => {
+    expect(isUuid("0edc565e-152e-4468-9a2b-a8c0f3b40a9b")).toBe(true);
+    expect(isUuid("0EDC565E-152E-4468-9A2B-A8C0F3B40A9B")).toBe(true);
+  });
+
+  it("rejects the URL values that used to crash the directory", () => {
+    // `?member=new` was a real 500: Postgres rejects it as a uuid.
+    expect(isUuid("new")).toBe(false);
+    expect(isUuid("")).toBe(false);
+    expect(isUuid("1234")).toBe(false);
+    expect(isUuid("0edc565e-152e-4468-9a2b-a8c0f3b40a9")).toBe(false);
+    expect(isUuid("0edc565e152e44689a2ba8c0f3b40a9b")).toBe(false);
+    expect(isUuid("zzzzzzzz-152e-4468-9a2b-a8c0f3b40a9b")).toBe(false);
   });
 });

@@ -1,11 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeftIcon } from "lucide-react";
 
 import { requireRole } from "@/lib/rbac";
 import { getMemberById } from "@/lib/members-query";
-import { Button } from "@/components/ui/button";
 import { MemberProfilePageBody } from "@/components/members/member-profile-page-body";
+import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 
 export default async function MemberProfilePage({
   params,
@@ -22,16 +20,14 @@ export default async function MemberProfilePage({
 
   return (
     <div className="flex flex-col gap-4">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="-ml-2 self-start text-muted-foreground"
-        render={<Link href="/members" />}
-      >
-        <ArrowLeftIcon />
-        Back to directory
-      </Button>
-      <div className="rounded-lg border border-mdpva-border bg-card p-4 dark:border-border">
+      <PageBreadcrumb
+        items={[
+          { label: "Dashboard", href: "/" },
+          { label: "Members", href: "/members" },
+          { label: `${member.firstName} ${member.lastName}` },
+        ]}
+      />
+      <div className="rounded-lg border border-mdpva-border bg-card p-4 sm:p-5 dark:border-border">
         <MemberProfilePageBody member={member} role={sessionUser.role} />
       </div>
     </div>

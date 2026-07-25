@@ -22,6 +22,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { SidebarResizer } from "@/components/app-shell/sidebar-resizer";
 
 const mainNav = [
   { title: "Dashboard", href: "/", icon: LayoutDashboardIcon },
@@ -93,6 +94,8 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
           Members portal · 2025–27 term
         </p>
       </SidebarFooter>
+
+      <SidebarResizer />
     </Sidebar>
   );
 }

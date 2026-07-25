@@ -68,8 +68,22 @@ export interface MemberDetail {
   notes: string | null;
 }
 
-/** Full profile record for the member sheet/page. Excludes soft-deleted members. */
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
+/**
+ * Full profile record for the member sheet/page. Excludes soft-deleted
+ * members. Ids come from user-editable URLs (`?member=…`, `/members/[id]`),
+ * so a non-uuid is a normal "not found" — without this guard Postgres
+ * raises a type error and takes the whole page to the error boundary.
+ */
 export async function getMemberById(id: string): Promise<MemberDetail | null> {
+  if (!isUuid(id)) return null;
+
   const [row] = await db
     .select()
     .from(members)

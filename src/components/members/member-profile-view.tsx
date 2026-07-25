@@ -67,9 +67,14 @@ export function MemberProfileView({
           <h2 className="font-serif text-lg font-medium text-foreground">
             {member.firstName} {member.lastName}
           </h2>
+          <p className="text-xs text-muted-foreground">{member.memberId}</p>
+          {/* Always shown, even when empty: at the desk an operator needs to
+              know whether this member has an old printed ID card number. */}
           <p className="text-xs text-muted-foreground">
-            {member.memberId}
-            {member.legacyId ? ` · Legacy ${member.legacyId}` : ""}
+            Legacy ID:{" "}
+            <span className={member.legacyId ? "text-foreground" : undefined}>
+              {member.legacyId ?? "—"}
+            </span>
           </p>
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
             <StatusBadge status={member.status} />
@@ -77,6 +82,28 @@ export function MemberProfileView({
             <DeathFundBadge covered={member.deathFundCovered} />
           </div>
         </div>
+
+        {canEdit || canDelete ? (
+          <div className="flex shrink-0 items-center gap-2">
+            {canDelete ? (
+              <DeleteMemberDialog
+                memberId={member.id}
+                name={`${member.firstName} ${member.lastName}`}
+                onDeleted={onDeleted}
+                trigger={
+                  <Button variant="destructive" size="sm">
+                    Delete
+                  </Button>
+                }
+              />
+            ) : null}
+            {canEdit ? (
+              <Button size="sm" render={<Link href={editHref} />}>
+                Edit
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-4">
@@ -147,21 +174,6 @@ export function MemberProfileView({
         ) : null}
       </div>
 
-      {canEdit || canDelete ? (
-        <div className="flex justify-end gap-2 border-t border-mdpva-border pt-4 dark:border-border">
-          {canDelete ? (
-            <DeleteMemberDialog
-              memberId={member.id}
-              name={`${member.firstName} ${member.lastName}`}
-              onDeleted={onDeleted}
-              trigger={<Button variant="destructive">Delete</Button>}
-            />
-          ) : null}
-          {canEdit ? (
-            <Button render={<Link href={editHref} />}>Edit</Button>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   );
 }
