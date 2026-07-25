@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { KeyRoundIcon, LogOutIcon, UserIcon } from "lucide-react";
+import { KeyRoundIcon, LogOutIcon, UserIcon, UsersIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function ProfileMenu({ name }: { name: string }) {
+export function ProfileMenu({
+  name,
+  isAdmin = false,
+}: {
+  name: string;
+  isAdmin?: boolean;
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -27,6 +33,12 @@ export function ProfileMenu({ name }: { name: string }) {
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{name}</DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {isAdmin ? (
+          <DropdownMenuItem render={<Link href="/users" />} className="sm:hidden">
+            <UsersIcon className="size-4" />
+            Users
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem render={<Link href="/change-password" />}>
           <KeyRoundIcon className="size-4" />
           Change password

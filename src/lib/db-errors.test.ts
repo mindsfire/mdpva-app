@@ -47,6 +47,17 @@ describe("mapUniqueViolation", () => {
     });
   });
 
+  it("maps users_email_unique to a friendly email message", () => {
+    const result = mapUniqueViolation({
+      code: "23505",
+      constraint: "users_email_unique",
+    });
+    expect(result).toEqual({
+      field: "email",
+      error: "A user with this email already exists.",
+    });
+  });
+
   it("returns null for a non-unique-violation error code", () => {
     const result = mapUniqueViolation({
       code: "23503",

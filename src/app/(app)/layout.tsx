@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { UsersIcon } from "lucide-react";
 
 import { auth } from "@/auth";
+import { hasRole } from "@/lib/rbac";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileMenu } from "@/components/app-shell/profile-menu";
 import { SearchInput } from "@/components/members/search-input";
+import { Button } from "@/components/ui/button";
 
 export default async function AppLayout({
   children,
@@ -13,6 +16,7 @@ export default async function AppLayout({
 }) {
   const session = await auth();
   const name = session?.user?.name ?? session?.user?.email ?? "Member";
+  const isAdmin = session?.user ? hasRole(session.user.role, "admin") : false;
 
   return (
     <div className="flex min-h-full flex-col bg-mdpva-paper text-mdpva-ink dark:bg-background dark:text-foreground">
@@ -30,8 +34,19 @@ export default async function AppLayout({
             </Suspense>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            {isAdmin ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                render={<Link href="/users" />}
+                className="hidden sm:inline-flex"
+              >
+                <UsersIcon />
+                Users
+              </Button>
+            ) : null}
             <ThemeToggle />
-            <ProfileMenu name={name} />
+            <ProfileMenu name={name} isAdmin={isAdmin} />
           </div>
         </div>
       </header>

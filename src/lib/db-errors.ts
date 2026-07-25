@@ -16,6 +16,10 @@ const CONSTRAINT_MESSAGES: Record<string, { field?: string; error: string }> = {
   members_member_id_unique: {
     error: "That member ID is already in use. Please try again.",
   },
+  users_email_unique: {
+    field: "email",
+    error: "A user with this email already exists.",
+  },
 };
 
 interface PgErrorShape {
