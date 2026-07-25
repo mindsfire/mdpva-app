@@ -54,7 +54,10 @@ export function ChangePasswordForm() {
       }
       // Force the JWT to re-check `must_change_password` against the db now
       // rather than waiting for the periodic recheck window.
-      await update();
+      // In next-auth v5, update() with no args sends a GET that does NOT trigger
+      // the jwt callback's `trigger === "update"` branch. Passing an empty object
+      // sends a POST that fires the update trigger and refreshes the session.
+      await update({});
       router.push("/");
       router.refresh();
     } finally {

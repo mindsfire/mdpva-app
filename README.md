@@ -78,7 +78,7 @@ active admin is blocked the same way.
   account must change its password on first login.
 - **Reset**: an admin can reset any user's password from `/users` the same
   way — this also bumps `token_version`, which invalidates every existing
-  session for that user immediately, and sets `must_change_password`.
+  session for that user at the next session refresh (within ~15 minutes), and sets `must_change_password`.
 - **Self-service change**: any signed-in user can change their own password
   from the profile menu (`/change-password`); this also bumps
   `token_version`, invalidating other sessions but not the current one.
