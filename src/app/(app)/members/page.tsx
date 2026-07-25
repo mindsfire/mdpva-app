@@ -18,13 +18,16 @@ import { SearchInput } from "@/components/members/search-input";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-function exportHref(currentParams: Record<string, string | undefined>): string {
+function withParams(
+  path: string,
+  currentParams: Record<string, string | undefined>,
+): string {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(currentParams)) {
     if (value) params.set(key, value);
   }
   const query = params.toString();
-  return query ? `/api/export/members?${query}` : "/api/export/members";
+  return query ? `${path}?${query}` : path;
 }
 
 function first(value: string | string[] | undefined): string | undefined {
@@ -72,10 +75,7 @@ export default async function MembersDirectoryPage({
     typeof resolvedSearchParams.member === "string"
       ? resolvedSearchParams.member
       : undefined;
-  const selectedMember =
-    memberParam && memberParam !== "new"
-      ? await getMemberById(memberParam)
-      : null;
+  const selectedMember = memberParam ? await getMemberById(memberParam) : null;
 
   const currentParams: Record<string, string | undefined> = {
     q: params.q,
@@ -85,6 +85,9 @@ export default async function MembersDirectoryPage({
     deathFund: params.deathFund ? "true" : undefined,
     sort: params.sort,
   };
+
+  // Carried into the create form so Cancel returns to this exact filtered view.
+  const backToDirectory = withParams("/members", currentParams);
 
   return (
     <div className="flex flex-col gap-5">
@@ -104,13 +107,22 @@ export default async function MembersDirectoryPage({
               <Button
                 variant="outline"
                 size="sm"
-                render={<a href={exportHref(currentParams)} download />}
+                render={
+                  <a href={withParams("/api/export/members", currentParams)} download />
+                }
               >
                 Export CSV
               </Button>
             ) : null}
             {hasRole(sessionUser.role, "editor") ? (
-              <Button render={<Link href="/members?member=new" />} size="sm">
+              <Button
+                render={
+                  <Link
+                    href={`/members/new?back=${encodeURIComponent(backToDirectory)}`}
+                  />
+                }
+                size="sm"
+              >
                 <PlusIcon />
                 Add member
               </Button>
@@ -146,11 +158,7 @@ export default async function MembersDirectoryPage({
       )}
 
       {memberParam ? (
-        <MemberSheet
-          memberId={memberParam}
-          member={selectedMember}
-          role={sessionUser.role}
-        />
+        <MemberSheet member={selectedMember} role={sessionUser.role} />
       ) : null}
     </div>
   );

@@ -22,7 +22,12 @@ export default async function MemberProfilePage({
 
   return (
     <div className="flex flex-col gap-4">
-      <Button variant="ghost" size="sm" render={<Link href="/" />}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-2 self-start text-muted-foreground"
+        render={<Link href="/members" />}
+      >
         <ArrowLeftIcon />
         Back to directory
       </Button>

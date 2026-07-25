@@ -11,20 +11,18 @@ import {
 } from "@/components/ui/sheet";
 import type { Role } from "@/lib/rbac";
 import type { MemberDetail } from "@/lib/members-query";
-import { MemberForm } from "@/components/members/member-form";
 import { MemberProfileView } from "@/components/members/member-profile-view";
 
 /**
- * Desktop sheet driven by the `?member=<id>` URL param (deep-linkable).
- * `?member=new` opens the create form; any other value is a member id
- * whose data is fetched server-side and passed in as `member`.
+ * Read-only quick peek at a member, driven by the `?member=<id>` URL param
+ * (deep-linkable). Editing deliberately lives on its own full page — a
+ * 384px panel is too cramped for the full form — so Edit links out,
+ * carrying the directory's current URL as `back`.
  */
 export function MemberSheet({
-  memberId,
   member,
   role,
 }: {
-  memberId: string;
   member: MemberDetail | null;
   role: Role;
 }) {
@@ -39,7 +37,7 @@ export function MemberSheet({
     router.push(query ? `${pathname}?${query}` : pathname);
   }
 
-  const isCreate = memberId === "new";
+  const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams}` : ""}`;
 
   return (
     <Sheet
@@ -50,15 +48,13 @@ export function MemberSheet({
     >
       <SheetContent className="overflow-y-auto p-4">
         <SheetHeader className="p-0">
-          <SheetTitle>{isCreate ? "Add member" : "Member profile"}</SheetTitle>
+          <SheetTitle>Member profile</SheetTitle>
         </SheetHeader>
-        {isCreate ? (
-          <MemberForm mode="create" onCancel={close} onSuccess={close} />
-        ) : member ? (
+        {member ? (
           <MemberProfileView
             member={member}
             role={role}
-            onUpdated={() => router.refresh()}
+            editHref={`/members/${member.id}/edit?back=${encodeURIComponent(currentUrl)}`}
             onDeleted={close}
           />
         ) : (

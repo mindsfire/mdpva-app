@@ -71,7 +71,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         {isEditor ? (
-          <Button render={<Link href="/members?member=new" />} size="sm">
+          <Button render={<Link href="/members/new" />} size="sm">
             <PlusIcon />
             Add member
           </Button>

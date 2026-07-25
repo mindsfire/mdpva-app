@@ -19,8 +19,8 @@ export function MemberProfilePageBody({
     <MemberProfileView
       member={member}
       role={role}
-      onUpdated={() => router.refresh()}
-      onDeleted={() => router.push("/")}
+      editHref={`/members/${member.id}/edit`}
+      onDeleted={() => router.push("/members")}
     />
   );
 }

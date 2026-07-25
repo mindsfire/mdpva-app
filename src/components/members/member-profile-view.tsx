@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { hasRole, type Role } from "@/lib/rbac";
@@ -12,7 +13,6 @@ import {
   FeesBadge,
   StatusBadge,
 } from "@/components/members/member-badges";
-import { MemberForm } from "@/components/members/member-form";
 
 function Detail({
   label,
@@ -22,9 +22,10 @@ function Detail({
   value: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className="flex min-w-0 flex-col gap-0.5">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-sm text-foreground">{value ?? "—"}</span>
+      {/* break-words: long emails would otherwise overflow into the next column */}
+      <span className="text-sm break-words text-foreground">{value ?? "—"}</span>
     </div>
   );
 }
@@ -41,31 +42,17 @@ const PROFESSION_LABELS: Record<
 export function MemberProfileView({
   member,
   role,
-  onUpdated,
+  editHref,
   onDeleted,
 }: {
   member: MemberDetail;
   role: Role;
-  onUpdated?: () => void;
+  /** Where the Edit button goes; callers pass a `?back=` so Cancel returns here. */
+  editHref: string;
   onDeleted?: () => void;
 }) {
-  const [editing, setEditing] = React.useState(false);
   const canEdit = hasRole(role, "editor");
   const canDelete = hasRole(role, "admin");
-
-  if (editing) {
-    return (
-      <MemberForm
-        mode="edit"
-        member={member}
-        onCancel={() => setEditing(false)}
-        onSuccess={() => {
-          setEditing(false);
-          onUpdated?.();
-        }}
-      />
-    );
-  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -171,7 +158,7 @@ export function MemberProfileView({
             />
           ) : null}
           {canEdit ? (
-            <Button onClick={() => setEditing(true)}>Edit</Button>
+            <Button render={<Link href={editHref} />}>Edit</Button>
           ) : null}
         </div>
       ) : null}
