@@ -2,17 +2,15 @@ import { and, asc, desc, eq, ilike, isNull, lt, or, sql, type SQL } from "drizzl
 
 import { db } from "@/db";
 import { members } from "@/db/schema";
+import {
+  DEFAULT_PER_PAGE,
+  type MembersSort,
+  type MemberStatusFilter,
+  type PerPage,
+  type ProfessionFilter,
+} from "@/lib/members-params";
 
-export const MEMBERS_PAGE_SIZE = 50;
-
-export type MemberStatusFilter = "active" | "inactive" | "suspended";
-export type ProfessionFilter = "photographer" | "videographer" | "both";
-
-/**
- * `name` (last_name asc, default) / `name_desc` (last_name desc) / `newest`
- * (created_at desc). Each has its own keyset tuple — see `SORT_CONFIG`.
- */
-export type MembersSort = "name" | "name_desc" | "newest";
+export * from "@/lib/members-params";
 
 export interface MembersQueryParams {
   q?: string;
@@ -21,7 +19,8 @@ export interface MembersQueryParams {
   feesDue?: boolean;
   deathFund?: boolean;
   sort?: MembersSort;
-  cursor?: string;
+  page?: number;
+  perPage?: PerPage;
 }
 
 export interface MemberRow {
@@ -40,7 +39,10 @@ export interface MemberRow {
 
 export interface MembersSearchResult {
   rows: MemberRow[];
-  nextCursor: string | null;
+  total: number;
+  page: number;
+  perPage: PerPage;
+  totalPages: number;
 }
 
 export interface MemberDetail {
@@ -120,51 +122,77 @@ export async function getMemberById(id: string): Promise<MemberDetail | null> {
 
 const DEFAULT_SORT: MembersSort = "name";
 
-/**
- * Per-sort keyset config: the sort column + comparison direction, plus
- * `id` as the tiebreaker (same direction as the sort column, so the
- * combined `(sortColumn, id)` tuple is strictly monotonic either way).
- */
 const SORT_CONFIG = {
   name: { column: members.lastName, direction: "asc" as const },
   name_desc: { column: members.lastName, direction: "desc" as const },
   newest: { column: members.createdAt, direction: "desc" as const },
 } satisfies Record<
   MembersSort,
-  { column: typeof members.lastName | typeof members.createdAt; direction: "asc" | "desc" }
+  {
+    column: typeof members.lastName | typeof members.createdAt;
+    direction: "asc" | "desc";
+  }
 >;
 
-interface KeysetCursor {
-  sort: MembersSort;
-  /** String form of the sort column's value (ISO string for timestamps). */
-  key: string;
-  id: string;
-}
+/**
+ * Free-text search spans every field an operator might recall about a
+ * member — not just the name. Enum and numeric columns are cast to text so
+ * "photographer", "suspended" or "2026" match too.
+ */
+function buildSearchCondition(rawQuery: string): SQL | null {
+  const q = rawQuery.trim();
+  if (!q) return null;
+  const term = `%${q}%`;
+  const lower = q.toLowerCase();
 
-/** Parses the opaque cursor string; returns null instead of throwing on bad input. */
-function parseCursor(cursor: string | undefined): KeysetCursor | null {
-  if (!cursor) return null;
-  try {
-    const parsed: unknown = JSON.parse(cursor);
-    if (typeof parsed !== "object" || parsed === null) return null;
-    const record = parsed as Record<string, unknown>;
-    const sort = record.sort;
-    if (
-      typeof sort === "string" &&
-      Object.prototype.hasOwnProperty.call(SORT_CONFIG, sort) &&
-      typeof record.key === "string" &&
-      typeof record.id === "string"
-    ) {
-      return { sort: sort as MembersSort, key: record.key, id: record.id };
-    }
-    return null;
-  } catch {
-    return null;
+  const conditions: SQL[] = [
+    ilike(members.firstName, term),
+    ilike(members.lastName, term),
+    // Match against the full name so "Kavya Bhat" finds the member that
+    // neither first_name nor last_name alone would.
+    sql`${members.firstName} || ' ' || ${members.lastName} ilike ${term}`,
+    ilike(members.email, term),
+    ilike(members.phone, term),
+    ilike(members.memberId, term),
+    ilike(members.legacyId, term),
+    ilike(members.businessName, term),
+    ilike(members.addressLine1, term),
+    ilike(members.addressLine2, term),
+    ilike(members.area, term),
+    ilike(members.city, term),
+    ilike(members.state, term),
+    ilike(members.pincode, term),
+    ilike(members.bloodGroup, term),
+    ilike(members.notes, term),
+    sql`${members.profession}::text ilike ${term}`,
+    sql`${members.status}::text ilike ${term}`,
+    sql`${members.feesPaidUpto}::text ilike ${term}`,
+    sql`${members.dob}::text ilike ${term}`,
+  ];
+
+  // Match what the UI actually displays, which differs from the stored
+  // enum value / boolean.
+  if ("photo & video".includes(lower) || "photo and video".includes(lower)) {
+    conditions.push(sql`${members.profession} = 'both'`);
   }
-}
+  if ("death fund".includes(lower) || lower === "covered") {
+    conditions.push(sql`${members.deathFundCovered} = true`);
+  }
+  if ("due".startsWith(lower) || "unpaid".startsWith(lower)) {
+    conditions.push(
+      or(
+        isNull(members.feesPaidUpto),
+        lt(members.feesPaidUpto, new Date().getFullYear()),
+      )!,
+    );
+  }
+  if ("paid".startsWith(lower)) {
+    conditions.push(
+      sql`${members.feesPaidUpto} >= ${new Date().getFullYear()}`,
+    );
+  }
 
-function encodeCursor(row: KeysetCursor): string {
-  return JSON.stringify(row);
+  return or(...conditions)!;
 }
 
 /**
@@ -177,16 +205,8 @@ export function buildMembersWhere(params: MembersQueryParams): SQL {
   const conditions: SQL[] = [isNull(members.deletedAt)];
 
   if (params.q) {
-    const term = `%${params.q}%`;
-    conditions.push(
-      or(
-        ilike(members.firstName, term),
-        ilike(members.lastName, term),
-        ilike(members.phone, term),
-        ilike(members.memberId, term),
-        ilike(members.legacyId, term),
-      )!,
-    );
+    const search = buildSearchCondition(params.q);
+    if (search) conditions.push(search);
   }
 
   if (params.status) {
@@ -211,25 +231,14 @@ export function buildMembersWhere(params: MembersQueryParams): SQL {
     conditions.push(sql`${members.deathFundCovered} = true`);
   }
 
-  const activeSort = params.sort ?? DEFAULT_SORT;
-  const cursor = parseCursor(params.cursor);
-  if (cursor && cursor.sort === activeSort) {
-    const { column, direction } = SORT_CONFIG[activeSort];
-    const op = direction === "asc" ? sql`>` : sql`<`;
-    conditions.push(
-      or(
-        sql`${column} ${op} ${cursor.key}`,
-        and(sql`${column} = ${cursor.key}`, sql`${members.id} ${op} ${cursor.id}`)!,
-      )!,
-    );
-  }
-
   return and(...conditions)!;
 }
 
 /**
- * Server-side keyset pagination on `(last_name, id)`, 50/page. Never loads
- * the full members list — always bounded by `MEMBERS_PAGE_SIZE`.
+ * Offset pagination with a total count, so the UI can show real page
+ * numbers. Offsets are cheap at this table's scale (low thousands) and buy
+ * jump-to-page, which keyset cursors can't do. Never loads the full list —
+ * always bounded by `perPage`.
  */
 export async function searchMembers(
   params: MembersQueryParams,
@@ -238,6 +247,18 @@ export async function searchMembers(
   const activeSort = params.sort ?? DEFAULT_SORT;
   const { column, direction } = SORT_CONFIG[activeSort];
   const orderFn = direction === "asc" ? asc : desc;
+
+  const perPage = params.perPage ?? DEFAULT_PER_PAGE;
+
+  const [{ count: total }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(members)
+    .where(where);
+
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  // Clamp so a stale/typed-in ?page= past the end returns the last page
+  // rather than an empty table.
+  const page = Math.min(Math.max(1, params.page ?? 1), totalPages);
 
   const rows = await db
     .select({
@@ -252,33 +273,12 @@ export async function searchMembers(
       feesPaidUpto: members.feesPaidUpto,
       deathFundCovered: members.deathFundCovered,
       photoKey: members.photoKey,
-      createdAt: members.createdAt,
     })
     .from(members)
     .where(where)
     .orderBy(orderFn(column), orderFn(members.id))
-    .limit(MEMBERS_PAGE_SIZE + 1);
+    .limit(perPage)
+    .offset((page - 1) * perPage);
 
-  const hasMore = rows.length > MEMBERS_PAGE_SIZE;
-  const page = hasMore ? rows.slice(0, MEMBERS_PAGE_SIZE) : rows;
-  const last = page[page.length - 1];
-
-  return {
-    rows: page.map((row) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- createdAt is query-internal, not part of the public MemberRow shape
-      const { createdAt, ...rest } = row;
-      return rest;
-    }),
-    nextCursor:
-      hasMore && last
-        ? encodeCursor({
-            sort: activeSort,
-            key:
-              activeSort === "newest"
-                ? last.createdAt.toISOString()
-                : last.lastName,
-            id: last.id,
-          })
-        : null,
-  };
+  return { rows, total, page, perPage, totalPages };
 }

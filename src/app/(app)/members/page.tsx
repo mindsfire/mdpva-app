@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { PlusIcon } from "lucide-react";
 
 import { hasRole, requireRole } from "@/lib/rbac";
@@ -8,14 +9,16 @@ import {
   searchMembers,
   type MembersQueryParams,
 } from "@/lib/members-query";
+import { parsePage, parsePerPage } from "@/lib/members-params";
 import { Button } from "@/components/ui/button";
 import { MemberFilters } from "@/components/members/filters";
 import { MemberCard } from "@/components/members/member-card";
 import { MemberTable } from "@/components/members/member-table";
 import { MemberSheet } from "@/components/members/member-sheet";
-import { LoadMore } from "@/components/members/load-more";
+import { MembersPagination } from "@/components/members/members-pagination";
 import { SearchInput } from "@/components/members/search-input";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
+import { parsePeekWidthCookie, PEEK_WIDTH_COOKIE } from "@/lib/peek-prefs";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -57,7 +60,8 @@ function toQueryParams(searchParams: SearchParams): MembersQueryParams {
       sort === "name" || sort === "name_desc" || sort === "newest"
         ? sort
         : undefined,
-    cursor: first(searchParams.cursor),
+    page: parsePage(first(searchParams.page)),
+    perPage: parsePerPage(first(searchParams.perPage)),
   };
 }
 
@@ -70,13 +74,16 @@ export default async function MembersDirectoryPage({
 
   const resolvedSearchParams = await searchParams;
   const params = toQueryParams(resolvedSearchParams);
-  const { rows, nextCursor } = await searchMembers(params);
+  const { rows, total, page, perPage, totalPages } = await searchMembers(params);
 
   const memberParam =
     typeof resolvedSearchParams.member === "string"
       ? resolvedSearchParams.member
       : undefined;
   const selectedMember = memberParam ? await getMemberById(memberParam) : null;
+  const peekWidth = parsePeekWidthCookie(
+    (await cookies()).get(PEEK_WIDTH_COOKIE)?.value,
+  );
 
   const currentParams: Record<string, string | undefined> = {
     q: params.q,
@@ -85,6 +92,8 @@ export default async function MembersDirectoryPage({
     feesDue: params.feesDue ? "true" : undefined,
     deathFund: params.deathFund ? "true" : undefined,
     sort: params.sort,
+    perPage:
+      params.perPage && params.perPage !== 10 ? String(params.perPage) : undefined,
   };
 
   // Carried into the create form so Cancel returns to this exact filtered view.
@@ -153,14 +162,21 @@ export default async function MembersDirectoryPage({
               <MemberCard key={row.id} row={row} />
             ))}
           </div>
-          {nextCursor ? (
-            <LoadMore currentParams={currentParams} nextCursor={nextCursor} />
-          ) : null}
+          <MembersPagination
+            page={page}
+            perPage={perPage}
+            total={total}
+            totalPages={totalPages}
+          />
         </>
       )}
 
       {memberParam ? (
-        <MemberSheet member={selectedMember} role={sessionUser.role} />
+        <MemberSheet
+          member={selectedMember}
+          role={sessionUser.role}
+          initialWidth={peekWidth}
+        />
       ) : null}
     </div>
   );

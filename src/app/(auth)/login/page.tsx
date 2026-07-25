@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 import hero1 from "@/assets/login/hero-1.jpg";
 import hero2 from "@/assets/login/hero-2.jpg";
@@ -18,11 +17,8 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-svh flex-col md:flex-row">
-      <div className="absolute right-4 top-4 z-20">
-        <ThemeToggle />
-      </div>
-
+    // Login is always light — no theme switcher here by design.
+    <div className="force-light relative flex min-h-svh flex-col md:flex-row">
       {/* Right (desktop) / background (mobile): full-bleed slideshow */}
       <div className="absolute inset-0 md:relative md:order-2 md:h-svh md:flex-1">
         <Slideshow images={HERO_IMAGES} />

@@ -149,6 +149,36 @@
   --sidebar-ring: #d8cd96;
 }
 
+/*
+ * Forces the light token set regardless of the theme on <html>. The `dark`
+ * variant matches any descendant of `.dark`, so a page can't opt out with a
+ * class alone — re-declaring the variables in a nearer scope is what works.
+ * Used by the login screen, which is deliberately always light.
+ */
+.force-light {
+  --background: var(--color-mdpva-paper);
+  --foreground: var(--color-mdpva-ink);
+  --card: var(--color-mdpva-white);
+  --card-foreground: var(--color-mdpva-ink);
+  --popover: var(--color-mdpva-white);
+  --popover-foreground: var(--color-mdpva-ink);
+  --primary: var(--color-mdpva-accent);
+  --primary-foreground: var(--color-mdpva-cream);
+  --secondary: var(--color-mdpva-border-tile);
+  --secondary-foreground: var(--color-mdpva-ink);
+  --muted: var(--color-mdpva-border-soft);
+  --muted-foreground: var(--color-mdpva-muted);
+  --accent: var(--color-mdpva-gold);
+  --accent-foreground: var(--color-mdpva-ink);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: var(--color-mdpva-border);
+  --input: var(--color-mdpva-border);
+  --ring: var(--color-mdpva-accent);
+
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

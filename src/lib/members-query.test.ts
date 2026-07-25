@@ -6,6 +6,7 @@ import {
   isUuid,
   type MembersQueryParams,
 } from "./members-query";
+import { parsePage, parsePerPage } from "./members-params";
 
 /**
  * `buildMembersWhere` returns a drizzle `SQL` condition tree. We compile it
@@ -26,9 +27,47 @@ describe("buildMembersWhere", () => {
     expect(sql).toContain("deleted_at");
   });
 
-  it("adds an ILIKE clause across name/phone/member_id/legacy_id for q", () => {
+  it("searches across every user-facing field, not just the name", () => {
     const sql = render({ q: "sha" });
-    expect(sql).toContain("ilike");
+    for (const column of [
+      "first_name",
+      "last_name",
+      "email",
+      "phone",
+      "member_id",
+      "legacy_id",
+      "business_name",
+      "address_line1",
+      "area",
+      "city",
+      "state",
+      "pincode",
+      "blood_group",
+      "profession",
+      "status",
+      "fees_paid_upto",
+    ]) {
+      expect(sql).toContain(column);
+    }
+  });
+
+  it("matches the full name so a first+last query finds the member", () => {
+    const sql = render({ q: "Kavya Bhat" });
+    expect(sql).toContain("|| ' ' ||");
+  });
+
+  it("maps the displayed 'Photo & Video' label onto the 'both' enum", () => {
+    const sql = render({ q: "photo & video" });
+    expect(sql).toContain("'both'");
+  });
+
+  it("treats 'due' as a fees-due search", () => {
+    const sql = render({ q: "due" });
+    expect(sql).toContain("fees_paid_upto");
+  });
+
+  it("ignores a whitespace-only query instead of matching everything", () => {
+    expect(render({ q: "   " })).toBe(render({}));
   });
 
   it("filters by status when provided", () => {
@@ -49,59 +88,6 @@ describe("buildMembersWhere", () => {
   it("filters death fund covered when deathFund is true", () => {
     const sql = render({ deathFund: true });
     expect(sql).toContain("death_fund_covered");
-  });
-
-  it("adds a keyset cursor condition on (last_name, id) for the default (name) sort", () => {
-    const withCursor = render({
-      cursor: JSON.stringify({ sort: "name", key: "Rao", id: "abc-123" }),
-    });
-    const withoutCursor = render({});
-    expect(withCursor.length).toBeGreaterThan(withoutCursor.length);
-    expect(withCursor).toContain("last_name");
-    expect(withCursor).toContain(">");
-  });
-
-  it("flips the cursor comparison to `<` for name_desc", () => {
-    const sql = render({
-      sort: "name_desc",
-      cursor: JSON.stringify({ sort: "name_desc", key: "Rao", id: "abc-123" }),
-    });
-    expect(sql).toContain("last_name");
-    expect(sql).toContain("<");
-  });
-
-  it("keysets on created_at for the newest sort", () => {
-    const sql = render({
-      sort: "newest",
-      cursor: JSON.stringify({
-        sort: "newest",
-        key: "2026-01-01T00:00:00.000Z",
-        id: "abc-123",
-      }),
-    });
-    expect(sql).toContain("created_at");
-    expect(sql).toContain("<");
-  });
-
-  it("ignores a cursor minted for a different sort (stale cursor after switching sort)", () => {
-    const withStaleCursor = render({
-      sort: "newest",
-      cursor: JSON.stringify({ sort: "name", key: "Rao", id: "abc-123" }),
-    });
-    const withoutCursor = render({ sort: "newest" });
-    expect(withStaleCursor).toBe(withoutCursor);
-  });
-
-  it("ignores an unparsable cursor rather than throwing", () => {
-    expect(() => buildMembersWhere({ cursor: "not-json" })).not.toThrow();
-  });
-
-  it("ignores a cursor with an unknown sort value rather than throwing", () => {
-    expect(() =>
-      buildMembersWhere({
-        cursor: JSON.stringify({ sort: "bogus", key: "x", id: "y" }),
-      }),
-    ).not.toThrow();
   });
 
   it("combines multiple filters together", () => {
@@ -134,5 +120,37 @@ describe("isUuid", () => {
     expect(isUuid("0edc565e-152e-4468-9a2b-a8c0f3b40a9")).toBe(false);
     expect(isUuid("0edc565e152e44689a2ba8c0f3b40a9b")).toBe(false);
     expect(isUuid("zzzzzzzz-152e-4468-9a2b-a8c0f3b40a9b")).toBe(false);
+  });
+});
+
+describe("parsePerPage", () => {
+  it("accepts the offered options", () => {
+    expect(parsePerPage("10")).toBe(10);
+    expect(parsePerPage("25")).toBe(25);
+    expect(parsePerPage("100")).toBe(100);
+  });
+
+  it("falls back to 10 for anything else", () => {
+    expect(parsePerPage(undefined)).toBe(10);
+    expect(parsePerPage("")).toBe(10);
+    expect(parsePerPage("50")).toBe(10);
+    expect(parsePerPage("99999")).toBe(10);
+    expect(parsePerPage("abc")).toBe(10);
+    expect(parsePerPage("-25")).toBe(10);
+  });
+});
+
+describe("parsePage", () => {
+  it("accepts positive integers", () => {
+    expect(parsePage("1")).toBe(1);
+    expect(parsePage("7")).toBe(7);
+  });
+
+  it("falls back to page 1 for junk or out-of-range values", () => {
+    expect(parsePage(undefined)).toBe(1);
+    expect(parsePage("0")).toBe(1);
+    expect(parsePage("-3")).toBe(1);
+    expect(parsePage("1.5")).toBe(1);
+    expect(parsePage("abc")).toBe(1);
   });
 });

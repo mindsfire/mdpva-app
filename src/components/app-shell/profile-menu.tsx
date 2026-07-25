@@ -47,21 +47,27 @@ function ThemeIcons() {
   }, []);
 
   return (
-    <div className="flex items-center gap-1 px-2 py-1.5">
-      <span className="flex-1 text-xs text-muted-foreground">Theme</span>
+    <div
+      role="tablist"
+      aria-label="Theme"
+      className="mx-2 my-1.5 flex items-center gap-0.5 rounded-lg bg-muted p-0.5"
+    >
       {THEMES.map(({ value, label, icon: Icon }) => {
         const active = mounted && theme === value;
         return (
           <button
             key={value}
             type="button"
+            role="tab"
+            aria-selected={active}
             aria-label={label}
             title={label}
-            aria-pressed={active}
             onClick={() => setTheme(value)}
             className={cn(
-              "flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-              active && "bg-accent text-foreground",
+              "flex flex-1 cursor-pointer items-center justify-center rounded-md py-1.5 transition-colors",
+              active
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             <Icon className="size-3.5" />

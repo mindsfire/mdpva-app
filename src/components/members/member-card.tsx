@@ -13,7 +13,7 @@ export function MemberCard({ row }: { row: MemberRow }) {
   return (
     <Link
       href={`/members/${row.id}`}
-      className="flex items-start gap-3 rounded-lg border border-mdpva-border bg-card p-3.5 dark:border-border"
+      className="flex cursor-pointer items-start gap-3 rounded-lg border border-mdpva-border bg-card p-3.5 dark:border-border"
     >
       <MemberAvatar
         firstName={row.firstName}
