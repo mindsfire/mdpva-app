@@ -2,6 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
+import { CredentialsSignin } from "next-auth";
 
 import { auth, signIn } from "@/auth";
 import { db } from "@/db";
@@ -81,23 +82,39 @@ export async function loginAction(
   email: string,
   password: string,
 ): Promise<LoginState> {
-  const result = await signIn("credentials", {
-    email,
-    password,
-    redirect: false,
-  });
+  try {
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
 
-  const url = new URL(result, "http://localhost");
-  const error = url.searchParams.get("error");
-  if (!error) return {};
+    const url = new URL(result, "http://localhost");
+    const error = url.searchParams.get("error");
+    if (!error) return {};
 
-  const code = url.searchParams.get("code");
-  if (code === "locked") {
-    return {
-      error: "Too many attempts. Please wait a few minutes and try again.",
-    };
+    const code = url.searchParams.get("code");
+    if (code === "locked") {
+      return {
+        error: "Too many attempts. Please wait a few minutes and try again.",
+      };
+    }
+    return { error: "Invalid email or password." };
+  } catch (err) {
+    // With `redirect: false`, Auth.js v5 is documented to return a URL
+    // carrying `error`/`code` on a credentials failure — but in practice it
+    // still throws the `CredentialsSignin` subclass here, so both paths
+    // must be handled or the client never learns the sign-in failed.
+    if (err instanceof CredentialsSignin) {
+      if (err.code === "locked") {
+        return {
+          error: "Too many attempts. Please wait a few minutes and try again.",
+        };
+      }
+      return { error: "Invalid email or password." };
+    }
+    throw err;
   }
-  return { error: "Invalid email or password." };
 }
 
 export async function requireSession() {

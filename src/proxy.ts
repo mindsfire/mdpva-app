@@ -30,10 +30,6 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/change-password", req.nextUrl));
   }
 
-  if (!user.mustChangePassword && pathname === "/change-password") {
-    return NextResponse.redirect(new URL("/", req.nextUrl));
-  }
-
   return NextResponse.next();
 });
 
