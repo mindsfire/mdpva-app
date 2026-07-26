@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { members } from "@/db/schema";
@@ -155,6 +155,32 @@ export async function softDeleteMember(id: string): Promise<SoftDeleteResult> {
   revalidatePath(DIRECTORY_PATH);
   revalidatePath(DASHBOARD_PATH);
   return { ok: true };
+}
+
+export interface BulkSoftDeleteResult {
+  ok: boolean;
+  deletedCount: number;
+}
+
+/** Admin only. Soft-deletes every non-deleted member id in `ids`. */
+export async function bulkSoftDeleteMembers(
+  ids: string[],
+): Promise<BulkSoftDeleteResult> {
+  await requireRole("admin");
+
+  if (ids.length === 0) {
+    return { ok: true, deletedCount: 0 };
+  }
+
+  const updated = await db
+    .update(members)
+    .set({ deletedAt: new Date() })
+    .where(and(inArray(members.id, ids), isNull(members.deletedAt)))
+    .returning({ id: members.id });
+
+  revalidatePath(DIRECTORY_PATH);
+  revalidatePath(DASHBOARD_PATH);
+  return { ok: true, deletedCount: updated.length };
 }
 
 export interface DuplicateMatch {

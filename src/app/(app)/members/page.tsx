@@ -21,6 +21,7 @@ import {
   DirectoryTransitionProvider,
 } from "@/components/members/directory-transition";
 import { SearchInput } from "@/components/members/search-input";
+import { MembersSelectionProvider } from "@/components/members/selection";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 import { parsePeekWidthCookie, PEEK_WIDTH_COOKIE } from "@/lib/peek-prefs";
 
@@ -158,24 +159,29 @@ export default async function MembersDirectoryPage({
         </div>
       ) : (
         <DirectoryTransitionProvider>
-          <div className="flex flex-col gap-5">
-            <DirectoryResults>
-              <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
-                <MemberTable rows={rows} />
-              </div>
-              <div className="flex flex-col gap-2.5 md:hidden">
-                {rows.map((row) => (
-                  <MemberCard key={row.id} row={row} />
-                ))}
-              </div>
-            </DirectoryResults>
-            <MembersPagination
-              page={page}
-              perPage={perPage}
-              total={total}
-              totalPages={totalPages}
-            />
-          </div>
+          <MembersSelectionProvider
+            isAdmin={hasRole(sessionUser.role, "admin")}
+            ids={rows.map((row) => row.id)}
+          >
+            <div className="flex flex-col gap-5">
+              <DirectoryResults>
+                <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
+                  <MemberTable rows={rows} />
+                </div>
+                <div className="flex flex-col gap-2.5 md:hidden">
+                  {rows.map((row) => (
+                    <MemberCard key={row.id} row={row} />
+                  ))}
+                </div>
+              </DirectoryResults>
+              <MembersPagination
+                page={page}
+                perPage={perPage}
+                total={total}
+                totalPages={totalPages}
+              />
+            </div>
+          </MembersSelectionProvider>
         </DirectoryTransitionProvider>
       )}
 

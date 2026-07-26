@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import type { MemberRow } from "@/lib/members-query";
 import { MemberAvatar } from "./member-avatar";
 import {
@@ -8,13 +11,31 @@ import {
   ProfessionLabel,
   StatusBadge,
 } from "./member-badges";
+import { useMembersSelection } from "./selection";
 
 export function MemberCard({ row }: { row: MemberRow }) {
+  const selection = useMembersSelection();
+
   return (
     <Link
       href={`/members/${row.id}`}
       className="flex cursor-pointer items-start gap-3 rounded-lg border border-mdpva-border bg-card p-3.5 dark:border-border"
     >
+      {selection ? (
+        <span
+          className="mt-0.5 flex items-center"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            selection.toggle(row.id);
+          }}
+        >
+          <Checkbox
+            checked={selection.isSelected(row.id)}
+            aria-label={`Select ${row.firstName} ${row.lastName}`}
+          />
+        </span>
+      ) : null}
       <MemberAvatar
         firstName={row.firstName}
         lastName={row.lastName}

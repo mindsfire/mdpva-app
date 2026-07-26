@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { XIcon } from "lucide-react";
 
 import { auth } from "@/auth";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
 
 import { ChangePasswordForm } from "./change-password-form";
 
@@ -12,10 +14,18 @@ export default async function ChangePasswordPage() {
   }
 
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center bg-mdpva-paper px-6 py-16">
-      <div className="absolute right-4 top-4">
-        <ThemeToggle />
-      </div>
+    // Always light — no theme switcher here by design, matching /login.
+    <div className="force-light relative flex min-h-svh flex-col items-center justify-center bg-mdpva-paper px-6 py-16">
+      {!session.user.mustChangePassword ? (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="absolute right-4 top-4"
+          render={<Link href="/" aria-label="Close" />}
+        >
+          <XIcon />
+        </Button>
+      ) : null}
 
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col gap-1.5">

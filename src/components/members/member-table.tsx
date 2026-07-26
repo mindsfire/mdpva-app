@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { MemberRow } from "@/lib/members-query";
 import { MemberAvatar } from "./member-avatar";
 import {
@@ -18,11 +19,13 @@ import {
   ProfessionLabel,
   StatusBadge,
 } from "./member-badges";
+import { useMembersSelection } from "./selection";
 
 export function MemberTable({ rows }: { rows: MemberRow[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const selection = useMembersSelection();
 
   function openMember(id: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -30,10 +33,38 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
     router.push(`${pathname}?${params.toString()}`);
   }
 
+  const allSelected =
+    !!selection && rows.length > 0 && rows.every((row) => selection.isSelected(row.id));
+  const someSelected =
+    !!selection && !allSelected && rows.some((row) => selection.isSelected(row.id));
+
+  function toggleAll() {
+    if (!selection) return;
+    if (allSelected) {
+      for (const row of rows) {
+        if (selection.isSelected(row.id)) selection.toggle(row.id);
+      }
+    } else {
+      for (const row of rows) {
+        if (!selection.isSelected(row.id)) selection.toggle(row.id);
+      }
+    }
+  }
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
+          {selection ? (
+            <TableHead className="w-10">
+              <Checkbox
+                checked={allSelected}
+                indeterminate={someSelected}
+                onCheckedChange={toggleAll}
+                aria-label="Select all members on this page"
+              />
+            </TableHead>
+          ) : null}
           <TableHead>Name</TableHead>
           <TableHead>Member ID</TableHead>
           <TableHead>Legacy ID</TableHead>
@@ -51,6 +82,15 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
             onClick={() => openMember(row.id)}
             className="cursor-pointer"
           >
+            {selection ? (
+              <TableCell onClick={(event) => event.stopPropagation()}>
+                <Checkbox
+                  checked={selection.isSelected(row.id)}
+                  onCheckedChange={() => selection.toggle(row.id)}
+                  aria-label={`Select ${row.firstName} ${row.lastName}`}
+                />
+              </TableCell>
+            ) : null}
             <TableCell>
               <div className="flex items-center gap-2.5">
                 <MemberAvatar
