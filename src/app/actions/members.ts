@@ -9,6 +9,7 @@ import { mapUniqueViolation } from "@/lib/db-errors";
 import { generateMemberId } from "@/lib/member-id";
 import { requireRole } from "@/lib/rbac";
 import { memberInputSchema, type MemberInput } from "@/lib/validation/member";
+import { normalizePhone } from "@/lib/validation/phone";
 
 const DIRECTORY_PATH = "/members";
 const DASHBOARD_PATH = "/";
@@ -33,6 +34,10 @@ function toValues(input: MemberInput) {
     lastName: input.lastName,
     email: input.email,
     phone: input.phone,
+    // Derived on every write so it can never drift from `phone`. Onboarding
+    // verification matches on this column; a stale value silently locks a
+    // member out of the self-service form.
+    normalizedPhone: normalizePhone(input.phone),
     profession: input.profession,
     businessName: input.businessName,
     addressLine1: input.addressLine1,

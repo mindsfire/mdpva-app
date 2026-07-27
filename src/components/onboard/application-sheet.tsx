@@ -1,3 +1,4 @@
+import { MdpvaLogo } from "@/components/brand/mdpva-logo";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
 import { formatPhone } from "@/lib/validation/phone";
 import { cn } from "@/lib/utils";
@@ -107,23 +108,8 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
       {/* Letterhead */}
       <div className="flex items-start gap-4">
         <span className="mt-0.5 shrink-0">
-          {/* Placeholder mark — replace with the real MDPVA logo. */}
-          <svg width="52" height="52" viewBox="0 0 64 64" aria-hidden="true">
-            <circle cx="32" cy="32" r="32" fill="#161513" />
-            <circle cx="32" cy="32" r="27" fill="none" stroke="#c9bc7e" strokeWidth="2.5" />
-            <text
-              x="32"
-              y="34"
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontFamily="Georgia, serif"
-              fontSize="30"
-              fontWeight="600"
-              fill="#e8c893"
-            >
-              M
-            </text>
-          </svg>
+          {/* The one place the seal is large enough to read properly. */}
+          <MdpvaLogo size={64} priority />
         </span>
         <div className="min-w-0 flex-1 text-center">
           <p className="text-balance text-[20px] leading-tight font-semibold text-[#161513]">

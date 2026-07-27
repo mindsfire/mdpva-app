@@ -18,9 +18,27 @@ export interface Bilingual {
 
 const t = (en: string, kn: string): Bilingual => ({ en, kn });
 
+/**
+ * ⚠️ Taken from the official seal (src/assets/brand/mdpva-logo.png), which
+ * differs from what this file previously assumed in two ways worth knowing:
+ *
+ * 1. The seal reads "MYSORE", not "Mysuru" — the older spelling, as
+ *    registered. A registered society's name is a legal string; it should be
+ *    reproduced on the form exactly as registered even though the city is now
+ *    officially Mysuru. `place` below still uses the modern spelling, since
+ *    that's an address rather than part of the name.
+ * 2. The seal's Kannada is a *transliteration* of the English
+ *    ("ಫೋಟೋಗ್ರಾಫರ್ ಅಂಡ್ ವೀಡಿಯೋಗ್ರಾಫರ್"), not a translation. An earlier draft
+ *    of this file used the translated ಛಾಯಾಗ್ರಾಹಕರ, which does not match the
+ *    registered name.
+ *
+ * `nameKn` below is my reading of the seal and MUST be confirmed against
+ * MDPVA's registration document before rollout — a wrong association name on
+ * a form that members sign is not a cosmetic error.
+ */
 export const ORG = {
-  nameEn: "Mysuru District Photographers & Videographers Association",
-  nameKn: "ಮೈಸೂರು ಜಿಲ್ಲಾ ಛಾಯಾಗ್ರಾಹಕರ ಮತ್ತು ವೀಡಿಯೋಗ್ರಾಹಕರ ಸಂಘ",
+  nameEn: "Mysore District Photographers & Videographers Association (R.)",
+  nameKn: "ಮೈಸೂರು ಜಿಲ್ಲಾ ಫೋಟೋಗ್ರಾಫರ್ ಅಂಡ್ ವೀಡಿಯೋಗ್ರಾಫರ್ ಅಸೋಸಿಯೇಷನ್ (ರಿ)",
   place: "Mysuru, Karnataka",
 } as const;
 

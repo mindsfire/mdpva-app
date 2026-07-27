@@ -8,6 +8,7 @@ import { members } from "@/db/schema";
 import { requireRole } from "@/lib/rbac";
 import { generateMemberId } from "@/lib/member-id";
 import { memberInputSchema, type MemberInput } from "@/lib/validation/member";
+import { normalizePhone } from "@/lib/validation/phone";
 import {
   parseMembersCsv,
   type CsvRowError,
@@ -201,6 +202,10 @@ export async function commitImport(
       lastName: input.lastName,
       email: input.email,
       phone: input.phone,
+      // Derived here too: this is the path the scanned ledger arrives through,
+      // and onboarding verification matches on this column. Missing it would
+      // leave every imported member unable to use the self-service form.
+      normalizedPhone: normalizePhone(input.phone),
       profession: input.profession,
       businessName: input.businessName,
       addressLine1: input.addressLine1,

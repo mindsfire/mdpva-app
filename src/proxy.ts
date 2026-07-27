@@ -58,9 +58,10 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    // icon.svg replaced the old favicon.ico (see src/app/icon.svg) — the
-    // browser requests it from the login page itself, before any session
-    // exists, so it must stay excluded the same way favicon.ico was.
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|icon.svg|sitemap.xml|robots.txt).*)",
+    // The app icons (src/app/icon.png, src/app/apple-icon.png) are requested
+    // by the browser from the login page itself, before any session exists —
+    // without these exclusions those requests get redirected to /login and the
+    // favicon silently never loads.
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|sitemap.xml|robots.txt).*)",
   ],
 };
