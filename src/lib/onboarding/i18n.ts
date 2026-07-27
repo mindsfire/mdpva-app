@@ -60,6 +60,10 @@ export const STRINGS = {
     "We couldn't find that membership number and phone together. If your details aren't in our records yet, please contact the MDPVA office.",
     "ಆ ಸದಸ್ಯತ್ವ ಸಂಖ್ಯೆ ಮತ್ತು ದೂರವಾಣಿ ಸಂಖ್ಯೆ ಹೊಂದಿಕೆಯಾಗಲಿಲ್ಲ. ನಿಮ್ಮ ವಿವರಗಳು ಇನ್ನೂ ದಾಖಲಾಗಿಲ್ಲದಿದ್ದರೆ, ದಯವಿಟ್ಟು ಸಂಘದ ಕಚೇರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ.",
   ),
+  captchaFailed: t(
+    "The security check didn't complete. Please wait a moment and try again — your membership number and phone are fine.",
+    "ಭದ್ರತಾ ಪರಿಶೀಲನೆ ಪೂರ್ಣಗೊಳ್ಳಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಕೆಲವು ಕ್ಷಣ ಕಾದು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ — ನಿಮ್ಮ ಸದಸ್ಯತ್ವ ಸಂಖ್ಯೆ ಮತ್ತು ದೂರವಾಣಿ ಸರಿಯಾಗಿವೆ.",
+  ),
   rateLimited: t(
     "Too many attempts. Please wait a few minutes and try again.",
     "ಹಲವು ಬಾರಿ ಪ್ರಯತ್ನಿಸಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಕೆಲವು ನಿಮಿಷಗಳ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.",
