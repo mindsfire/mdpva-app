@@ -54,6 +54,19 @@ export const TurnstileWidget = React.forwardRef<
         // "auto" follows the page language; the public screens are bilingual
         // and members should see the challenge in a language they read.
         language: "auto",
+        /*
+         * Renders nothing at all unless a human check is genuinely required —
+         * which is almost never. Chosen over the dashboard's "Invisible"
+         * widget mode, which is not the same thing: Invisible never shows a
+         * challenge, so a visitor Cloudflare judges suspicious simply fails
+         * with no way to prove themselves. On a shared rural connection or an
+         * old browser that is a dead end, and the member's only recourse is
+         * the office.
+         *
+         * `interaction-only` keeps the page clean in the normal case while
+         * preserving that escape hatch.
+         */
+        appearance: "interaction-only",
         callback: (token: string) => onToken(token),
         "expired-callback": () => onToken(null),
         "error-callback": () => onToken(null),
