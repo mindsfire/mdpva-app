@@ -1,19 +1,85 @@
 import { z } from "zod";
 
+import { normalizePhone } from "./phone";
+import {
+  graphemeLength,
+  isValidBusinessName,
+  isValidPersonName,
+  sanitizeName,
+  sanitizeText,
+} from "./text-safety";
+
 const PINCODE_REGEX = /^[0-9]{6}$/;
+
+/**
+ * Field length caps, in graphemes (what a human sees), not UTF-16 code units.
+ *
+ * Before these existed the schema had no upper bound on any field at all — a
+ * multi-megabyte name was accepted, stored, rendered into every directory row,
+ * and written into CSV exports.
+ */
+export const MAX_LENGTHS = {
+  name: 60,
+  email: 254, // RFC 5321
+  businessName: 120,
+  addressLine: 120,
+  area: 60,
+  city: 60,
+  state: 60,
+  dob: 10,
+  bloodGroup: 4,
+  notes: 2000,
+  legacyId: 20,
+} as const;
 
 /** Empty/whitespace-only strings (and null/undefined) collapse to `null`. */
 function trimOrNull(value: string | null | undefined): string | null {
   if (value == null) return null;
-  const trimmed = value.trim();
-  return trimmed === "" ? null : trimmed;
+  const cleaned = sanitizeText(value);
+  return cleaned === "" ? null : cleaned;
 }
 
-const optionalTrimmedString = z
-  .string()
-  .optional()
-  .nullable()
-  .transform(trimOrNull);
+/** Optional free text: sanitized, nulled when empty, capped. */
+function optionalText(max: number, label: string) {
+  return z
+    .string()
+    .optional()
+    .nullable()
+    .transform(trimOrNull)
+    .refine((v) => v === null || graphemeLength(v) <= max, {
+      message: `${label} must be ${max} characters or fewer`,
+    });
+}
+
+/** Required free text: sanitized, non-empty, capped. */
+function requiredText(max: number, label: string) {
+  return z
+    .string()
+    .transform((v) => sanitizeText(v))
+    .refine((v) => v.length > 0, { message: `${label} is required` })
+    .refine((v) => graphemeLength(v) <= max, {
+      message: `${label} must be ${max} characters or fewer`,
+    });
+}
+
+/**
+ * A person's name. Sanitized with combining-mark limiting (not just
+ * `sanitizeText`) and restricted to letters from any script plus the
+ * punctuation Indian names genuinely use — so Kannada works, but digits,
+ * symbols and markup do not.
+ */
+function personName(label: string) {
+  return z
+    .string()
+    .transform((v) => sanitizeName(v))
+    .refine((v) => v.length > 0, { message: `${label} is required` })
+    .refine((v) => graphemeLength(v) <= MAX_LENGTHS.name, {
+      message: `${label} must be ${MAX_LENGTHS.name} characters or fewer`,
+    })
+    .refine(isValidPersonName, {
+      message: `${label} may only contain letters, spaces and . ' -`,
+    });
+}
 
 /**
  * Shared client/server schema for the editable member fields (spec §4).
@@ -21,30 +87,53 @@ const optionalTrimmedString = z
  * excluded — never accept it as user input.
  */
 export const memberInputSchema = z.object({
-  firstName: z.string().trim().min(1, "First name is required"),
-  lastName: z.string().trim().min(1, "Last name is required"),
+  firstName: personName("First name"),
+  lastName: personName("Last name"),
 
   email: z
     .string()
     .optional()
     .nullable()
     .transform(trimOrNull)
+    .transform((v) => (v === null ? null : v.toLowerCase()))
+    .refine((v) => v === null || graphemeLength(v) <= MAX_LENGTHS.email, {
+      message: "Email is too long",
+    })
     .refine((v) => v === null || z.string().email().safeParse(v).success, {
       message: "Enter a valid email",
     }),
-  phone: optionalTrimmedString,
+
+  /**
+   * Stored as the member wrote it; `normalizePhone` is what every comparison
+   * uses. Rejected outright when it can't be a real Indian mobile number —
+   * onboarding verification matches on this field, so junk here would let the
+   * wrong person claim a record.
+   */
+  phone: z
+    .string()
+    .optional()
+    .nullable()
+    .transform(trimOrNull)
+    .refine((v) => v === null || normalizePhone(v) !== null, {
+      message: "Enter a valid 10-digit mobile number",
+    }),
 
   profession: z
     .enum(["photographer", "videographer", "both"])
     .nullable()
     .default(null),
-  businessName: optionalTrimmedString,
+  businessName: optionalText(
+    MAX_LENGTHS.businessName,
+    "Business name",
+  ).refine((v) => v === null || isValidBusinessName(v), {
+    message: "Business name contains characters that aren't allowed",
+  }),
 
-  addressLine1: z.string().trim().min(1, "Address is required"),
-  addressLine2: optionalTrimmedString,
-  area: optionalTrimmedString,
-  city: z.string().trim().min(1, "City is required"),
-  state: z.string().trim().min(1, "State is required"),
+  addressLine1: requiredText(MAX_LENGTHS.addressLine, "Address"),
+  addressLine2: optionalText(MAX_LENGTHS.addressLine, "Address line 2"),
+  area: optionalText(MAX_LENGTHS.area, "Area"),
+  city: requiredText(MAX_LENGTHS.city, "City"),
+  state: requiredText(MAX_LENGTHS.state, "State"),
   pincode: z
     .string()
     .optional()
@@ -54,15 +143,15 @@ export const memberInputSchema = z.object({
       message: "Pincode must be 6 digits",
     }),
 
-  dob: optionalTrimmedString,
-  bloodGroup: optionalTrimmedString,
+  dob: optionalText(MAX_LENGTHS.dob, "Date of birth"),
+  bloodGroup: optionalText(MAX_LENGTHS.bloodGroup, "Blood group"),
 
   status: z.enum(["active", "inactive", "suspended"]).default("active"),
   feesPaidUpto: z.number().int().nullable().default(null),
   deathFundCovered: z.boolean().default(false),
 
-  notes: optionalTrimmedString,
-  legacyId: optionalTrimmedString,
+  notes: optionalText(MAX_LENGTHS.notes, "Notes"),
+  legacyId: optionalText(MAX_LENGTHS.legacyId, "Legacy ID"),
 });
 
 export type MemberInput = z.infer<typeof memberInputSchema>;

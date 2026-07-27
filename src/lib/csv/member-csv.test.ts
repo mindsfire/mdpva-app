@@ -14,7 +14,9 @@ function csv(...rows: string[]): string {
 }
 
 const VALID_ROW =
-  "Ramesh,Kumar,ramesh@example.com,9876543210,OLD/1,photographer,Studio,12 MG Road,,Lakshmipuram,Mysuru,Karnataka,570004,1975-06-15,B+,active,2026,yes,";
+  // Phone is deliberately not 9876543210 — that descending run is rejected as
+  // ledger placeholder junk (see `normalizePhone`).
+  "Ramesh,Kumar,ramesh@example.com,9845011234,OLD/1,photographer,Studio,12 MG Road,,Lakshmipuram,Mysuru,Karnataka,570004,1975-06-15,B+,active,2026,yes,";
 
 describe("parseMembersCsv", () => {
   it("parses a valid row into MemberInput", () => {

