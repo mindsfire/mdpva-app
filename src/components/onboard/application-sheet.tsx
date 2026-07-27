@@ -42,7 +42,7 @@ function Val({
   return (
     <span
       className={cn(
-        "min-h-[19px] flex-1 border-b border-dotted border-[#b9b7ac] px-1 pb-[3px] break-words",
+        "min-h-[19px] min-w-[3.5rem] flex-1 border-b border-dotted border-[#b9b7ac] px-1 pb-[3px] break-words",
         numeric && "tabular-nums tracking-wide",
         empty && "text-[#787770]/55",
       )}
@@ -64,15 +64,22 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-baseline gap-2 pt-[7px] pb-[2px] text-[13.5px]">
-      <span className="w-5 shrink-0 font-sans text-[11px] tabular-nums text-[#787770]">
+    <div className="flex items-baseline gap-1.5 pt-[7px] pb-[2px] text-[12px] sm:gap-2 sm:text-[13.5px]">
+      <span className="w-3.5 shrink-0 font-sans text-[10px] tabular-nums text-[#787770] sm:w-5 sm:text-[11px]">
         {num}
       </span>
       {label ? (
-        <span className="shrink-0 text-[#45443e]">
+        /*
+         * `min-w-0` + wrapping label: at ~330px a `shrink-0` label pushed the
+         * value out of the row, so it wrapped onto its own line with the
+         * dotted rule underlining only half of it.
+         */
+        <span className="min-w-0 shrink text-[#45443e] sm:shrink-0">
           {label}{" "}
           {labelKn ? (
-            <span className="font-kn text-[12px] text-[#787770]">{labelKn}</span>
+            <span className="font-kn text-[10.5px] text-[#787770] sm:text-[12px]">
+              {labelKn}
+            </span>
           ) : null}
         </span>
       ) : null}
@@ -83,7 +90,7 @@ function Row({
 
 function Band({ en, kn }: { en: string; kn: string }) {
   return (
-    <p className="mt-[22px] mb-[2px] border-b border-[#cfcdc4] pb-[5px] font-sans text-[10px] tracking-[0.16em] text-[#787770] uppercase">
+    <p className="mt-[18px] mb-[2px] border-b border-[#cfcdc4] pb-[5px] font-sans text-[9px] sm:mt-[22px] sm:text-[10px] tracking-[0.16em] text-[#787770] uppercase">
       {en} · <span className="font-kn normal-case">{kn}</span>
     </p>
   );
@@ -105,7 +112,7 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
     .trim();
 
   return (
-    <article className="relative bg-[#fdfdfb] px-11 pt-10 pb-[34px] font-serif text-[#45443e] shadow-[0_1px_2px_rgba(22,21,19,.06),0_12px_32px_-8px_rgba(22,21,19,.14)] dark:brightness-[.93]">
+    <article className="relative bg-[#fdfdfb] px-5 pt-7 pb-6 font-serif sm:px-11 sm:pt-10 sm:pb-[34px] text-[#45443e] shadow-[0_1px_2px_rgba(22,21,19,.06),0_12px_32px_-8px_rgba(22,21,19,.14)] dark:brightness-[.93]">
       {/* Letterhead */}
       <div className="flex items-start gap-4">
         <span className="mt-0.5 shrink-0">
@@ -113,10 +120,10 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
           <MdpvaLogo size={64} priority />
         </span>
         <div className="min-w-0 flex-1 text-center">
-          <p className="text-balance text-[20px] leading-tight font-semibold text-[#161513]">
+          <p className="text-balance text-[15px] leading-tight font-semibold text-[#161513] sm:text-[20px]">
             {ORG.nameEn}
           </p>
-          <p className="font-kn mt-[5px] text-balance text-[14.5px] leading-snug text-[#45443e]">
+          <p className="font-kn mt-[5px] text-balance text-[11.5px] leading-snug text-[#45443e] sm:text-[14.5px]">
             {ORG.nameKn}
           </p>
           <p className="mt-2 font-sans text-[10.5px] tracking-[0.05em] text-[#787770] uppercase">
@@ -139,7 +146,15 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
       {/* Passport photo box — 7:9, the exact ratio the pipeline stores */}
       <div
         className={cn(
-          "absolute top-[152px] right-11 grid w-[98px] place-items-center overflow-hidden border p-2 text-center font-sans text-[8.5px] leading-tight text-[#787770]",
+          /*
+           * In normal flow on mobile, absolute only from `sm` up.
+           *
+           * The absolute position was measured against the 640px desktop
+           * sheet. At ~330px the letterhead wraps to far more lines, so a
+           * fixed `top` dropped the photo box straight through the
+           * association name — which is what it did in production.
+           */
+          "mx-auto mt-4 grid w-[84px] place-items-center overflow-hidden border p-2 text-center font-sans text-[8.5px] leading-tight text-[#787770] sm:absolute sm:top-[152px] sm:right-11 sm:mx-0 sm:mt-0 sm:w-[98px]",
           values.photoUrl
             ? "border-solid border-[#cfcdc4] p-0"
             : "border-dashed border-[#b9b7ac] bg-[#b9b7ac]/5",
@@ -158,7 +173,7 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
         )}
       </div>
 
-      <div className="mt-[26px] pr-[122px]">
+      <div className="mt-5 sm:mt-[26px] sm:pr-[122px]">
         <Row num="1." label="Membership no." labelKn={S.membershipNo.kn}>
           <Val numeric>{values.membershipNo}</Val>
         </Row>
@@ -223,7 +238,7 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
         </Row>
       </div>
 
-      <p className="mt-[26px] border-t border-[#cfcdc4] pt-4 text-[12.5px] leading-relaxed text-[#45443e]">
+      <p className="mt-5 border-t border-[#cfcdc4] pt-4 text-[11px] leading-relaxed text-[#45443e] sm:mt-[26px] sm:text-[12.5px]">
         {S.consent.en}
         <span className="font-kn mt-1.5 block text-[12px] text-[#787770]">
           {S.consent.kn}
@@ -241,7 +256,7 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
         </span>
       </div>
 
-      <div className="mt-[26px] flex flex-wrap items-center gap-x-6 gap-y-1 border border-[#cfcdc4] bg-[#b9b7ac]/[.06] px-3.5 py-[11px] font-sans text-[10.5px] text-[#787770]">
+      <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 border border-[#cfcdc4] bg-[#b9b7ac]/[.06] px-3 py-2.5 font-sans text-[9.5px] text-[#787770] sm:mt-[26px] sm:gap-x-6 sm:px-3.5 sm:py-[11px] sm:text-[10.5px]">
         <span className="text-[9.5px] tracking-[0.13em] uppercase">
           {S.officeUse.en}
         </span>

@@ -7,6 +7,13 @@ import { useRouter } from "next/navigation";
 import { endOnboardSessionAction } from "@/app/actions/onboard";
 import { submitApplicationAction } from "@/app/actions/onboard-submit";
 import { PhotoCropper } from "@/components/onboard/photo-cropper";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { XIcon } from "lucide-react";
 import { ApplicationStatus } from "@/components/onboard/application-status";
 
 import {
@@ -247,7 +254,7 @@ export function OnboardForm({
   // Served through the auth-gated route; the member's own onboarding session
   // is accepted for their own pending photo (see the photos route).
   const existingPhotoSrc = existing?.photoKey
-    ? `/api/onboard-photo`
+    ? `/onboard/photo`
     : null;
 
   const sheet: SheetValues = {
@@ -319,13 +326,12 @@ export function OnboardForm({
 
   return (
     <div className="grid min-h-[calc(100svh-53px)] grid-cols-1 items-start lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)]">
-      {/* Paper sheet — hidden below lg, shown via the Preview toggle */}
-      <section
-        className={cn(
-          "border-b border-mdpva-border bg-[#eceae4] px-7 pt-7 pb-14 lg:block lg:min-h-full lg:border-r lg:border-b-0 dark:border-border dark:bg-[#0d0d0c]",
-          showPreview ? "block" : "hidden",
-        )}
-      >
+      {/*
+        Desktop only. Below lg the preview opens as a dialog instead of
+        appearing above the form — inline, it pushed the form off-screen and
+        members read it as the page having changed rather than as a preview.
+      */}
+      <section className="hidden border-mdpva-border bg-[#eceae4] px-7 pt-7 pb-14 lg:block lg:min-h-full lg:border-r dark:border-border dark:bg-[#0d0d0c]">
         <div className="mx-auto w-full max-w-[640px]">
           <p className="mb-3 ml-0.5 flex items-center gap-2 text-[11px] tracking-[0.14em] text-muted-foreground uppercase after:h-px after:flex-1 after:bg-border after:content-['']">
             {S.livePreview.en}
@@ -348,9 +354,9 @@ export function OnboardForm({
             variant="outline"
             size="sm"
             className="lg:hidden"
-            onClick={() => setShowPreview((v) => !v)}
+            onClick={() => setShowPreview(true)}
           >
-            {showPreview ? "Hide" : S.preview.en}
+            {S.preview.en}
           </Button>
         </div>
 
@@ -641,6 +647,34 @@ export function OnboardForm({
           </Button>
         </div>
       </section>
+
+      {/* Mobile preview: a real dialog, so it reads as an overlay you dismiss. */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent
+          showCloseButton={false}
+          className="max-h-[88svh] w-[calc(100%-1.5rem)] max-w-[560px] gap-0 overflow-hidden p-0 sm:max-w-[560px]"
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+            <DialogTitle className="text-sm font-medium">
+              {S.livePreview.en}{" "}
+              <span className="font-kn text-muted-foreground">
+                {S.livePreview.kn}
+              </span>
+            </DialogTitle>
+            <DialogClose
+              render={
+                <Button variant="ghost" size="icon-sm" aria-label="Close preview" />
+              }
+            >
+              <XIcon className="size-4" />
+            </DialogClose>
+          </div>
+          {/* Scrolls inside the dialog; the sheet is taller than any phone. */}
+          <div className="overflow-y-auto bg-[#eceae4] p-3 dark:bg-[#0d0d0c]">
+            <ApplicationSheet values={sheet} />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <PhotoCropper
         file={pickedFile}
