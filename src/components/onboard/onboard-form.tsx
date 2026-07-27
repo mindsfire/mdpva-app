@@ -219,6 +219,18 @@ export function OnboardForm({
       }
       window.localStorage.removeItem(draftKey);
       setSubmitted(result.applicationNo);
+    } catch {
+      /*
+       * A server action that *throws* — rather than returning `{ ok: false }`
+       * — rejects this promise. Without this catch the rejection escaped, the
+       * button simply re-enabled, and the member was left staring at a form
+       * that appeared to do nothing. That is how an oversized photo upload
+       * (a 500 from the body-size limit) presented in production: silently.
+       *
+       * Any unexpected failure now says so. The draft is deliberately left in
+       * localStorage so nothing they typed is lost on a retry.
+       */
+      setSubmitError("submit_failed");
     } finally {
       setSubmitting(false);
     }
