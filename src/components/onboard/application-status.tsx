@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Bi } from "@/components/onboard/bilingual";
 import { useRouter } from "next/navigation";
 
 import { endOnboardSessionAction } from "@/app/actions/onboard";
@@ -89,7 +90,7 @@ export function ApplicationStatus({
       {rejectionReason ? (
         <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
           <p className="text-xs font-semibold tracking-[0.12em] text-destructive uppercase">
-            {S.reasonGiven.en} · <span className="font-kn">{S.reasonGiven.kn}</span>
+            <Bi s={S.reasonGiven} sep="·" />
           </p>
           <p className="mt-1.5 text-sm text-destructive">{rejectionReason}</p>
         </div>
@@ -101,17 +102,10 @@ export function ApplicationStatus({
       </p>
 
       <Button className="mt-7 h-10 w-full" onClick={onEdit}>
-        {status === "rejected" ? (
-          <>
-            {S.fixAndResubmit.en} ·{" "}
-            <span className="font-kn">{S.fixAndResubmit.kn}</span>
-          </>
-        ) : (
-          <>
-            {S.updateDetails.en} ·{" "}
-            <span className="font-kn">{S.updateDetails.kn}</span>
-          </>
-        )}
+        <Bi
+          s={status === "rejected" ? S.fixAndResubmit : S.updateDetails}
+          sep="·"
+        />
       </Button>
 
       <Button
@@ -122,7 +116,7 @@ export function ApplicationStatus({
           router.push("/onboard");
         }}
       >
-        {S.done.en} · <span className="font-kn">{S.done.kn}</span>
+        <Bi s={S.done} sep="·" />
       </Button>
     </main>
   );

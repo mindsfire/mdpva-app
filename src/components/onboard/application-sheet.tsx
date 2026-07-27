@@ -1,4 +1,5 @@
 import { MdpvaLogo } from "@/components/brand/mdpva-logo";
+import { Bi } from "@/components/onboard/bilingual";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
 import { formatPhone } from "@/lib/validation/phone";
 import { cn } from "@/lib/utils";
@@ -232,11 +233,11 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
       <div className="mt-[34px] flex items-end justify-between gap-6">
         <span className="font-sans text-[12px] text-[#787770]">
           <span className="mb-[5px] block h-[26px] min-w-[108px] border-b border-[#b9b7ac]" />
-          {S.date.en} · <span className="font-kn">{S.date.kn}</span>
+          <Bi s={S.date} sep="·" />
         </span>
         <span className="font-sans text-[12px] text-[#787770]">
           <span className="mb-[5px] block h-[26px] min-w-[150px] border-b border-[#b9b7ac]" />
-          {S.signature.en} · <span className="font-kn">{S.signature.kn}</span>
+          <Bi s={S.signature} sep="·" />
         </span>
       </div>
 

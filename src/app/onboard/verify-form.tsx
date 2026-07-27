@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Bi } from "@/components/onboard/bilingual";
 import { useRouter } from "next/navigation";
 
 import { confirmMemberAction, verifyMemberAction } from "@/app/actions/onboard";
@@ -63,14 +64,14 @@ export function VerifyForm() {
       <div className="mt-8 flex flex-col gap-5">
         <div className="rounded-lg border border-mdpva-border bg-card px-4 py-5 text-center">
           <p className="text-sm text-muted-foreground">
-            {S.foundYou.en} <span className="font-kn">{S.foundYou.kn}</span>
+            <Bi s={S.foundYou} />
           </p>
           <p className="mt-1.5 font-serif text-2xl font-medium text-foreground">
             {confirming.displayName}
           </p>
         </div>
         <Button className="h-10 w-full" onClick={onConfirm} disabled={pending}>
-          {S.yesContinue.en} · <span className="font-kn">{S.yesContinue.kn}</span>
+          <Bi s={S.yesContinue} sep="·" />
         </Button>
         <Button
           variant="outline"
@@ -83,7 +84,7 @@ export function VerifyForm() {
             setPhone("");
           }}
         >
-          {S.noGoBack.en} · <span className="font-kn">{S.noGoBack.kn}</span>
+          <Bi s={S.noGoBack} sep="·" />
         </Button>
       </div>
     );
@@ -143,8 +144,7 @@ export function VerifyForm() {
       ) : null}
 
       <Button type="submit" className="mt-1 h-10 w-full" disabled={pending}>
-        {pending ? "…" : S.continue.en} ·{" "}
-        <span className="font-kn">{S.continue.kn}</span>
+        {pending ? "…" : <Bi s={S.continue} sep="·" />}
       </Button>
     </form>
   );
