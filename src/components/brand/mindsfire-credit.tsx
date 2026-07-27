@@ -50,13 +50,14 @@ export function MindsfireCredit({
       )}
     >
       <span>Powered by</span>
-      {/* 32x14 keeps the mark's true 2.3:1 aspect — it's a wide stacked-bar
-          mark, so a square box would letterbox or distort it. */}
+      {/* Sized to the cap height of the 11px text, not its line box, so the
+          mark sits with the wordmark rather than towering over it. 23x10
+          preserves the artwork's true 2.3:1 aspect. */}
       <Image
         src={logo}
         alt=""
-        width={32}
-        height={14}
+        width={23}
+        height={10}
         className="shrink-0 opacity-85 transition-opacity group-hover:opacity-100"
       />
       <span className="font-medium">
