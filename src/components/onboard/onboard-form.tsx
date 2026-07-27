@@ -4,6 +4,8 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { endOnboardSessionAction } from "@/app/actions/onboard";
+import { submitApplicationAction } from "@/app/actions/onboard-submit";
+import { PhotoCropper } from "@/components/onboard/photo-cropper";
 
 import {
   ApplicationSheet,
@@ -18,6 +20,26 @@ import { cn } from "@/lib/utils";
 type Values = Omit<SheetValues, "photoUrl" | "applicationNo">;
 
 const DRAFT_KEY_PREFIX = "mdpva.onboard.draft.";
+
+/** Server error codes → member-facing copy. */
+function submitMessage(code: string): string {
+  switch (code) {
+    case "session_expired":
+      return "Your session timed out. Please verify again — your typed details are saved on this device.";
+    case "photo_required":
+      return "Please add a photograph before submitting.";
+    case "photo_too_large":
+      return "That image is too large. Please choose one under 8 MB.";
+    case "photo_not_an_image":
+      return "That file isn't a JPEG, PNG or WebP image.";
+    case "photo_unreadable":
+      return "That image could not be read. Please try a different photo.";
+    case "submit_failed":
+      return "Something went wrong saving your details. Please try again.";
+    default:
+      return code;
+  }
+}
 
 function emptyValues(membershipNo: string, prefill: Partial<Values>): Values {
   return {
@@ -88,8 +110,15 @@ export function OnboardForm({
     emptyValues(membershipNo, prefill),
   );
   const [photoUrl, setPhotoUrl] = React.useState<string | null>(null);
+  const [photoBlob, setPhotoBlob] = React.useState<Blob | null>(null);
+  const [pickedFile, setPickedFile] = React.useState<File | null>(null);
+  const [cropOpen, setCropOpen] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
   const [restored, setRestored] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const [submitted, setSubmitted] = React.useState<string | null>(null);
+  const [consented, setConsented] = React.useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
 
   // Restore the draft after mount. localStorage is genuinely an external system
@@ -136,8 +165,42 @@ export function OnboardForm({
   function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setPickedFile(file);
+    setCropOpen(true);
+    // Allow re-picking the same file — without this, choosing the same photo
+    // twice in a row fires no change event.
+    e.target.value = "";
+  }
+
+  function onCropped(blob: Blob) {
     if (photoUrl) URL.revokeObjectURL(photoUrl);
-    setPhotoUrl(URL.createObjectURL(file));
+    setPhotoBlob(blob);
+    setPhotoUrl(URL.createObjectURL(blob));
+    setCropOpen(false);
+    setPickedFile(null);
+  }
+
+  async function onSubmit() {
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      const fd = new FormData();
+      for (const [key, value] of Object.entries(values)) {
+        if (key === "membershipNo") continue;
+        fd.set(key, value ?? "");
+      }
+      if (photoBlob) fd.set("photo", photoBlob, "photo.webp");
+
+      const result = await submitApplicationAction(fd);
+      if (!result.ok) {
+        setSubmitError(result.error);
+        return;
+      }
+      window.localStorage.removeItem(draftKey);
+      setSubmitted(result.applicationNo);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function clearDraft() {
@@ -152,8 +215,53 @@ export function OnboardForm({
     ...values,
     dob: values.dob ? isoToDisplay(values.dob) : "",
     photoUrl,
-    applicationNo: undefined,
+    applicationNo: submitted ?? undefined,
   };
+
+  if (submitted) {
+    return (
+      <main className="mx-auto w-full max-w-lg px-6 py-16">
+        <p className="text-xs font-medium tracking-[0.2em] text-mdpva-accent uppercase">
+          MDPVA
+        </p>
+        <h1 className="mt-1.5 font-serif text-3xl font-medium tracking-tight text-foreground">
+          {S.submittedTitle.en}
+        </h1>
+        <p className="font-kn mt-1 text-lg text-muted-foreground">
+          {S.submittedTitle.kn}
+        </p>
+
+        <div className="mt-7 rounded-lg border border-mdpva-border bg-card px-5 py-6 text-center">
+          <p className="text-xs tracking-[0.14em] text-muted-foreground uppercase">
+            {S.applicationNo.en}
+          </p>
+          <p className="mt-2 font-serif text-3xl font-medium tracking-wide text-foreground tabular-nums">
+            {submitted}
+          </p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {S.noteItDown.en}
+            <span className="font-kn mt-1 block">{S.noteItDown.kn}</span>
+          </p>
+        </div>
+
+        <p className="mt-6 text-sm text-muted-foreground">
+          {S.submittedBody.en}
+          <span className="font-kn mt-1.5 block">{S.submittedBody.kn}</span>
+        </p>
+
+        <Button
+          variant="outline"
+          className="mt-7 h-10 w-full"
+          onClick={async () => {
+            await endOnboardSessionAction();
+            router.push("/onboard");
+          }}
+        >
+          {S.done.en} · <span className="font-kn">{S.done.kn}</span>
+        </Button>
+      </main>
+    );
+  }
 
   return (
     <div className="grid min-h-[calc(100svh-53px)] grid-cols-1 items-start lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)]">
@@ -428,19 +536,52 @@ export function OnboardForm({
           </div>
         </Group>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-border pt-4">
+        <label className="mt-2 flex cursor-pointer items-start gap-2.5 rounded-lg border border-border p-3 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={consented}
+            onChange={(e) => setConsented(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 cursor-pointer accent-[var(--color-mdpva-accent)]"
+          />
+          <span>
+            {S.consent.en}
+            <span className="font-kn mt-1 block">{S.consent.kn}</span>
+          </span>
+        </label>
+
+        {submitError ? (
+          <p
+            role="alert"
+            className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+          >
+            {submitMessage(submitError)}
+          </p>
+        ) : null}
+
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-border pt-4">
           <Button type="button" variant="outline" size="sm" onClick={clearDraft}>
             {S.clearDraft.en}
           </Button>
           <span className="flex-1" />
-          <Button type="button" disabled>
-            {S.submit.en}
+          <Button
+            type="button"
+            onClick={onSubmit}
+            disabled={submitting || !consented}
+          >
+            {submitting ? "…" : S.submit.en}
           </Button>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Submission is not wired up yet — the schema and server action land next.
-        </p>
       </section>
+
+      <PhotoCropper
+        file={pickedFile}
+        open={cropOpen}
+        onCancel={() => {
+          setCropOpen(false);
+          setPickedFile(null);
+        }}
+        onCropped={onCropped}
+      />
     </div>
   );
 }

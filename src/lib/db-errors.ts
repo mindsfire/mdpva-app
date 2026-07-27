@@ -44,6 +44,19 @@ function extractPgError(err: unknown): PgErrorShape | null {
 }
 
 /**
+ * True when `err` is a unique violation on the named constraint.
+ *
+ * Drizzle wraps driver errors, so `err.message` is the *query text* and
+ * `err.code`/`err.constraint` are undefined at the top level — the Postgres
+ * detail lives on `cause`. Matching against the message string therefore never
+ * fires, which silently turns retry-on-collision logic into dead code.
+ */
+export function isUniqueViolationOn(err: unknown, constraint: string): boolean {
+  const pgError = extractPgError(err);
+  return pgError?.code === UNIQUE_VIOLATION && pgError.constraint === constraint;
+}
+
+/**
  * Maps a Postgres unique-violation (23505) on one of the `members` table's
  * partial unique indexes to a friendly `{ field, error }` message. Returns
  * `null` for any other error shape/code/constraint so callers can fall back

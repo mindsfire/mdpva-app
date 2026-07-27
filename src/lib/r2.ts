@@ -22,3 +22,19 @@ export const R2_BUCKET = env.R2_BUCKET;
 export function photoKeyFor(memberId: string): string {
   return `app/members/${memberId}.webp`;
 }
+
+/**
+ * Unapproved member-submitted photos live under a separate prefix.
+ *
+ * Kept apart from the live namespace so an unreviewed photo can never be
+ * served as if it were current — approval copies it across, and only then
+ * does it become the member's face in the directory.
+ */
+export function pendingPhotoKeyFor(applicationId: string): string {
+  return `app/pending/${applicationId}.webp`;
+}
+
+/** True for keys under the pending prefix; used to gate serving to admins. */
+export function isPendingPhotoKey(key: string): boolean {
+  return key.startsWith("app/pending/");
+}

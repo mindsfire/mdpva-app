@@ -108,6 +108,19 @@ export const STRINGS = {
   clearDraft: t("Clear saved draft", "ಉಳಿಸಿದ ಕರಡು ಅಳಿಸಿ"),
   notYou: t("Not you? Start over", "ನೀವಲ್ಲವೇ? ಮತ್ತೆ ಪ್ರಾರಂಭಿಸಿ"),
   submit: t("Submit for approval", "ಅನುಮೋದನೆಗೆ ಸಲ್ಲಿಸಿ"),
+
+  // Submitted screen
+  submittedTitle: t("Details submitted", "ವಿವರಗಳು ಸಲ್ಲಿಕೆಯಾಗಿವೆ"),
+  applicationNo: t("Application number", "ಅರ್ಜಿ ಸಂಖ್ಯೆ"),
+  noteItDown: t(
+    "Please write this down. You'll need it to check your status.",
+    "ದಯವಿಟ್ಟು ಇದನ್ನು ಬರೆದಿಟ್ಟುಕೊಳ್ಳಿ. ಸ್ಥಿತಿ ಪರಿಶೀಲಿಸಲು ಇದು ಬೇಕಾಗುತ್ತದೆ.",
+  ),
+  submittedBody: t(
+    "The MDPVA office will review your details. Your information appears in the member directory only after it is approved.",
+    "ಸಂಘದ ಕಚೇರಿಯು ನಿಮ್ಮ ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತದೆ. ಅನುಮೋದನೆಯ ನಂತರವೇ ನಿಮ್ಮ ಮಾಹಿತಿ ಸದಸ್ಯರ ಪಟ್ಟಿಯಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.",
+  ),
+  done: t("Done", "ಮುಗಿಯಿತು"),
   preview: t("Preview", "ಮುನ್ನೋಟ"),
   yourDetails: t("Your details", "ನಿಮ್ಮ ವಿವರಗಳು"),
   livePreview: t("Live preview", "ನೇರ ಮುನ್ನೋಟ"),

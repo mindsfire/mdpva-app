@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mapUniqueViolation } from "./db-errors";
+import { isUniqueViolationOn, mapUniqueViolation } from "./db-errors";
 
 describe("mapUniqueViolation", () => {
   it("maps members_email_active to a friendly email message", () => {
@@ -89,5 +89,67 @@ describe("mapUniqueViolation", () => {
       field: "email",
       error: "A member with this email already exists.",
     });
+  });
+});
+
+/**
+ * Shaped like a real Drizzle failure: the wrapper's `message` is the query
+ * text and carries no code, while the Postgres detail sits on `cause`.
+ * Matching `err.message` against a constraint name therefore never fires —
+ * which silently turned a retry-on-collision loop into dead code once.
+ */
+function drizzleError(constraint: string, code = "23505") {
+  const err = new Error(
+    'Failed query: insert into "member_applications" ...\nparams: APP-J5RZ02',
+  );
+  (err as Error & { cause?: unknown }).cause = { code, constraint };
+  return err;
+}
+
+describe("isUniqueViolationOn", () => {
+  it("matches on the constraint carried by `cause`", () => {
+    expect(
+      isUniqueViolationOn(
+        drizzleError("member_applications_no_unique"),
+        "member_applications_no_unique",
+      ),
+    ).toBe(true);
+  });
+
+  it("does not match a different constraint", () => {
+    expect(
+      isUniqueViolationOn(
+        drizzleError("member_applications_one_pending"),
+        "member_applications_no_unique",
+      ),
+    ).toBe(false);
+  });
+
+  it("does not match a non-unique-violation error code", () => {
+    expect(
+      isUniqueViolationOn(
+        drizzleError("member_applications_no_unique", "23502"),
+        "member_applications_no_unique",
+      ),
+    ).toBe(false);
+  });
+
+  it("is not fooled by the constraint name appearing in the message", () => {
+    // The regression this replaces: a message-substring check passes here even
+    // though nothing about the error indicates a unique violation.
+    const err = new Error("Failed query: ... member_applications_no_unique ...");
+    expect(isUniqueViolationOn(err, "member_applications_no_unique")).toBe(false);
+  });
+
+  it("handles a driver error that puts code at the top level", () => {
+    const err = Object.assign(new Error("dup"), {
+      code: "23505",
+      constraint: "member_applications_no_unique",
+    });
+    expect(isUniqueViolationOn(err, "member_applications_no_unique")).toBe(true);
+  });
+
+  it.each([null, undefined, "a string", 42])("returns false for %s", (v) => {
+    expect(isUniqueViolationOn(v, "anything")).toBe(false);
   });
 });
