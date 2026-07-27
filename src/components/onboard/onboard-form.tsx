@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { endOnboardSessionAction } from "@/app/actions/onboard";
 import { submitApplicationAction } from "@/app/actions/onboard-submit";
 import { PhotoCropper } from "@/components/onboard/photo-cropper";
+import { ApplicationStatus } from "@/components/onboard/application-status";
 
 import {
   ApplicationSheet,
@@ -95,19 +96,35 @@ function Group({ s, children }: { s: Bilingual; children: React.ReactNode }) {
  * live on the left as the form is filled on the right; below `lg` the sheet
  * collapses behind a Preview toggle rather than being duplicated.
  */
+export interface ExistingApplication {
+  applicationNo: string;
+  status: "pending" | "approved" | "rejected";
+  submittedAt: Date;
+  reviewedAt: Date | null;
+  rejectionReason: string | null;
+  photoKey: string | null;
+  /** Their own previously submitted values, safe to show back to them. */
+  values: Partial<Values>;
+}
+
 export function OnboardForm({
   membershipNo,
   prefill,
   verifiedName,
+  existing,
 }: {
   membershipNo: string;
   prefill: Partial<Values>;
   verifiedName?: string;
+  existing?: ExistingApplication | null;
 }) {
   const router = useRouter();
   const draftKey = `${DRAFT_KEY_PREFIX}${membershipNo}`;
   const [values, setValues] = React.useState<Values>(() =>
-    emptyValues(membershipNo, prefill),
+    // Their own prior submission takes precedence over the sparse prefill:
+    // it's data they typed, so showing it back discloses nothing new and
+    // saves them re-entering everything to fix one field.
+    emptyValues(membershipNo, { ...prefill, ...(existing?.values ?? {}) }),
   );
   const [photoUrl, setPhotoUrl] = React.useState<string | null>(null);
   const [photoBlob, setPhotoBlob] = React.useState<Blob | null>(null);
@@ -119,6 +136,9 @@ export function OnboardForm({
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState<string | null>(null);
   const [consented, setConsented] = React.useState(false);
+  // A returning member sees their existing application first, not a blank
+  // form — otherwise they cannot tell whether the last one arrived.
+  const [editing, setEditing] = React.useState(existing == null);
   const fileRef = React.useRef<HTMLInputElement>(null);
 
   // Restore the draft after mount. localStorage is genuinely an external system
@@ -211,12 +231,33 @@ export function OnboardForm({
     setRestored(false);
   }
 
+  // Served through the auth-gated route; the member's own onboarding session
+  // is accepted for their own pending photo (see the photos route).
+  const existingPhotoSrc = existing?.photoKey
+    ? `/api/onboard-photo`
+    : null;
+
   const sheet: SheetValues = {
     ...values,
     dob: values.dob ? isoToDisplay(values.dob) : "",
-    photoUrl,
-    applicationNo: submitted ?? undefined,
+    // Falls back to the photo already on file, so a returning member editing
+    // one field doesn't see an empty passport box and assume it was lost.
+    photoUrl: photoUrl ?? existingPhotoSrc,
+    applicationNo: submitted ?? existing?.applicationNo,
   };
+
+  if (!editing && existing) {
+    return (
+      <ApplicationStatus
+        applicationNo={existing.applicationNo}
+        status={existing.status}
+        submittedAt={existing.submittedAt}
+        reviewedAt={existing.reviewedAt}
+        rejectionReason={existing.rejectionReason}
+        onEdit={() => setEditing(true)}
+      />
+    );
+  }
 
   if (submitted) {
     return (
@@ -323,6 +364,16 @@ export function OnboardForm({
           </p>
         ) : null}
 
+        {existing ? (
+          <p className="mb-5 rounded-lg border border-mdpva-gold/40 bg-mdpva-gold/15 px-3 py-2.5 text-xs text-foreground">
+            {S.editingNotice.en}{" "}
+            <b className="font-medium">{existing.applicationNo}</b>
+            <span className="font-kn mt-1 block text-muted-foreground">
+              {S.editingNotice.kn}
+            </span>
+          </p>
+        ) : null}
+
         {restored ? (
           <p className="mb-5 flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2.5 text-xs text-muted-foreground">
             <span className="size-1.5 shrink-0 rounded-full bg-primary" />
@@ -345,6 +396,11 @@ export function OnboardForm({
               {photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element -- blob: preview URL
                 <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+              ) : existingPhotoSrc ? (
+                // Their already-submitted photo. Shown so they know one is on
+                // file and needn't re-take it just to change an address.
+                // eslint-disable-next-line @next/next/no-img-element -- auth-gated stream
+                <img src={existingPhotoSrc} alt="" className="h-full w-full object-cover" />
               ) : (
                 S.noPhotoYet.en
               )}

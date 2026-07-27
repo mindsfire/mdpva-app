@@ -121,6 +121,30 @@ export const STRINGS = {
     "ಸಂಘದ ಕಚೇರಿಯು ನಿಮ್ಮ ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತದೆ. ಅನುಮೋದನೆಯ ನಂತರವೇ ನಿಮ್ಮ ಮಾಹಿತಿ ಸದಸ್ಯರ ಪಟ್ಟಿಯಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.",
   ),
   done: t("Done", "ಮುಗಿಯಿತು"),
+
+  // Returning-member status
+  statusPendingTitle: t("Awaiting review", "ಪರಿಶೀಲನೆಗೆ ಬಾಕಿ ಇದೆ"),
+  statusPendingBody: t(
+    "Your details have reached the MDPVA office and are waiting to be checked. There is nothing more you need to do — but you can update them if something is wrong.",
+    "ನಿಮ್ಮ ವಿವರಗಳು ಸಂಘದ ಕಚೇರಿಯನ್ನು ತಲುಪಿವೆ ಮತ್ತು ಪರಿಶೀಲನೆಗೆ ಕಾಯುತ್ತಿವೆ. ನೀವು ಬೇರೇನೂ ಮಾಡಬೇಕಿಲ್ಲ.",
+  ),
+  statusApprovedTitle: t("Details approved", "ವಿವರಗಳು ಅನುಮೋದನೆಯಾಗಿವೆ"),
+  statusApprovedBody: t(
+    "Your details are now in the member directory. You can update them any time — changes go back to the office for approval.",
+    "ನಿಮ್ಮ ವಿವರಗಳು ಈಗ ಸದಸ್ಯರ ಪಟ್ಟಿಯಲ್ಲಿವೆ. ಯಾವಾಗ ಬೇಕಾದರೂ ಬದಲಾಯಿಸಬಹುದು.",
+  ),
+  statusRejectedTitle: t("Needs correction", "ತಿದ್ದುಪಡಿ ಅಗತ್ಯವಿದೆ"),
+  statusRejectedBody: t(
+    "The office could not accept your details as submitted. Please correct them and send again.",
+    "ಕಚೇರಿಯು ನಿಮ್ಮ ವಿವರಗಳನ್ನು ಸ್ವೀಕರಿಸಲಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ತಿದ್ದಿ ಮತ್ತೆ ಕಳುಹಿಸಿ.",
+  ),
+  reasonGiven: t("Reason", "ಕಾರಣ"),
+  updateDetails: t("Update my details", "ನನ್ನ ವಿವರಗಳನ್ನು ಬದಲಾಯಿಸಿ"),
+  fixAndResubmit: t("Correct and send again", "ತಿದ್ದಿ ಮತ್ತೆ ಕಳುಹಿಸಿ"),
+  editingNotice: t(
+    "You already have an application on file. Sending this will replace it.",
+    "ನಿಮ್ಮ ಅರ್ಜಿ ಈಗಾಗಲೇ ದಾಖಲಾಗಿದೆ. ಇದನ್ನು ಕಳುಹಿಸಿದರೆ ಅದು ಬದಲಾಗುತ್ತದೆ.",
+  ),
   preview: t("Preview", "ಮುನ್ನೋಟ"),
   yourDetails: t("Your details", "ನಿಮ್ಮ ವಿವರಗಳು"),
   livePreview: t("Live preview", "ನೇರ ಮುನ್ನೋಟ"),
