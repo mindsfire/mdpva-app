@@ -28,10 +28,37 @@ describe("generateApplicationNo", () => {
     expect(generateApplicationNo(() => bytes)).toBe("APP-01Z01Z");
   });
 
-  it("does not repeat within a large sample", () => {
+  it("draws from the whole alphabet", () => {
+    // Real entropy check: a generator stuck on a subset of symbols would pass
+    // a uniqueness test at small samples but collide constantly at scale.
+    const chars = new Set(
+      Array.from({ length: 2000 }, () => generateApplicationNo())
+        .join("")
+        .replace(/APP-/g, ""),
+    );
+    expect(chars.size).toBe(32);
+  });
+
+  it("collides at no more than the birthday bound", () => {
+    /*
+     * Deliberately NOT asserting 5000 draws are all unique.
+     *
+     * The keyspace is 32^6 ≈ 1.07e9, so over 5000 draws the expected number of
+     * collisions is n²/2N ≈ 0.012 — meaning an exact-uniqueness assertion fails
+     * on roughly 1 run in 86. It did exactly that in CI, blocking an unrelated
+     * PR.
+     *
+     * Uniqueness was never the generator's job anyway: it's guaranteed by the
+     * `member_applications_no_unique` index plus the retry loop in
+     * `submitApplicationAction`. What matters here is that collisions stay rare
+     * enough for that retry to be a formality.
+     *
+     * P(4 or more collisions) ≈ 7.7e-10, so this threshold is stable.
+     */
+    const n = 5000;
     const seen = new Set<string>();
-    for (let i = 0; i < 5000; i += 1) seen.add(generateApplicationNo());
-    expect(seen.size).toBe(5000);
+    for (let i = 0; i < n; i += 1) seen.add(generateApplicationNo());
+    expect(n - seen.size).toBeLessThanOrEqual(3);
   });
 });
 
