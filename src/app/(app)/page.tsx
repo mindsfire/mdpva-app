@@ -10,8 +10,10 @@ import {
 
 import { hasRole, requireRole } from "@/lib/rbac";
 import { getDashboardStats } from "@/lib/dashboard-query";
+import { getOnboardingProgress } from "@/lib/onboarding/progress-query";
 import { Button } from "@/components/ui/button";
 import { MdpvaLogo } from "@/components/brand/mdpva-logo";
+import { OnboardingProgressCard } from "@/components/applications/progress-card";
 import { MemberAvatar } from "@/components/members/member-avatar";
 import { ProfessionLabel } from "@/components/members/member-badges";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
@@ -61,11 +63,16 @@ export default async function DashboardPage() {
   const stats = await getDashboardStats();
   const year = new Date().getFullYear();
   const isEditor = hasRole(sessionUser.role, "editor");
+  const isAdmin = hasRole(sessionUser.role, "admin");
+  // Admin-only: the progress card is a staff coordination tool, not member data.
+  const progress = isAdmin ? await getOnboardingProgress() : null;
   const professionMax = Math.max(1, ...stats.professions.map((p) => p.count));
 
   return (
     <div className="flex flex-col gap-6">
       <PageBreadcrumb items={[{ label: "Dashboard" }]} />
+      {isAdmin && progress ? <OnboardingProgressCard progress={progress} /> : null}
+
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-center gap-3.5">
           <MdpvaLogo size={52} className="hidden sm:block" priority />

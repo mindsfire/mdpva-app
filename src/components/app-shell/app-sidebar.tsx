@@ -7,6 +7,7 @@ import {
   ContactIcon,
   UsersIcon,
   ArrowDownUpIcon,
+  InboxIcon,
 } from "lucide-react";
 
 import { MdpvaLogo } from "@/components/brand/mdpva-logo";
@@ -31,6 +32,7 @@ const mainNav = [
 ];
 
 const adminNav = [
+  { title: "Applications", href: "/applications", icon: InboxIcon },
   { title: "Users", href: "/users", icon: UsersIcon },
   { title: "Import / Export", href: "/import", icon: ArrowDownUpIcon },
 ];
