@@ -129,14 +129,40 @@ export function PhotoCropper({
   );
 }
 
-/** Draws the selected region to a canvas and returns it as a WebP blob. */
+/**
+ * Longest edge of the uploaded crop.
+ *
+ * The server re-encodes to 600x771 regardless, so uploading the crop at source
+ * resolution is pure waste. A 7:9 crop of a 12MP phone photo is ~2389x3072 and
+ * encodes to ~5.8MB — which both blew past the server action body limit and
+ * meant members on mobile data in Mysuru were uploading megabytes to produce a
+ * ~40KB file.
+ *
+ * 1400 is comfortably above the 771 the server needs, so downscaling here
+ * costs no visible quality.
+ */
+const MAX_UPLOAD_EDGE = 1400;
+
+/**
+ * Draws the selected region to a canvas and returns it as a WebP blob,
+ * downscaled so the upload stays small.
+ */
 async function cropToBlob(src: string, area: Area): Promise<Blob | null> {
   const image = await loadImage(src);
+
+  const scale = Math.min(1, MAX_UPLOAD_EDGE / Math.max(area.width, area.height));
+  const outW = Math.round(area.width * scale);
+  const outH = Math.round(area.height * scale);
+
   const canvas = document.createElement("canvas");
-  canvas.width = area.width;
-  canvas.height = area.height;
+  canvas.width = outW;
+  canvas.height = outH;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
+
+  // Better downsampling than the default on large reductions.
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
 
   ctx.drawImage(
     image,
@@ -146,12 +172,12 @@ async function cropToBlob(src: string, area: Area): Promise<Blob | null> {
     area.height,
     0,
     0,
-    area.width,
-    area.height,
+    outW,
+    outH,
   );
 
   return new Promise((resolve) =>
-    canvas.toBlob((blob) => resolve(blob), "image/webp", 0.92),
+    canvas.toBlob((blob) => resolve(blob), "image/webp", 0.85),
   );
 }
 
