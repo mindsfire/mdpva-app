@@ -2,6 +2,7 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/auth";
+import { hasRole } from "@/lib/rbac";
 import { r2, R2_BUCKET } from "@/lib/r2";
 
 /**
@@ -20,7 +21,18 @@ export async function GET(
 
   const { key } = await params;
   // Only ever serve objects this app itself writes.
-  if (key[0] !== "app" || key[1] !== "members" || key.length !== 3) {
+  if (key[0] !== "app" || key.length !== 3) {
+    return new NextResponse("Not found", { status: 404 });
+  }
+
+  if (key[1] === "pending") {
+    // Unapproved member submissions. Admin-only: these are photos nobody has
+    // vetted yet, and they must never be reachable as if they were a member's
+    // current directory photo.
+    if (!hasRole(session.user.role, "admin")) {
+      return new NextResponse("Not found", { status: 404 });
+    }
+  } else if (key[1] !== "members") {
     return new NextResponse("Not found", { status: 404 });
   }
 

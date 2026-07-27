@@ -7,8 +7,10 @@ import {
   ContactIcon,
   UsersIcon,
   ArrowDownUpIcon,
+  InboxIcon,
 } from "lucide-react";
 
+import { MdpvaLogo } from "@/components/brand/mdpva-logo";
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +32,7 @@ const mainNav = [
 ];
 
 const adminNav = [
+  { title: "Applications", href: "/applications", icon: InboxIcon },
   { title: "Users", href: "/users", icon: UsersIcon },
   { title: "Import / Export", href: "/import", icon: ArrowDownUpIcon },
 ];
@@ -63,9 +66,7 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
           onClick={() => setOpenMobile(false)}
           className="flex h-10 items-center gap-2 rounded-md px-2"
         >
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-mdpva-gold font-serif text-[11px] font-semibold text-mdpva-accent dark:text-mdpva-gold">
-            M
-          </span>
+          <MdpvaLogo size={28} />
           <span className="truncate font-serif text-lg font-medium tracking-tight group-data-[collapsible=icon]:hidden">
             MDPVA
           </span>

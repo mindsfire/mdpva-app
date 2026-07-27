@@ -1,6 +1,16 @@
 import sharp from "sharp";
 
-export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+import {
+  MAX_UPLOAD_BYTES,
+  PASSPORT_HEIGHT,
+  PASSPORT_WIDTH,
+} from "@/lib/photo-constants";
+
+// Re-exported so existing server-side callers keep their import path; client
+// components must import from `@/lib/photo-constants` directly, since this
+// module pulls in `sharp`.
+export { MAX_UPLOAD_BYTES };
+
 const MAX_EDGE = 1200;
 const WEBP_QUALITY = 82;
 
@@ -33,6 +43,35 @@ export interface ProcessedPhoto {
   webp: Buffer;
   width: number;
   height: number;
+}
+
+const PASSPORT_QUALITY = 80;
+
+/**
+ * Crops and re-encodes an uploaded image to exact passport geometry.
+ *
+ * Runs *regardless* of whether the browser already cropped. The client-side
+ * cropper is a convenience for the member, never a trust boundary — a crafted
+ * request can post any bytes it likes, so the server decides the final
+ * geometry.
+ *
+ * `fit: "cover"` guarantees exact 7:9 output whatever arrives.
+ * `position: "attention"` makes the fallback crop (for an image that arrives
+ * uncropped) centre on the most salient region rather than the geometric
+ * middle — meaningfully better for faces.
+ */
+export async function processPassportPhoto(buf: Buffer): Promise<ProcessedPhoto> {
+  const pipeline = sharp(buf, { failOn: "error" })
+    .rotate() // apply EXIF orientation, then strip it
+    .resize(PASSPORT_WIDTH, PASSPORT_HEIGHT, {
+      fit: "cover",
+      position: "attention",
+      withoutEnlargement: false,
+    })
+    .webp({ quality: PASSPORT_QUALITY });
+
+  const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+  return { webp: data, width: info.width, height: info.height };
 }
 
 /**

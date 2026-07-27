@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { MdpvaLogo } from "@/components/brand/mdpva-logo";
 
 import hero1 from "@/assets/login/hero-1.jpg";
 import hero2 from "@/assets/login/hero-2.jpg";
@@ -28,6 +29,7 @@ export default async function LoginPage() {
       <div className="relative z-10 flex flex-1 items-end justify-center p-6 md:order-1 md:flex md:w-[480px] md:flex-none md:items-center md:justify-start md:bg-mdpva-paper md:p-12">
         <div className="w-full max-w-sm rounded-2xl bg-mdpva-white/95 p-6 shadow-xl backdrop-blur-sm md:max-w-none md:rounded-none md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none dark:bg-card/95 md:dark:bg-transparent">
           <div className="mb-8 flex flex-col gap-1.5">
+            <MdpvaLogo size={56} className="mb-2" priority />
             <span className="text-xs font-medium uppercase tracking-[0.2em] text-mdpva-accent">
               MDPVA
             </span>

@@ -7,7 +7,9 @@ function validInput(overrides: Partial<Record<string, unknown>> = {}) {
     firstName: "Asha",
     lastName: "Rao",
     email: "asha@example.com",
-    phone: "9876543210",
+    // Deliberately not 9876543210 — that descending run is rejected as ledger
+    // placeholder junk (see `normalizePhone`), which is the intended behaviour.
+    phone: "9845011234",
     profession: "photographer",
     businessName: "Asha Studios",
     addressLine1: "12 MG Road",
