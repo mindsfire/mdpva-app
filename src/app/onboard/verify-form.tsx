@@ -20,9 +20,9 @@ export function VerifyForm() {
   const [pending, setPending] = React.useState(false);
   const [captchaToken, setCaptchaToken] = React.useState<string | null>(null);
   const captcha = React.useRef<TurnstileHandle>(null);
-  const [error, setError] = React.useState<"no_match" | "rate_limited" | null>(
-    null,
-  );
+  const [error, setError] = React.useState<
+    "no_match" | "rate_limited" | "captcha_failed" | null
+  >(null);
   const [confirming, setConfirming] = React.useState<{
     displayName: string;
     token: string;
@@ -145,9 +145,17 @@ export function VerifyForm() {
           role="alert"
           className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
         >
-          {error === "rate_limited" ? S.rateLimited.en : S.verifyFailed.en}
+          {error === "rate_limited"
+            ? S.rateLimited.en
+            : error === "captcha_failed"
+              ? S.captchaFailed.en
+              : S.verifyFailed.en}
           <span className="font-kn mt-1.5 block">
-            {error === "rate_limited" ? S.rateLimited.kn : S.verifyFailed.kn}
+            {error === "rate_limited"
+              ? S.rateLimited.kn
+              : error === "captcha_failed"
+                ? S.captchaFailed.kn
+                : S.verifyFailed.kn}
           </span>
         </p>
       ) : null}

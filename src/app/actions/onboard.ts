@@ -28,7 +28,7 @@ export interface VerifyState {
   /** Exchanged for a real session by `confirmMemberAction`. */
   pendingToken?: string;
   /** One of the generic i18n keys; never says which half was wrong. */
-  error?: "no_match" | "rate_limited";
+  error?: "no_match" | "rate_limited" | "captcha_failed";
 }
 
 /**
@@ -62,7 +62,16 @@ export async function verifyMemberAction(
   // lookup so a bot never reaches the database.
   const captcha = await verifyTurnstile(captchaToken, await clientIp());
   if (!captcha.ok) {
-    return { ok: false, error: "no_match" };
+    /*
+     * A distinct error, not the generic `no_match`.
+     *
+     * Hiding that a challenge exists would buy nothing — the widget is
+     * visibly on the page — while costing a great deal: a member whose
+     * challenge failed on a flaky connection would be told their membership
+     * number and phone are wrong, conclude their record is broken, and ring
+     * the office. That is exactly the trip this feature exists to save.
+     */
+    return { ok: false, error: "captcha_failed" };
   }
 
   const ledgerId = normalizeLedgerId(rawLedgerId);
