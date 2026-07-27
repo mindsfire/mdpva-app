@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { MdpvaLogo } from "@/components/brand/mdpva-logo";
+import { MindsfireCredit } from "@/components/brand/mindsfire-credit";
 import {
   Sidebar,
   SidebarContent,
@@ -91,9 +92,12 @@ export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
       </SidebarContent>
 
       <SidebarFooter>
-        <p className="px-2 pb-1 text-[11px] leading-snug text-muted-foreground group-data-[collapsible=icon]:hidden">
-          Members portal · 2025–27 term
-        </p>
+        <div className="flex flex-col gap-1.5 px-2 pb-1 group-data-[collapsible=icon]:hidden">
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            Members portal · 2025–27 term
+          </p>
+          <MindsfireCredit compact />
+        </div>
       </SidebarFooter>
 
       <SidebarResizer />

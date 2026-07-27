@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Bi } from "@/components/onboard/bilingual";
 import { useRouter } from "next/navigation";
 
 import { endOnboardSessionAction } from "@/app/actions/onboard";
@@ -298,7 +299,7 @@ export function OnboardForm({
             router.push("/onboard");
           }}
         >
-          {S.done.en} · <span className="font-kn">{S.done.kn}</span>
+          <Bi s={S.done} sep="·" />
         </Button>
       </main>
     );
@@ -359,7 +360,7 @@ export function OnboardForm({
               }}
               className="cursor-pointer underline underline-offset-2 hover:text-foreground"
             >
-              {S.notYou.en} · <span className="font-kn">{S.notYou.kn}</span>
+              <Bi s={S.notYou} sep="·" />
             </button>
           </p>
         ) : null}
