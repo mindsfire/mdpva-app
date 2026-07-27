@@ -6,12 +6,18 @@ import { cn } from "@/lib/utils";
 /**
  * Build credit for Mindsfire.
  *
+ * The asset is the bare mark: the source favicon's cream rounded-square plate
+ * has been dropped and the viewBox tightened to the artwork's measured bounds
+ * (362x157 within the original 512 canvas). A container plate would read as a
+ * second, competing badge next to MDPVA's own seal.
+ *
  * Uses the mark in its own colours rather than an outlined or monochrome
- * treatment. The logo is three heavily-overlapping stacked bars whose identity
- * *is* the layering — outlining it merges the strokes into an indistinct glyph
- * at credit size (~16px), and flattening it to one colour merges the shapes for
- * the same reason. The colour mark stays legible small, which a credit line
- * needs more than it needs to be visually quiet.
+ * treatment. It's three heavily-overlapping stacked bars whose identity *is*
+ * the layering — outlining merges the strokes into an indistinct glyph at this
+ * size, and flattening to one colour merges the shapes for the same reason.
+ *
+ * The source's drop-shadow filter is also stripped: at 16px it produced a
+ * pixel-identical render, so it was pure cost.
  *
  * "Powered by" rather than "Developed by": Mindsfire hosts and maintains this
  * app, so it describes an ongoing relationship rather than a one-time handover.
@@ -44,12 +50,14 @@ export function MindsfireCredit({
       )}
     >
       <span>Powered by</span>
+      {/* 32x14 keeps the mark's true 2.3:1 aspect — it's a wide stacked-bar
+          mark, so a square box would letterbox or distort it. */}
       <Image
         src={logo}
         alt=""
-        width={16}
-        height={16}
-        className="shrink-0 rounded-[3px] opacity-80 transition-opacity group-hover:opacity-100"
+        width={32}
+        height={14}
+        className="shrink-0 opacity-85 transition-opacity group-hover:opacity-100"
       />
       <span className="font-medium">
         {compact ? "Mindsfire" : "Mindsfire Private Limited"}
