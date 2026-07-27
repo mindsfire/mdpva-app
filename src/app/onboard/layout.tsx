@@ -1,4 +1,5 @@
 import { MdpvaLogo } from "@/components/brand/mdpva-logo";
+import { MindsfireCredit } from "@/components/brand/mindsfire-credit";
 import { ORG } from "@/lib/onboarding/i18n";
 
 /**
@@ -15,7 +16,7 @@ export default function OnboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="force-light min-h-svh bg-mdpva-paper">
+    <div className="force-light flex min-h-svh flex-col bg-mdpva-paper">
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-mdpva-border bg-card px-6 py-3">
         <MdpvaLogo size={30} />
         <span className="font-serif text-lg tracking-wide text-foreground">MDPVA</span>
@@ -24,6 +25,10 @@ export default function OnboardLayout({
         </span>
       </header>
       {children}
+
+      <footer className="mt-auto flex justify-center border-t border-mdpva-border px-6 py-5">
+        <MindsfireCredit />
+      </footer>
     </div>
   );
 }
