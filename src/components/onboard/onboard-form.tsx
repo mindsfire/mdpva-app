@@ -1,6 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+
+import { endOnboardSessionAction } from "@/app/actions/onboard";
 
 import {
   ApplicationSheet,
@@ -73,10 +76,13 @@ function Group({ s, children }: { s: Bilingual; children: React.ReactNode }) {
 export function OnboardForm({
   membershipNo,
   prefill,
+  verifiedName,
 }: {
   membershipNo: string;
   prefill: Partial<Values>;
+  verifiedName?: string;
 }) {
+  const router = useRouter();
   const draftKey = `${DRAFT_KEY_PREFIX}${membershipNo}`;
   const [values, setValues] = React.useState<Values>(() =>
     emptyValues(membershipNo, prefill),
@@ -185,6 +191,29 @@ export function OnboardForm({
             {showPreview ? "Hide" : S.preview.en}
           </Button>
         </div>
+
+        {verifiedName ? (
+          <p className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+            <span>
+              Filling in as{" "}
+              <b className="font-medium text-foreground">{verifiedName}</b> ·
+              no. {membershipNo}
+            </span>
+            {/* Essential on a shared phone: the cookie is httpOnly, so this is
+                the only way to hand the device back safely. */}
+            <button
+              type="button"
+              onClick={async () => {
+                window.localStorage.removeItem(draftKey);
+                await endOnboardSessionAction();
+                router.push("/onboard");
+              }}
+              className="cursor-pointer underline underline-offset-2 hover:text-foreground"
+            >
+              {S.notYou.en} · <span className="font-kn">{S.notYou.kn}</span>
+            </button>
+          </p>
+        ) : null}
 
         {restored ? (
           <p className="mb-5 flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2.5 text-xs text-muted-foreground">

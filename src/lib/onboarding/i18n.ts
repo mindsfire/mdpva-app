@@ -19,25 +19,20 @@ export interface Bilingual {
 const t = (en: string, kn: string): Bilingual => ({ en, kn });
 
 /**
- * ⚠️ Taken from the official seal (src/assets/brand/mdpva-logo.png), which
- * differs from what this file previously assumed in two ways worth knowing:
+ * The seal (src/assets/brand/mdpva-logo.png) is ~25 years old and spells the
+ * city "Mysore"; "Mysuru" is the corrected official name and is what we use
+ * everywhere in text. The logo image keeps its historical spelling.
  *
- * 1. The seal reads "MYSORE", not "Mysuru" — the older spelling, as
- *    registered. A registered society's name is a legal string; it should be
- *    reproduced on the form exactly as registered even though the city is now
- *    officially Mysuru. `place` below still uses the modern spelling, since
- *    that's an address rather than part of the name.
- * 2. The seal's Kannada is a *transliteration* of the English
- *    ("ಫೋಟೋಗ್ರಾಫರ್ ಅಂಡ್ ವೀಡಿಯೋಗ್ರಾಫರ್"), not a translation. An earlier draft
- *    of this file used the translated ಛಾಯಾಗ್ರಾಹಕರ, which does not match the
- *    registered name.
+ * The seal's Kannada is a *transliteration* of the English
+ * ("ಫೋಟೋಗ್ರಾಫರ್ ಅಂಡ್ ವೀಡಿಯೋಗ್ರಾಫರ್"), not a translation — an earlier draft of
+ * this file used the translated ಛಾಯಾಗ್ರಾಹಕರ, which doesn't match the
+ * registered name. `nameKn` follows the seal.
  *
- * `nameKn` below is my reading of the seal and MUST be confirmed against
- * MDPVA's registration document before rollout — a wrong association name on
- * a form that members sign is not a cosmetic error.
+ * ⚠️ Still worth one native-speaker check before rollout: this is my reading
+ * of a circular seal, and it's the association's name on a form members sign.
  */
 export const ORG = {
-  nameEn: "Mysore District Photographers & Videographers Association (R.)",
+  nameEn: "Mysuru District Photographers & Videographers Association (R.)",
   nameKn: "ಮೈಸೂರು ಜಿಲ್ಲಾ ಫೋಟೋಗ್ರಾಫರ್ ಅಂಡ್ ವೀಡಿಯೋಗ್ರಾಫರ್ ಅಸೋಸಿಯೇಷನ್ (ರಿ)",
   place: "Mysuru, Karnataka",
 } as const;
@@ -111,6 +106,7 @@ export const STRINGS = {
     "ಈ ಸಾಧನದಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ. ಪುಟ ಮುಚ್ಚಿ ನಂತರ ಮರಳಬಹುದು.",
   ),
   clearDraft: t("Clear saved draft", "ಉಳಿಸಿದ ಕರಡು ಅಳಿಸಿ"),
+  notYou: t("Not you? Start over", "ನೀವಲ್ಲವೇ? ಮತ್ತೆ ಪ್ರಾರಂಭಿಸಿ"),
   submit: t("Submit for approval", "ಅನುಮೋದನೆಗೆ ಸಲ್ಲಿಸಿ"),
   preview: t("Preview", "ಮುನ್ನೋಟ"),
   yourDetails: t("Your details", "ನಿಮ್ಮ ವಿವರಗಳು"),
