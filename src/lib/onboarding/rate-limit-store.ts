@@ -6,29 +6,37 @@ import type { RateLimitStore } from "@/lib/rate-limit";
 
 /**
  * `RateLimitStore` over `application_attempts`, reusing the sliding-window
- * logic already proven for login.
+ * logic proven for login. The identifier here is the ledger number.
  *
- * The store interface names its first bucket "email"; here that slot carries
- * the ledger id. Rather than widen the shared interface for one caller, the
- * mapping is done at this boundary.
+ * Keyed on (ledger number + IP) for blocking, for the same reason as login:
+ * counting across all IPs would let anyone lock a specific member out of
+ * onboarding with five wrong guesses at their card number.
  */
 export const applicationRateLimitStore: RateLimitStore = {
-  async countRecentFailures(field, value, since) {
-    const column =
-      field === "email" ? applicationAttempts.legacyId : applicationAttempts.ip;
+  async countRecentFailures(scope, identifier, ip, since) {
+    const where =
+      scope === "identifier+ip"
+        ? and(
+            eq(applicationAttempts.legacyId, identifier),
+            eq(applicationAttempts.ip, ip),
+          )
+        : scope === "ip"
+          ? eq(applicationAttempts.ip, ip)
+          : eq(applicationAttempts.legacyId, identifier);
+
     const [row] = await db
       .select({ count: sql<number>`count(*)` })
       .from(applicationAttempts)
       .where(
         and(
-          eq(column, value),
+          where,
           eq(applicationAttempts.success, false),
           gte(applicationAttempts.createdAt, since),
         ),
       );
     return Number(row?.count ?? 0);
   },
-  async recordAttempt(legacyId, ip, success) {
-    await db.insert(applicationAttempts).values({ legacyId, ip, success });
+  async recordAttempt(identifier, ip, success) {
+    await db.insert(applicationAttempts).values({ legacyId: identifier, ip, success });
   },
 };
