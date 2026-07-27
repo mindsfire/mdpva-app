@@ -39,8 +39,41 @@ Set these in `.env.local` (never commit real values):
 | `R2_SECRET_ACCESS_KEY` | yes | R2 API token secret (shown once at creation). |
 | `R2_ENDPOINT` | yes | The bucket's S3 API endpoint, e.g. `https://<account-id>.r2.cloudflarestorage.com`. |
 | `R2_BUCKET` | yes | R2 bucket name. This app writes only under the `app/members/` prefix, so the bucket can be shared with other projects. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | no | Turnstile site key (public). Renders the widget. Absent → no widget. |
+| `TURNSTILE_SECRET_KEY` | no | Turnstile secret key. Enforces the check. Absent → verification is skipped. |
 
 See `.env.example` for the same table inline.
+
+### Bot protection (Turnstile)
+
+Optional, and off until both keys are set. It guards the two endpoints where
+guessing has value: admin login, and the onboarding **verify** step. Not
+submission — that already requires a verified session.
+
+Turnstile works on Vercel; it is not tied to Cloudflare hosting.
+
+1. Cloudflare dashboard → **Turnstile** → **Add site**.
+2. Hostnames: `app.mdpva.org`, plus `localhost` if you want it in local dev.
+3. Widget mode: **Managed** — invisible for almost all real users, which
+   matters for an audience on older phones.
+4. Copy both keys into Vercel → Project → Settings → Environment Variables.
+5. **Redeploy.** `NEXT_PUBLIC_*` is inlined at build time, so an env change
+   alone will not surface the widget.
+
+#### Turning it off
+
+The two keys switch different things, which matters in an incident:
+
+| Action | Effect | Redeploy needed? |
+| --- | --- | --- |
+| Unset `TURNSTILE_SECRET_KEY` | **Stops blocking immediately.** Widget still shows but is no longer enforced. | No — read at runtime |
+| Also unset `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Widget disappears entirely | Yes — baked in at build |
+
+So: to unblock members fast, remove the **secret**. Remove the public key later
+if you also want the widget gone.
+
+Verification **fails closed** — if Cloudflare is unreachable, logins are
+refused rather than waved through. Removing the secret key is the escape hatch.
 
 ## Member photos
 
