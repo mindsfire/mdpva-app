@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -37,11 +38,42 @@ export default async function LoginPage() {
               Members Portal
             </h1>
             <p className="text-sm text-muted-foreground">
-              Sign in to manage members and dues.
+              For MDPVA office staff.
             </p>
           </div>
 
           <LoginForm />
+
+          {/*
+            Members have no accounts, but they will land here: the onboarding
+            link circulates on WhatsApp, and people return to the bare domain
+            later. Without a signpost they try to sign in with a phone number,
+            fail, and ring the office — so this redirects them to the flow they
+            actually want, before they touch the form above.
+          */}
+          <div className="mt-7 border-t border-mdpva-border pt-5">
+            <p className="text-sm text-muted-foreground">
+              Are you an MDPVA member updating your own details?
+            </p>
+            <p className="font-kn mt-1 text-sm text-muted-foreground">
+              ನಿಮ್ಮ ಸ್ವಂತ ವಿವರಗಳನ್ನು ನವೀಕರಿಸುತ್ತಿರುವ ಸದಸ್ಯರೇ?
+            </p>
+            {/*
+              `inline`, not `inline-flex`: with flex the English text node and
+              the Kannada span become two flex items, and flex aligns items by
+              box rather than baseline — Archivo and Noto Sans Kannada sit at
+              different heights inside an identical box, so the Kannada floats.
+              Plain inline content shares one baseline. Same issue as the
+              bilingual buttons; see components/onboard/bilingual.tsx.
+            */}
+            <Link
+              href="/onboard"
+              className="mt-2.5 inline text-sm font-medium text-mdpva-accent underline underline-offset-4 hover:text-mdpva-accent-hover"
+            >
+              Go to the member details form{" "}
+              <span className="font-kn">· ಸದಸ್ಯರ ನಮೂನೆಗೆ ಹೋಗಿ</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -4,7 +4,10 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { CredentialsSignin } from "next-auth";
 
+import { headers } from "next/headers";
+
 import { auth, signIn } from "@/auth";
+import { verifyTurnstile } from "@/lib/turnstile";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { computePasswordChange } from "@/lib/password-change";
@@ -73,6 +76,14 @@ export interface LoginState {
   error?: string;
 }
 
+/** Same best-effort proxy-header read as `src/auth.ts`. */
+async function clientIp(): Promise<string> {
+  const h = await headers();
+  const fwd = h.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0]!.trim();
+  return h.get("x-real-ip")?.trim() ?? "unknown";
+}
+
 /**
  * Called from the login form. With `redirect: false`, Auth.js v5 doesn't
  * throw on a credentials failure — it returns a redirect URL carrying
@@ -81,7 +92,15 @@ export interface LoginState {
 export async function loginAction(
   email: string,
   password: string,
+  captchaToken?: string | null,
 ): Promise<LoginState> {
+  // Checked before any credential work, so a bot never reaches the password
+  // comparison or contributes to the rate-limit counters.
+  const captcha = await verifyTurnstile(captchaToken, await clientIp());
+  if (!captcha.ok) {
+    return { error: "Please complete the verification and try again." };
+  }
+
   try {
     const result = await signIn("credentials", {
       email,

@@ -7,6 +7,10 @@ import { useRouter } from "next/navigation";
 import { confirmMemberAction, verifyMemberAction } from "@/app/actions/onboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  TurnstileWidget,
+  type TurnstileHandle,
+} from "@/components/ui/turnstile-widget";
 import { STRINGS as S } from "@/lib/onboarding/i18n";
 
 export function VerifyForm() {
@@ -14,6 +18,8 @@ export function VerifyForm() {
   const [ledgerId, setLedgerId] = React.useState("");
   const [phone, setPhone] = React.useState("");
   const [pending, setPending] = React.useState(false);
+  const [captchaToken, setCaptchaToken] = React.useState<string | null>(null);
+  const captcha = React.useRef<TurnstileHandle>(null);
   const [error, setError] = React.useState<"no_match" | "rate_limited" | null>(
     null,
   );
@@ -27,9 +33,12 @@ export function VerifyForm() {
     setError(null);
     setPending(true);
     try {
-      const result = await verifyMemberAction(ledgerId, phone);
+      const result = await verifyMemberAction(ledgerId, phone, captchaToken);
       if (!result.ok || !result.pendingToken) {
         setError(result.error ?? "no_match");
+        // Tokens are single-use — reset so a genuine retry isn't rejected for
+        // an invisible reason.
+        captcha.current?.reset();
         return;
       }
       // No session exists yet — the member confirms the name is theirs first.
@@ -142,6 +151,8 @@ export function VerifyForm() {
           </span>
         </p>
       ) : null}
+
+      <TurnstileWidget ref={captcha} onToken={setCaptchaToken} />
 
       <Button type="submit" className="mt-1 h-10 w-full" disabled={pending}>
         {pending ? "…" : <Bi s={S.continue} sep="·" />}

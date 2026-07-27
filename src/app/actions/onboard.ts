@@ -18,6 +18,7 @@ import {
   readPendingToken,
 } from "@/lib/onboarding/session";
 import { decideVerification, normalizeLedgerId } from "@/lib/onboarding/verify";
+import { verifyTurnstile } from "@/lib/turnstile";
 import { normalizePhone } from "@/lib/validation/phone";
 
 export interface VerifyState {
@@ -53,7 +54,17 @@ async function clientIp(): Promise<string> {
 export async function verifyMemberAction(
   rawLedgerId: string,
   rawPhone: string,
+  captchaToken?: string | null,
 ): Promise<VerifyState> {
+  // Guards the enumeration surface: rate limiting alone can only slow a
+  // distributed attacker (see the note in `@/lib/rate-limit`), and this is the
+  // one public endpoint where guessing has any value. Checked before the
+  // lookup so a bot never reaches the database.
+  const captcha = await verifyTurnstile(captchaToken, await clientIp());
+  if (!captcha.ok) {
+    return { ok: false, error: "no_match" };
+  }
+
   const ledgerId = normalizeLedgerId(rawLedgerId);
   const phone = normalizePhone(rawPhone);
   const ip = await clientIp();

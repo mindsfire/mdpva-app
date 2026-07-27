@@ -5,28 +5,39 @@ import { loginAttempts } from "@/db/schema";
 
 import type { RateLimitStore } from "@/lib/rate-limit";
 
-/** Drizzle-backed `RateLimitStore` — the injectable dependency in production. */
+/** Drizzle-backed `RateLimitStore` for admin login. */
 export const dbRateLimitStore: RateLimitStore = {
-  async countRecentFailures(field, value, since) {
-    const column = field === "email" ? loginAttempts.email : loginAttempts.ip;
-    const normalized = field === "email" ? value.toLowerCase() : value;
+  async countRecentFailures(scope, identifier, ip, since) {
+    const email = identifier.toLowerCase();
+
+    // `identifier+ip` is the blocking scope, keyed on the pair so a third
+    // party cannot lock a real admin out of their own account. Bare
+    // `identifier` is observability only — never used to block.
+    const where =
+      scope === "identifier+ip"
+        ? and(
+            sql`lower(${loginAttempts.email}) = ${email}`,
+            eq(loginAttempts.ip, ip),
+          )
+        : scope === "ip"
+          ? eq(loginAttempts.ip, ip)
+          : sql`lower(${loginAttempts.email}) = ${email}`;
+
     const [row] = await db
       .select({ count: sql<number>`count(*)` })
       .from(loginAttempts)
       .where(
         and(
-          field === "email"
-            ? sql`lower(${column}) = ${normalized}`
-            : eq(column, normalized),
+          where,
           eq(loginAttempts.success, false),
           gte(loginAttempts.createdAt, since),
         ),
       );
     return Number(row?.count ?? 0);
   },
-  async recordAttempt(email, ip, success) {
+  async recordAttempt(identifier, ip, success) {
     await db.insert(loginAttempts).values({
-      email: email ? email.toLowerCase() : null,
+      email: identifier ? identifier.toLowerCase() : null,
       ip,
       success,
     });
