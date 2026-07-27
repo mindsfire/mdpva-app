@@ -18,6 +18,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  TurnstileWidget,
+  type TurnstileHandle,
+} from "@/components/ui/turnstile-widget";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required.").email("Enter a valid email address."),
@@ -31,6 +35,8 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const [formError, setFormError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(false);
+  const [captchaToken, setCaptchaToken] = React.useState<string | null>(null);
+  const captcha = React.useRef<TurnstileHandle>(null);
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -41,9 +47,12 @@ export function LoginForm() {
     setFormError(null);
     setPending(true);
     try {
-      const result = await loginAction(values.email, values.password);
+      const result = await loginAction(values.email, values.password, captchaToken);
       if (result.error) {
         setFormError(result.error);
+        // A Turnstile token is single-use; without this reset the member's
+        // next attempt fails for a reason they cannot see.
+        captcha.current?.reset();
         return;
       }
       const callbackUrl = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
@@ -106,6 +115,8 @@ export function LoginForm() {
             {formError}
           </p>
         ) : null}
+
+        <TurnstileWidget ref={captcha} onToken={setCaptchaToken} className="mt-1" />
 
         <Button type="submit" className="mt-1 h-10 w-full" disabled={pending}>
           {pending ? "Signing in…" : "Sign in"}

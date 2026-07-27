@@ -58,11 +58,19 @@ export default async function LoginPage() {
             <p className="font-kn mt-1 text-sm text-muted-foreground">
               ನಿಮ್ಮ ಸ್ವಂತ ವಿವರಗಳನ್ನು ನವೀಕರಿಸುತ್ತಿರುವ ಸದಸ್ಯರೇ?
             </p>
+            {/*
+              `inline`, not `inline-flex`: with flex the English text node and
+              the Kannada span become two flex items, and flex aligns items by
+              box rather than baseline — Archivo and Noto Sans Kannada sit at
+              different heights inside an identical box, so the Kannada floats.
+              Plain inline content shares one baseline. Same issue as the
+              bilingual buttons; see components/onboard/bilingual.tsx.
+            */}
             <Link
               href="/onboard"
-              className="mt-2.5 inline-flex items-center gap-1.5 text-sm font-medium text-mdpva-accent underline underline-offset-4 hover:text-mdpva-accent-hover"
+              className="mt-2.5 inline text-sm font-medium text-mdpva-accent underline underline-offset-4 hover:text-mdpva-accent-hover"
             >
-              Go to the member details form
+              Go to the member details form{" "}
               <span className="font-kn">· ಸದಸ್ಯರ ನಮೂನೆಗೆ ಹೋಗಿ</span>
             </Link>
           </div>
