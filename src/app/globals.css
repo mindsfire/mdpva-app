@@ -8,6 +8,11 @@
   /* Fonts (mdpva-site) */
   --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Newsreader", ui-serif, Georgia, serif;
+  /* Kannada, for the public onboarding screens. Falls back through the faces
+     shipped with Android/Windows/macOS; a bundled Noto Sans Kannada should
+     replace this before the public rollout so rendering is consistent. */
+  --font-kn: "Noto Sans Kannada", "Noto Serif Kannada", "Tunga", "Kedage",
+    "Nirmala UI", sans-serif;
 
   /* Core palette (from mdpva-site Claude Design export) */
   --color-mdpva-paper: #fafaf8;

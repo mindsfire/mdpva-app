@@ -5,13 +5,30 @@ import { auth } from "@/auth";
 // Next.js 16 renamed the `middleware.ts` file convention to `proxy.ts`
 // (the exported function name is unconstrained for a default export) —
 // see node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md.
-const PUBLIC_PATHS = ["/login"];
+/**
+ * Reachable without a session.
+ *
+ * `/onboard` is the member self-service form — members arrive from a shared
+ * link with no account at all, so it must never redirect to /login.
+ */
+const PUBLIC_PATHS = ["/login", "/onboard"];
+
+/**
+ * Public paths that additionally bounce *authenticated* users away.
+ *
+ * Only /login belongs here. /onboard stays reachable while signed in, so an
+ * admin can open the form to walk a member through it — bouncing them to the
+ * dashboard would make the form impossible for staff to look at.
+ */
+const SIGNED_IN_REDIRECT_PATHS = ["/login"];
+
+function matchesPath(pathname: string, paths: string[]): boolean {
+  return paths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-  const isPublicPath = PUBLIC_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
+  const isPublicPath = matchesPath(pathname, PUBLIC_PATHS);
   const user = req.auth?.user;
 
   if (!user) {
@@ -22,11 +39,17 @@ export default auth((req) => {
   }
 
   // Authenticated users shouldn't see the login page again.
-  if (isPublicPath) {
+  if (matchesPath(pathname, SIGNED_IN_REDIRECT_PATHS)) {
     return NextResponse.redirect(new URL("/", req.nextUrl));
   }
 
-  if (user.mustChangePassword && pathname !== "/change-password") {
+  // The forced password change must not trap a signed-in admin who is looking
+  // at the public onboarding form.
+  if (
+    user.mustChangePassword &&
+    pathname !== "/change-password" &&
+    !isPublicPath
+  ) {
     return NextResponse.redirect(new URL("/change-password", req.nextUrl));
   }
 
