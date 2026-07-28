@@ -652,9 +652,17 @@ export function OnboardForm({
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent
           showCloseButton={false}
-          className="max-h-[88svh] w-[calc(100%-1.5rem)] max-w-[560px] gap-0 overflow-hidden p-0 sm:max-w-[560px]"
+          /*
+           * `flex flex-col` overrides DialogContent's default `grid`.
+           *
+           * Under grid the scroll area's row sizes to content, so it grew to
+           * its full height (1034px inside a 587px dialog), `scrollHeight`
+           * equalled `clientHeight`, and the overflow was silently clipped by
+           * `overflow-hidden` — the preview simply could not be scrolled.
+           */
+          className="flex max-h-[88svh] w-[calc(100%-1.5rem)] max-w-[560px] flex-col gap-0 overflow-hidden p-0 sm:max-w-[560px]"
         >
-          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2.5">
             <DialogTitle className="text-sm font-medium">
               {S.livePreview.en}{" "}
               <span className="font-kn text-muted-foreground">
@@ -669,8 +677,13 @@ export function OnboardForm({
               <XIcon className="size-4" />
             </DialogClose>
           </div>
-          {/* Scrolls inside the dialog; the sheet is taller than any phone. */}
-          <div className="overflow-y-auto bg-[#eceae4] p-3 dark:bg-[#0d0d0c]">
+          {/*
+            `min-h-0` is load-bearing: a flex item will not shrink below its
+            content size without it, which reproduces the same clipped,
+            unscrollable box. `overscroll-contain` stops a scroll gesture that
+            reaches the end from chaining to the page behind the dialog.
+          */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-[#eceae4] p-3 dark:bg-[#0d0d0c]">
             <ApplicationSheet values={sheet} />
           </div>
         </DialogContent>
