@@ -179,15 +179,25 @@ No other caller reads these fields, and no schema migration is required —
 - `clampPeekWidth` with a dynamic maximum: clamps to `container − 480` and
   never returns less than `PEEK_MIN_WIDTH`. Includes the boundary case at
   exactly 1024px, where the two minimums leave 544px for the drawer.
-- `getMemberById` returns the three new fields, and `updatedByName` is null
-  when `updated_by` is null.
+- `getMemberById`'s three new fields are covered by the type checker and by
+  manual verification against real data; there is no database-backed test
+  harness in this project, and adding one is out of scope here.
 
-**Render**
+**Field composition**
 
-- The drawer renders every field listed in §6, including empty ones as `—`.
-  This is the regression that would otherwise creep back, so it is asserted
-  field by field rather than by snapshot.
-- Notes render when empty.
+`vitest.config.ts` runs `environment: "node"` with no jsdom or testing-library,
+so component rendering cannot be asserted without adding dependencies. Rather
+than add them, the section/field list is extracted into a pure function
+(`buildMemberSections`) that the component maps over — the same pattern the
+codebase already uses for `buildMembersWhere`, which was extracted from
+`searchMembers` to be testable without a live database.
+
+- `buildMemberSections` returns every field in §6 for a fully populated member.
+- It returns the same field count for a member whose optional values are all
+  null — this is the "nothing silently disappears" regression, and it is the
+  one worth locking down.
+- Empty values surface as `null` for the component to render as `—`.
+- Address line 1 and line 2 appear as two separate entries.
 
 **Browser** — required, per the project's standing rule that both platforms are
 verified:
