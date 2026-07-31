@@ -191,7 +191,7 @@ export async function bulkSoftDeleteMembers(
 export interface DuplicateMatch {
   id: string;
   firstName: string;
-  lastName: string;
+  lastName: string | null;
   memberId: string;
   matchedOn: "email" | "phone" | "legacyId";
 }

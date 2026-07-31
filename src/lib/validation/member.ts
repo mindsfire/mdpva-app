@@ -82,13 +82,39 @@ function personName(label: string) {
 }
 
 /**
+ * A name part that may legitimately be absent.
+ *
+ * Kannada names frequently have no separable surname — 484 of the 1360 legacy
+ * ledger members are recorded as a single name ("SHIVAKUMAR") or as initials
+ * carrying the family part up front ("P.V. ANILKUMAR"). Requiring a last name
+ * would mean inventing one for 37% of the membership, so it is optional and
+ * normalises to `null` rather than "".
+ */
+function optionalPersonName(label: string) {
+  return z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => {
+      const cleaned = sanitizeName(v ?? "");
+      return cleaned.length > 0 ? cleaned : null;
+    })
+    .refine((v) => v === null || graphemeLength(v) <= MAX_LENGTHS.name, {
+      message: `${label} must be ${MAX_LENGTHS.name} characters or fewer`,
+    })
+    .refine((v) => v === null || isValidPersonName(v), {
+      message: `${label} may only contain letters, spaces and . ' -`,
+    });
+}
+
+/**
  * Shared client/server schema for the editable member fields (spec §4).
  * `member_id` is server-generated (see `generateMemberId`) and intentionally
  * excluded — never accept it as user input.
  */
 export const memberInputSchema = z.object({
   firstName: personName("First name"),
-  lastName: personName("Last name"),
+  lastName: optionalPersonName("Last name"),
 
   email: z
     .string()

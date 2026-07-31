@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { initials } from "./member-badges";
+import { fullName } from "@/lib/member-name";
 
 export function MemberAvatar({
   firstName,
@@ -14,7 +15,7 @@ export function MemberAvatar({
   className,
 }: {
   firstName: string;
-  lastName: string;
+  lastName: string | null;
   photoKey: string | null;
   size?: "default" | "sm" | "lg";
   className?: string;
@@ -30,7 +31,7 @@ export function MemberAvatar({
       {photoKey ? (
         <AvatarImage
           src={`/api/photos/${photoKey}`}
-          alt={`${firstName} ${lastName}`}
+          alt={fullName(firstName, lastName)}
         />
       ) : null}
       <AvatarFallback className="bg-mdpva-gold/20 font-serif text-mdpva-accent dark:text-mdpva-gold">

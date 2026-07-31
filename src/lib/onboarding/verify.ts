@@ -44,7 +44,7 @@ export interface VerifiableMember {
   legacyId: string | null;
   normalizedPhone: string | null;
   firstName: string;
-  lastName: string;
+  lastName: string | null;
 }
 
 /**

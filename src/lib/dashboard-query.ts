@@ -13,7 +13,7 @@ export interface DashboardStats {
     id: string;
     memberId: string;
     firstName: string;
-    lastName: string;
+    lastName: string | null;
     profession: "photographer" | "videographer" | "both" | null;
     photoKey: string | null;
     createdAt: Date;

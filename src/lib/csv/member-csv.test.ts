@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CSV_HEADERS,
+  coerceRow,
   membersToCsv,
   parseMembersCsv,
   templateCsv,
@@ -74,6 +75,70 @@ describe("parseMembersCsv", () => {
     const result = parseMembersCsv(csv(VALID_ROW, "", "  "));
     expect(result.rows).toHaveLength(1);
     expect(result.errors).toEqual([]);
+  });
+});
+
+describe("coerceRow column coverage", () => {
+  // `notes` was declared in CSV_HEADERS and offered in the template, but never
+  // mapped in coerceRow — so every imported note was silently dropped. This
+  // asserts each column actually reaches the parsed input.
+  const SAMPLE: Record<string, string> = {
+    first_name: "Asha",
+    last_name: "Rao",
+    email: "asha@example.com",
+    phone: "9000000001",
+    legacy_id: "42",
+    profession: "photographer",
+    business_name: "Asha Studio",
+    address_line1: "5 Temple St",
+    address_line2: "Near the tank",
+    area: "Lakshmipuram",
+    city: "Mysuru",
+    state: "Karnataka",
+    pincode: "570001",
+    dob: "1980-01-31",
+    blood_group: "O+",
+    status: "active",
+    fees_paid_upto: "2026",
+    death_fund_covered: "true",
+    notes: "Imported from the paper ledger.",
+  };
+
+  it("carries every CSV column into the validated input", () => {
+    const result = coerceRow(SAMPLE);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data).toMatchObject({
+      firstName: "Asha",
+      lastName: "Rao",
+      email: "asha@example.com",
+      phone: "9000000001",
+      legacyId: "42",
+      profession: "photographer",
+      businessName: "Asha Studio",
+      addressLine1: "5 Temple St",
+      addressLine2: "Near the tank",
+      area: "Lakshmipuram",
+      city: "Mysuru",
+      state: "Karnataka",
+      pincode: "570001",
+      dob: "1980-01-31",
+      bloodGroup: "O+",
+      status: "active",
+      feesPaidUpto: 2026,
+      deathFundCovered: true,
+      notes: "Imported from the paper ledger.",
+    });
+  });
+
+  it("preserves notes through a full parse", () => {
+    const csv = [
+      CSV_HEADERS.join(","),
+      CSV_HEADERS.map((h) => `"${SAMPLE[h] ?? ""}"`).join(","),
+    ].join("\n");
+    const parsed = parseMembersCsv(csv);
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.rows[0]?.input.notes).toBe("Imported from the paper ledger.");
   });
 });
 

@@ -69,12 +69,12 @@ export function ProfessionLabel({
 
 /**
  * Members with no surname fall back to the first two letters of their given
- * name, so the avatar never renders a lone letter.
+ * name, so the avatar never renders a lone letter (see `optionalPersonName`).
  *
- * `lastName` is typed as a string but is nullable in the database: many
- * Kannada names have no separable surname. Calling `.charAt` on that null
- * threw, and because every member row renders an avatar it took out the
- * dashboard and the directory through the error boundary.
+ * `lastName` is nullable in the database: many Kannada names have no
+ * separable surname. Calling `.charAt` on that null threw, and because every
+ * member row renders an avatar it took out the dashboard and the directory
+ * through the error boundary.
  */
 function initials(firstName: string, lastName: string | null): string {
   const first = (firstName ?? "").trim();

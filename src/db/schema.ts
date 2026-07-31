@@ -60,7 +60,11 @@ export const members = pgTable(
     memberId: text("member_id").notNull(),
     legacyId: text("legacy_id"),
     firstName: text("first_name").notNull(),
-    lastName: text("last_name").notNull(),
+    /**
+     * Nullable: many Kannada names have no separable surname, and a third of
+     * the legacy ledger is recorded as a single name. See `optionalPersonName`.
+     */
+    lastName: text("last_name"),
     email: text("email"),
     phone: text("phone"),
     /**
@@ -113,8 +117,13 @@ export const members = pgTable(
     index("members_normalized_phone_idx")
       .on(table.normalizedPhone)
       .where(sql`${table.deletedAt} is null`),
+    /**
+     * `coalesce` is load-bearing: `last_name` is nullable, and in SQL
+     * `'x' || NULL` is NULL — without it every single-name member would drop
+     * out of the index and become unsearchable.
+     */
     index("members_name_lower_idx").on(
-      sql`lower(${table.firstName} || ' ' || ${table.lastName})`,
+      sql`lower(trim(${table.firstName} || ' ' || coalesce(${table.lastName}, '')))`,
     ),
     index("members_status_idx").on(table.status),
     index("members_profession_idx").on(table.profession),

@@ -17,6 +17,7 @@ import { OnboardingProgressCard } from "@/components/applications/progress-card"
 import { MemberAvatar } from "@/components/members/member-avatar";
 import { ProfessionLabel } from "@/components/members/member-badges";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
+import { fullName } from "@/lib/member-name";
 
 const dateFmt = new Intl.DateTimeFormat("en-IN", {
   day: "numeric",
@@ -179,7 +180,7 @@ export default async function DashboardPage() {
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">
-                        {m.firstName} {m.lastName}
+                        {fullName(m.firstName, m.lastName)}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
                         {m.memberId} · <ProfessionLabel profession={m.profession} />
