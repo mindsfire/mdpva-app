@@ -67,8 +67,20 @@ export function ProfessionLabel({
   return <span>{labels[profession]}</span>;
 }
 
-function initials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+/**
+ * Members with no surname fall back to the first two letters of their given
+ * name, so the avatar never renders a lone letter.
+ *
+ * `lastName` is typed as a string but is nullable in the database: many
+ * Kannada names have no separable surname. Calling `.charAt` on that null
+ * threw, and because every member row renders an avatar it took out the
+ * dashboard and the directory through the error boundary.
+ */
+function initials(firstName: string, lastName: string | null): string {
+  const first = (firstName ?? "").trim();
+  const last = (lastName ?? "").trim();
+  const pair = last ? first.charAt(0) + last.charAt(0) : first.slice(0, 2);
+  return pair.toUpperCase();
 }
 
 export { initials };
