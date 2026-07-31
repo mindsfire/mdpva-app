@@ -1,7 +1,5 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
 import {
   Table,
   TableBody,
@@ -21,18 +19,12 @@ import {
   StatusBadge,
 } from "./member-badges";
 import { useMembersSelection } from "./selection";
+import { useMemberDrawerNav } from "@/components/members/member-drawer-nav";
+import { cn } from "@/lib/utils";
 
 export function MemberTable({ rows }: { rows: MemberRow[] }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const { activeId, open } = useMemberDrawerNav();
   const selection = useMembersSelection();
-
-  function openMember(id: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("member", id);
-    router.push(`${pathname}?${params.toString()}`);
-  }
 
   const allSelected =
     !!selection && rows.length > 0 && rows.every((row) => selection.isSelected(row.id));
@@ -53,7 +45,8 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
   }
 
   return (
-    <Table>
+    <div className="overflow-x-auto">
+      <Table className="min-w-[880px]">
       <TableHeader>
         <TableRow>
           {selection ? (
@@ -66,7 +59,9 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
               />
             </TableHead>
           ) : null}
-          <TableHead>Name</TableHead>
+          <TableHead className="sticky left-0 z-20 bg-mdpva-white dark:bg-card">
+            Name
+          </TableHead>
           <TableHead>Member ID</TableHead>
           <TableHead>Legacy ID</TableHead>
           <TableHead>Phone</TableHead>
@@ -80,8 +75,13 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
         {rows.map((row) => (
           <TableRow
             key={row.id}
-            onClick={() => openMember(row.id)}
-            className="cursor-pointer"
+            onClick={() => open(row.id)}
+            aria-current={activeId === row.id ? "true" : undefined}
+            className={cn(
+              "cursor-pointer",
+              activeId === row.id &&
+                "bg-mdpva-gold/15 dark:bg-mdpva-gold/10",
+            )}
           >
             {selection ? (
               <TableCell onClick={(event) => event.stopPropagation()}>
@@ -92,7 +92,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                 />
               </TableCell>
             ) : null}
-            <TableCell>
+            <TableCell className="sticky left-0 z-10 bg-inherit">
               <div className="flex items-center gap-2.5">
                 <MemberAvatar
                   firstName={row.firstName}
@@ -129,6 +129,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
           </TableRow>
         ))}
       </TableBody>
-    </Table>
+      </Table>
+    </div>
   );
 }
