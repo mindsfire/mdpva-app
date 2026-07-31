@@ -2,6 +2,7 @@ import sharp from "sharp";
 
 import {
   MAX_UPLOAD_BYTES,
+  PASSPORT_ASPECT,
   PASSPORT_HEIGHT,
   PASSPORT_WIDTH,
 } from "@/lib/photo-constants";
@@ -85,16 +86,31 @@ export async function processPassportPhoto(buf: Buffer): Promise<ProcessedPhoto>
  * gets a full-resolution one.
  */
 export async function processLegacyPhoto(buf: Buffer): Promise<ProcessedPhoto> {
-  const pipeline = sharp(buf, { failOn: "error" })
-    .rotate()
-    .resize(PASSPORT_WIDTH, PASSPORT_HEIGHT, {
-      fit: "cover",
-      position: "attention",
-      withoutEnlargement: true,
-    })
-    .webp({ quality: PASSPORT_QUALITY });
+  const rotated = await sharp(buf, { failOn: "error" }).rotate().toBuffer();
+  const { width, height } = await sharp(rotated).metadata();
+  if (!width || !height) throw new Error("could not read image dimensions");
 
-  const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+  // The target must be computed from the source, not fixed at 600x771 with
+  // `withoutEnlargement`: sharp skips the whole resize when the requested box
+  // is larger than the source, and skipping the resize skips the crop too —
+  // which silently stored every ledger photo at its original aspect ratio.
+  let targetW = Math.min(width, Math.round(height * PASSPORT_ASPECT));
+  let targetH = Math.round(targetW / PASSPORT_ASPECT);
+  if (targetH > height) {
+    targetH = height;
+    targetW = Math.round(targetH * PASSPORT_ASPECT);
+  }
+  // Never exceed the passport geometry; a source larger than that is downscaled.
+  if (targetW > PASSPORT_WIDTH) {
+    targetW = PASSPORT_WIDTH;
+    targetH = PASSPORT_HEIGHT;
+  }
+
+  const { data, info } = await sharp(rotated)
+    .resize(targetW, targetH, { fit: "cover", position: "attention" })
+    .webp({ quality: PASSPORT_QUALITY })
+    .toBuffer({ resolveWithObject: true });
+
   return { webp: data, width: info.width, height: info.height };
 }
 
