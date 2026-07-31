@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { MemberFilters } from "@/components/members/filters";
 import { MemberCard } from "@/components/members/member-card";
 import { MemberTable } from "@/components/members/member-table";
-import { MemberSheet } from "@/components/members/member-sheet";
+import { MemberSheetNarrow } from "@/components/members/member-sheet-narrow";
+import { MembersDirectoryLayout } from "@/components/members/members-directory-layout";
 import { MembersPagination } from "@/components/members/members-pagination";
 import {
   DirectoryResults,
@@ -163,30 +164,38 @@ export default async function MembersDirectoryPage({
             isAdmin={hasRole(sessionUser.role, "admin")}
             ids={rows.map((row) => row.id)}
           >
-            <div className="flex flex-col gap-5">
-              <DirectoryResults>
-                <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
-                  <MemberTable rows={rows} />
-                </div>
-                <div className="flex flex-col gap-2.5 md:hidden">
-                  {rows.map((row) => (
-                    <MemberCard key={row.id} row={row} />
-                  ))}
-                </div>
-              </DirectoryResults>
-              <MembersPagination
-                page={page}
-                perPage={perPage}
-                total={total}
-                totalPages={totalPages}
-              />
-            </div>
+            <MembersDirectoryLayout
+              ids={rows.map((row) => row.id)}
+              activeId={memberParam ?? null}
+              member={selectedMember}
+              role={sessionUser.role}
+              initialWidth={peekWidth}
+            >
+              <div className="flex flex-col gap-5">
+                <DirectoryResults>
+                  <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
+                    <MemberTable rows={rows} />
+                  </div>
+                  <div className="flex flex-col gap-2.5 md:hidden">
+                    {rows.map((row) => (
+                      <MemberCard key={row.id} row={row} />
+                    ))}
+                  </div>
+                </DirectoryResults>
+                <MembersPagination
+                  page={page}
+                  perPage={perPage}
+                  total={total}
+                  totalPages={totalPages}
+                />
+              </div>
+            </MembersDirectoryLayout>
           </MembersSelectionProvider>
         </DirectoryTransitionProvider>
       )}
 
       {memberParam ? (
-        <MemberSheet
+        <MemberSheetNarrow
           member={selectedMember}
           role={sessionUser.role}
           initialWidth={peekWidth}
