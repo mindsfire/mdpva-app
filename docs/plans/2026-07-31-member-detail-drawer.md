@@ -35,6 +35,8 @@
 | `src/components/members/sheet-resizer.tsx` | *Modify.* Accept a container element so the max width can depend on it. |
 | `src/components/members/member-profile-view.tsx` | *Modify.* Render from `buildMemberSections`; add the Record section. |
 | `src/components/members/member-table.tsx` | *Modify.* Row click via the nav context, active-row highlight, sticky name column. |
+| `src/components/members/use-is-narrow.tsx` | *Create.* SSR-safe `lg` media query; the sheet portals to body, so CSS cannot gate it. |
+| `src/components/members/member-sheet-narrow.tsx` | *Create.* Renders the modal sheet only below `lg`. |
 | `src/app/(app)/members/page.tsx` | *Modify.* Flex layout, drawer at `lg`+, sheet below `lg`. |
 
 ---
@@ -1180,19 +1182,85 @@ import { MembersDirectoryLayout } from "@/components/members/members-directory-l
 
 - [ ] **Step 3: Restrict the old sheet to below `lg`**
 
-Still in `page.tsx`, change the sheet render so the two never appear at once:
+`SheetContent` renders inside `SheetPortal`, which portals to `document.body`.
+A `lg:hidden` wrapper around `<MemberSheet>` therefore does **not** hide it,
+and even if it did, the modal's focus trap and scroll lock would stay active —
+so at `lg`+ the drawer and an invisible modal would fight for focus. The sheet
+must not be *rendered* at all above the breakpoint.
+
+Create `src/components/members/use-is-narrow.tsx`:
+
+```tsx
+"use client";
+
+import * as React from "react";
+
+/** Matches the Tailwind `lg` breakpoint used to switch to the docked drawer. */
+const NARROW_QUERY = "(max-width: 1023.98px)";
+
+function subscribe(onChange: () => void) {
+  const list = window.matchMedia(NARROW_QUERY);
+  list.addEventListener("change", onChange);
+  return () => list.removeEventListener("change", onChange);
+}
+
+/**
+ * True below the `lg` breakpoint, where the modal sheet is still used.
+ *
+ * The server snapshot is `false` deliberately: the drawer is the desktop
+ * experience, so rendering nothing on the server means desktop is correct on
+ * first paint with no modal flash. Narrow viewports get the sheet one frame
+ * after hydration, which is invisible in practice because the member data is
+ * already server-rendered.
+ */
+export function useIsNarrow(): boolean {
+  return React.useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(NARROW_QUERY).matches,
+    () => false,
+  );
+}
+```
+
+Create `src/components/members/member-sheet-narrow.tsx` so the page (a server
+component) can stay declarative:
+
+```tsx
+"use client";
+
+import type { Role } from "@/lib/rbac";
+import type { MemberDetail } from "@/lib/members-query";
+import { MemberSheet } from "@/components/members/member-sheet";
+import { useIsNarrow } from "@/components/members/use-is-narrow";
+
+/** Renders the modal sheet only below `lg`; above it the drawer takes over. */
+export function MemberSheetNarrow(props: {
+  member: MemberDetail | null;
+  role: Role;
+  initialWidth?: number;
+}) {
+  const isNarrow = useIsNarrow();
+  if (!isNarrow) return null;
+  return <MemberSheet {...props} />;
+}
+```
+
+Then in `page.tsx` swap the render, replacing the `MemberSheet` import with
+`MemberSheetNarrow`:
 
 ```tsx
       {memberParam ? (
-        <div className="lg:hidden">
-          <MemberSheet
-            member={selectedMember}
-            role={sessionUser.role}
-            initialWidth={peekWidth}
-          />
-        </div>
+        <MemberSheetNarrow
+          member={selectedMember}
+          role={sessionUser.role}
+          initialWidth={peekWidth}
+        />
       ) : null}
 ```
+
+Note for context: `MemberCard` (below `md`) links to `/members/[id]`, the full
+page — it never opens the sheet. The sheet is reached only from the table, so
+the band this gating actually affects is tablets at 768–1023px.
 
 - [ ] **Step 4: Verify**
 
@@ -1202,7 +1270,7 @@ Expected: all pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/app/\(app\)/members/page.tsx src/components/members/members-directory-layout.tsx
+git add src/app/\(app\)/members/page.tsx src/components/members/members-directory-layout.tsx src/components/members/use-is-narrow.tsx src/components/members/member-sheet-narrow.tsx
 git commit -m "Feature - dock the member drawer beside the directory on desktop"
 ```
 
