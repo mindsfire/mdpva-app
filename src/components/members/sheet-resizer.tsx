@@ -12,11 +12,23 @@ import {
 
 /**
  * Drag handle on the peek sheet's leading (left) edge. The sheet is anchored
- * to the right, so its width is `viewportWidth - clientX`. Only ever widens
- * past the original 384px — dragging narrower is clamped, per the design
- * decision that the default is already the minimum comfortable width.
+ * to the right, so its width is `containerRight - clientX` or `viewportWidth - clientX`
+ * depending on whether a container is supplied. Only ever widens past the original
+ * 384px — dragging narrower is clamped, per the design decision that the default
+ * is already the minimum comfortable width.
  */
-export function SheetResizer({ panelRef }: { panelRef: React.RefObject<HTMLDivElement | null> }) {
+export function SheetResizer({
+  panelRef,
+  containerRef,
+}: {
+  panelRef: React.RefObject<HTMLDivElement | null>;
+  /**
+   * When supplied, the drawer's maximum width also depends on this element's
+   * width, so it can never squeeze the table below `MIN_TABLE_WIDTH`. The
+   * modal sheet on mobile passes nothing and keeps the viewport-based ceiling.
+   */
+  containerRef?: React.RefObject<HTMLDivElement | null>;
+}) {
   const [dragging, setDragging] = React.useState(false);
 
   const onPointerDown = React.useCallback(
@@ -29,10 +41,19 @@ export function SheetResizer({ panelRef }: { panelRef: React.RefObject<HTMLDivEl
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
 
-      let width = clampPeekWidth(panel.getBoundingClientRect().width);
+      const containerWidth = containerRef?.current?.getBoundingClientRect().width;
+      let width = clampPeekWidth(
+        panel.getBoundingClientRect().width,
+        containerWidth,
+      );
 
       function onMove(moveEvent: PointerEvent) {
-        width = clampPeekWidth(window.innerWidth - moveEvent.clientX);
+        // The panel is right-anchored, so its width is the distance from the
+        // pointer to the container's right edge.
+        const right =
+          containerRef?.current?.getBoundingClientRect().right ??
+          window.innerWidth;
+        width = clampPeekWidth(right - moveEvent.clientX, containerWidth);
         panel!.style.width = `${width}px`;
         panel!.style.maxWidth = `${width}px`;
       }
@@ -49,7 +70,7 @@ export function SheetResizer({ panelRef }: { panelRef: React.RefObject<HTMLDivEl
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp);
     },
-    [panelRef],
+    [panelRef, containerRef],
   );
 
   function reset() {
