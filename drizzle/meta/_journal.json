@@ -22,6 +22,13 @@
       "when": 1785132160436,
       "tag": "0002_member_self_service_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785496442444,
+      "tag": "0003_known_vision",
+      "breakpoints": true
     }
   ]
 }

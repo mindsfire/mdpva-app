@@ -187,7 +187,9 @@ export function MemberForm({
                 <FormItem>
                   <FormLabel>Last name</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    {/* Optional: many members have no separable surname, and
+                        a null must render as an empty controlled input. */}
+                    <Input {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

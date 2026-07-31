@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import type { MemberRow } from "@/lib/members-query";
+import { fullName } from "@/lib/member-name";
 import { MemberAvatar } from "./member-avatar";
 import {
   DeathFundBadge,
@@ -32,7 +33,7 @@ export function MemberCard({ row }: { row: MemberRow }) {
         >
           <Checkbox
             checked={selection.isSelected(row.id)}
-            aria-label={`Select ${row.firstName} ${row.lastName}`}
+            aria-label={`Select ${fullName(row.firstName, row.lastName)}`}
           />
         </span>
       ) : null}
@@ -46,7 +47,7 @@ export function MemberCard({ row }: { row: MemberRow }) {
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex items-baseline justify-between gap-2">
           <span className="truncate font-serif text-base font-medium text-foreground">
-            {row.firstName} {row.lastName}
+            {fullName(row.firstName, row.lastName)}
           </span>
           <span className="shrink-0 text-xs text-muted-foreground">
             {row.memberId}

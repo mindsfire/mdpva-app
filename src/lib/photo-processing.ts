@@ -75,6 +75,30 @@ export async function processPassportPhoto(buf: Buffer): Promise<ProcessedPhoto>
 }
 
 /**
+ * Passport crop for photos recovered from the legacy paper ledger.
+ *
+ * Identical to `processPassportPhoto` except that it never enlarges. Those
+ * scans are all far below the passport target (median 161x206 against
+ * 600x771), so `withoutEnlargement: false` would upscale them ~3.7x and make
+ * every face soft. The stored image keeps the 7:9 ratio the UI lays out for,
+ * just at its native size; a member replacing their photo through onboarding
+ * gets a full-resolution one.
+ */
+export async function processLegacyPhoto(buf: Buffer): Promise<ProcessedPhoto> {
+  const pipeline = sharp(buf, { failOn: "error" })
+    .rotate()
+    .resize(PASSPORT_WIDTH, PASSPORT_HEIGHT, {
+      fit: "cover",
+      position: "attention",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: PASSPORT_QUALITY });
+
+  const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+  return { webp: data, width: info.width, height: info.height };
+}
+
+/**
  * Re-encodes any accepted raster image to WebP, downscaled to fit within
  * MAX_EDGE×MAX_EDGE (never upscaled, aspect ratio preserved, never
  * cropped). Throws if `sharp` can't decode the buffer as a real image —

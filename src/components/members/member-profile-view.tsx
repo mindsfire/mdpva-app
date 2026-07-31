@@ -8,6 +8,7 @@ import { hasRole, type Role } from "@/lib/rbac";
 import type { MemberDetail } from "@/lib/members-query";
 import { DeleteMemberDialog } from "@/components/members/delete-dialog";
 import { MemberAvatar } from "@/components/members/member-avatar";
+import { fullName } from "@/lib/member-name";
 import {
   DeathFundBadge,
   FeesBadge,
@@ -65,7 +66,7 @@ export function MemberProfileView({
         />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h2 className="font-serif text-lg font-medium text-foreground">
-            {member.firstName} {member.lastName}
+            {fullName(member.firstName, member.lastName)}
           </h2>
           <p className="text-xs text-muted-foreground">{member.memberId}</p>
           {/* Always shown, even when empty: at the desk an operator needs to
@@ -88,7 +89,7 @@ export function MemberProfileView({
             {canDelete ? (
               <DeleteMemberDialog
                 memberId={member.id}
-                name={`${member.firstName} ${member.lastName}`}
+                name={fullName(member.firstName, member.lastName)}
                 onDeleted={onDeleted}
                 trigger={
                   <Button variant="destructive" size="sm">

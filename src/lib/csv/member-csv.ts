@@ -95,6 +95,7 @@ export function coerceRow(
     pincode: get("pincode"),
     dob: get("dob"),
     bloodGroup: get("blood_group"),
+    notes: get("notes"),
     status: statusRaw === "" ? "active" : statusRaw,
     feesPaidUpto:
       feesRaw === "" ? null
@@ -148,7 +149,7 @@ export interface ExportableMember {
   memberId: string;
   legacyId: string | null;
   firstName: string;
-  lastName: string;
+  lastName: string | null;
   email: string | null;
   phone: string | null;
   profession: "photographer" | "videographer" | "both" | null;

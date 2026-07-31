@@ -4,6 +4,7 @@ import { requireRole } from "@/lib/rbac";
 import { getMemberById } from "@/lib/members-query";
 import { MemberProfilePageBody } from "@/components/members/member-profile-page-body";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
+import { fullName } from "@/lib/member-name";
 
 export default async function MemberProfilePage({
   params,
@@ -24,7 +25,7 @@ export default async function MemberProfilePage({
         items={[
           { label: "Dashboard", href: "/" },
           { label: "Members", href: "/members" },
-          { label: `${member.firstName} ${member.lastName}` },
+          { label: fullName(member.firstName, member.lastName) },
         ]}
       />
       <div className="rounded-lg border border-mdpva-border bg-card p-4 sm:p-5 dark:border-border">

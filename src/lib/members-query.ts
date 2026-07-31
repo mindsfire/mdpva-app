@@ -28,7 +28,7 @@ export interface MemberRow {
   memberId: string;
   legacyId: string | null;
   firstName: string;
-  lastName: string;
+  lastName: string | null;
   phone: string | null;
   profession: "photographer" | "videographer" | "both" | null;
   status: "active" | "inactive" | "suspended";
@@ -50,7 +50,7 @@ export interface MemberDetail {
   memberId: string;
   legacyId: string | null;
   firstName: string;
-  lastName: string;
+  lastName: string | null;
   email: string | null;
   phone: string | null;
   profession: "photographer" | "videographer" | "both" | null;
@@ -122,14 +122,21 @@ export async function getMemberById(id: string): Promise<MemberDetail | null> {
 
 const DEFAULT_SORT: MembersSort = "name";
 
+/**
+ * Name sorting uses the whole displayed name, not `last_name` alone: that
+ * column is null for every member without a separable surname, which would
+ * otherwise sort a third of the directory into one block at the end.
+ */
+const NAME_SORT_KEY = sql`lower(trim(${members.firstName} || ' ' || coalesce(${members.lastName}, '')))`;
+
 const SORT_CONFIG = {
-  name: { column: members.lastName, direction: "asc" as const },
-  name_desc: { column: members.lastName, direction: "desc" as const },
+  name: { column: NAME_SORT_KEY, direction: "asc" as const },
+  name_desc: { column: NAME_SORT_KEY, direction: "desc" as const },
   newest: { column: members.createdAt, direction: "desc" as const },
 } satisfies Record<
   MembersSort,
   {
-    column: typeof members.lastName | typeof members.createdAt;
+    column: SQL | typeof members.createdAt;
     direction: "asc" | "desc";
   }
 >;
@@ -150,7 +157,10 @@ function buildSearchCondition(rawQuery: string): SQL | null {
     ilike(members.lastName, term),
     // Match against the full name so "Kavya Bhat" finds the member that
     // neither first_name nor last_name alone would.
-    sql`${members.firstName} || ' ' || ${members.lastName} ilike ${term}`,
+    // `coalesce` matches the members_name_lower_idx expression: last_name is
+    // nullable, and `'x' || NULL` is NULL, which would exclude every
+    // single-name member from full-name search.
+    sql`trim(${members.firstName} || ' ' || coalesce(${members.lastName}, '')) ilike ${term}`,
     ilike(members.email, term),
     ilike(members.phone, term),
     ilike(members.memberId, term),

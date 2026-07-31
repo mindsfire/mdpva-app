@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { MemberRow } from "@/lib/members-query";
+import { fullName } from "@/lib/member-name";
 import { MemberAvatar } from "./member-avatar";
 import {
   DeathFundBadge,
@@ -87,7 +88,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                 <Checkbox
                   checked={selection.isSelected(row.id)}
                   onCheckedChange={() => selection.toggle(row.id)}
-                  aria-label={`Select ${row.firstName} ${row.lastName}`}
+                  aria-label={`Select ${fullName(row.firstName, row.lastName)}`}
                 />
               </TableCell>
             ) : null}
@@ -100,7 +101,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                   className="size-8"
                 />
                 <span className="font-medium text-foreground">
-                  {row.firstName} {row.lastName}
+                  {fullName(row.firstName, row.lastName)}
                 </span>
               </div>
             </TableCell>

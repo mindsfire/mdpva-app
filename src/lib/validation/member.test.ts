@@ -35,11 +35,46 @@ describe("memberInputSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("requires firstName, lastName, addressLine1, city, state", () => {
-    for (const field of ["firstName", "lastName", "addressLine1", "city", "state"]) {
+  it("requires firstName, addressLine1, city, state", () => {
+    for (const field of ["firstName", "addressLine1", "city", "state"]) {
       const result = memberInputSchema.safeParse(validInput({ [field]: "" }));
       expect(result.success, `${field} should be required`).toBe(false);
     }
+  });
+
+  describe("lastName", () => {
+    // Many Kannada names have no separable surname, and 484 of the 1360
+    // legacy ledger members are recorded as a single name.
+    it("accepts a member with no last name", () => {
+      const result = memberInputSchema.safeParse(validInput({ lastName: "" }));
+      expect(result.success).toBe(true);
+    });
+
+    it.each([["" as const], [null], [undefined]])(
+      "normalises %p to null rather than an empty string",
+      (value) => {
+        const result = memberInputSchema.safeParse(
+          validInput({ lastName: value }),
+        );
+        expect(result.success).toBe(true);
+        if (result.success) expect(result.data.lastName).toBeNull();
+      },
+    );
+
+    it("still rejects a last name with disallowed characters", () => {
+      const result = memberInputSchema.safeParse(
+        validInput({ lastName: "Bhat99" }),
+      );
+      expect(result.success).toBe(false);
+    });
+
+    it("keeps a real last name", () => {
+      const result = memberInputSchema.safeParse(
+        validInput({ lastName: "Bhat" }),
+      );
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.lastName).toBe("Bhat");
+    });
   });
 
   describe("pincode", () => {
