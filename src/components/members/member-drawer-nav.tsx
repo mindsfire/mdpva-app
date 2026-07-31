@@ -99,6 +99,16 @@ export function MemberDrawerNavProvider({
 export function MemberDrawerKeys() {
   const { next, prev, close } = useMemberDrawerNav();
 
+  // `next`/`prev`/`close` are recreated whenever the provider's `value` memo
+  // recomputes (which happens on every `isPending` flip during navigation).
+  // Keep the latest handlers in a ref and register the listener once with a
+  // stable dependency array, so an arrow-key press doesn't detach/reattach
+  // the global keydown listener on every navigation.
+  const handlersRef = React.useRef({ next, prev, close });
+  React.useEffect(() => {
+    handlersRef.current = { next, prev, close };
+  }, [next, prev, close]);
+
   React.useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
@@ -112,19 +122,23 @@ export function MemberDrawerKeys() {
         return;
       }
       if (event.key === "ArrowDown") {
+        // Ignore OS key-repeat: each step triggers a server fetch, and
+        // holding the key down would spray requests at the database.
+        if (event.repeat) return;
         event.preventDefault();
-        next();
+        handlersRef.current.next();
       } else if (event.key === "ArrowUp") {
+        if (event.repeat) return;
         event.preventDefault();
-        prev();
+        handlersRef.current.prev();
       } else if (event.key === "Escape") {
         event.preventDefault();
-        close();
+        handlersRef.current.close();
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [close, next, prev]);
+  }, []);
 
   return null;
 }
