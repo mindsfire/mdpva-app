@@ -80,13 +80,23 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
           <TableRow
             key={row.id}
             tabIndex={0}
+            role="row"
+            aria-roledescription="Activatable row: press Enter to view member details"
+            aria-label={`View details for ${fullName(row.firstName, row.lastName)}`}
             onClick={(event) => {
               event.currentTarget.focus();
               open(row.id);
             }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                event.currentTarget.focus();
+                open(row.id);
+              }
+            }}
             aria-current={activeId === row.id ? "true" : undefined}
             className={cn(
-              "cursor-pointer",
+              "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset",
               // `bg-mdpva-gold/15` and `bg-mdpva-white` are both in the
               // `background-color` group, so twMerge (via `cn`) keeps only
               // the last one — the row's computed background becomes a
@@ -96,15 +106,27 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
               // Using `color-mix` produces a single solid (opaque) color
               // instead of an alpha-blended one, so there's nothing left
               // for twMerge to strip and nothing translucent to inherit.
+              //
+              // `TableRow` also carries `hover:bg-muted/50`, which is in a
+              // different tailwind-merge group (it's a state-variant utility,
+              // not a plain `bg-*`) so twMerge keeps BOTH it and our `bg-*`
+              // classes — on hover the browser applies both, and since both
+              // are backgrounds on the same element the later one in the
+              // generated stylesheet wins, which for `hover:` is not
+              // guaranteed to be ours. Rather than fight the cascade, we
+              // neutralise the inherited hover utility with an explicit
+              // `hover:bg-[...]` using the same opaque `color-mix` colors, so
+              // hovering never reintroduces alpha.
               activeId === row.id
-                ? "bg-[color-mix(in_srgb,var(--color-mdpva-gold)_15%,var(--color-mdpva-white))] dark:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_10%,var(--card))]"
-                : "bg-mdpva-white dark:bg-card",
+                ? "bg-[color-mix(in_srgb,var(--color-mdpva-gold)_15%,var(--color-mdpva-white))] hover:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_15%,var(--color-mdpva-white))] dark:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_10%,var(--card))] dark:hover:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_10%,var(--card))]"
+                : "bg-mdpva-white hover:bg-[color-mix(in_srgb,var(--color-muted)_50%,var(--color-mdpva-white))] dark:bg-card dark:hover:bg-[color-mix(in_srgb,var(--color-muted)_50%,var(--card))]",
             )}
           >
             {selection ? (
               <TableCell
                 className="sticky left-0 z-10 bg-inherit"
                 onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
               >
                 <Checkbox
                   checked={selection.isSelected(row.id)}
