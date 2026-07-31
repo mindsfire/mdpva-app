@@ -20,6 +20,16 @@ export const PROFESSION_LABELS: Record<
   both: "Photo & Video",
 };
 
+/** Stable, unambiguous day format — avoids 07/08 being read either way round. */
+function formatDay(value: Date): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(value);
+}
+
 /**
  * The drawer's field list, as data.
  *
@@ -74,6 +84,14 @@ export function buildMemberSections(member: MemberDetail): MemberSection[] {
     {
       title: "Notes",
       fields: [{ label: "Notes", value: member.notes }],
+    },
+    {
+      title: "Record",
+      fields: [
+        { label: "Created", value: formatDay(member.createdAt) },
+        { label: "Last updated", value: formatDay(member.updatedAt) },
+        { label: "Last updated by", value: member.updatedByName },
+      ],
     },
   ];
 }

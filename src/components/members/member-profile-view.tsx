@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { hasRole, type Role } from "@/lib/rbac";
 import type { MemberDetail } from "@/lib/members-query";
+import { buildMemberSections } from "@/lib/member-sections";
 import { DeleteMemberDialog } from "@/components/members/delete-dialog";
 import { MemberAvatar } from "@/components/members/member-avatar";
 import { fullName } from "@/lib/member-name";
@@ -31,15 +32,6 @@ function Detail({
   );
 }
 
-const PROFESSION_LABELS: Record<
-  NonNullable<MemberDetail["profession"]>,
-  string
-> = {
-  photographer: "Photographer",
-  videographer: "Videographer",
-  both: "Photo & Video",
-};
-
 export function MemberProfileView({
   member,
   role,
@@ -56,7 +48,7 @@ export function MemberProfileView({
   const canDelete = hasRole(role, "admin");
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="@container flex flex-col gap-6">
       <div className="flex items-start gap-3">
         <MemberAvatar
           firstName={member.firstName}
@@ -108,73 +100,30 @@ export function MemberProfileView({
       </div>
 
       <div className="flex flex-col gap-4">
-        <div>
-          <h3 className="pb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Contact
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            <Detail label="Email" value={member.email} />
-            <Detail label="Phone" value={member.phone} />
-          </div>
-        </div>
-
-        <div>
-          <h3 className="pb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Address
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            <Detail
-              label="Address"
-              value={[member.addressLine1, member.addressLine2]
-                .filter(Boolean)
-                .join(", ")}
-            />
-            <Detail label="Area" value={member.area} />
-            <Detail label="City" value={member.city} />
-            <Detail label="State" value={member.state} />
-            <Detail label="Pincode" value={member.pincode} />
-          </div>
-        </div>
-
-        <div>
-          <h3 className="pb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Association
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            <Detail
-              label="Profession"
-              value={
-                member.profession
-                  ? PROFESSION_LABELS[member.profession]
-                  : null
-              }
-            />
-            <Detail label="Business" value={member.businessName} />
-            <Detail label="Date of birth" value={member.dob} />
-            <Detail label="Blood group" value={member.bloodGroup} />
-            <Detail
-              label="Fees paid upto"
-              value={member.feesPaidUpto}
-            />
-            <Detail
-              label="Death fund"
-              value={member.deathFundCovered ? "Covered" : "Not covered"}
-            />
-          </div>
-        </div>
-
-        {member.notes ? (
-          <div>
+        {buildMemberSections(member).map((section) => (
+          <div key={section.title}>
             <h3 className="pb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Notes
+              {section.title}
             </h3>
-            <p className="text-sm whitespace-pre-wrap text-foreground">
-              {member.notes}
-            </p>
+            {/* Notes can be long prose; everything else is short pairs. */}
+            {section.title === "Notes" ? (
+              <p className="text-sm whitespace-pre-wrap text-foreground">
+                {section.fields[0]?.value ?? "—"}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
+                {section.fields.map((field) => (
+                  <Detail
+                    key={field.label}
+                    label={field.label}
+                    value={field.value}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        ) : null}
+        ))}
       </div>
-
     </div>
   );
 }

@@ -94,3 +94,31 @@ describe("buildMemberSections", () => {
     ).toBe("Not covered");
   });
 });
+
+describe("record section", () => {
+  it("includes created, updated and who last changed it", () => {
+    const record = buildMemberSections(member()).find(
+      (s) => s.title === "Record",
+    );
+    expect(record?.fields.map((f) => f.label)).toEqual([
+      "Created",
+      "Last updated",
+      "Last updated by",
+    ]);
+  });
+
+  it("formats dates as a readable day", () => {
+    const record = buildMemberSections(
+      member({ createdAt: new Date("2026-07-31T10:00:00Z") }),
+    ).find((s) => s.title === "Record");
+    expect(record?.fields[0]?.value).toBe("31 Jul 2026");
+  });
+
+  // Imported members were written by a script, so this is the common case.
+  it("leaves the editor null when no person has touched the record", () => {
+    const record = buildMemberSections(member({ updatedByName: null })).find(
+      (s) => s.title === "Record",
+    );
+    expect(record?.fields[2]?.value).toBeNull();
+  });
+});
