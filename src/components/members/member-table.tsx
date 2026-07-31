@@ -49,7 +49,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
       <TableHeader>
         <TableRow>
           {selection ? (
-            <TableHead className="w-10">
+            <TableHead className="sticky left-0 z-20 w-10 bg-mdpva-white dark:bg-card">
               <Checkbox
                 checked={allSelected}
                 indeterminate={someSelected}
@@ -58,7 +58,12 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
               />
             </TableHead>
           ) : null}
-          <TableHead className="sticky left-0 z-20 bg-mdpva-white dark:bg-card">
+          <TableHead
+            className={cn(
+              "sticky z-20 bg-mdpva-white dark:bg-card",
+              selection ? "left-10" : "left-0",
+            )}
+          >
             Name
           </TableHead>
           <TableHead>Member ID</TableHead>
@@ -74,16 +79,33 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
         {rows.map((row) => (
           <TableRow
             key={row.id}
-            onClick={() => open(row.id)}
+            tabIndex={0}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              open(row.id);
+            }}
             aria-current={activeId === row.id ? "true" : undefined}
             className={cn(
-              "cursor-pointer bg-mdpva-white dark:bg-card",
-              activeId === row.id &&
-                "bg-mdpva-gold/15 dark:bg-mdpva-gold/10",
+              "cursor-pointer",
+              // `bg-mdpva-gold/15` and `bg-mdpva-white` are both in the
+              // `background-color` group, so twMerge (via `cn`) keeps only
+              // the last one — the row's computed background becomes a
+              // 15%-alpha translucent color, and the sticky Name cell's
+              // `bg-inherit` inherits that translucency, letting other
+              // columns show through as the table scrolls horizontally.
+              // Using `color-mix` produces a single solid (opaque) color
+              // instead of an alpha-blended one, so there's nothing left
+              // for twMerge to strip and nothing translucent to inherit.
+              activeId === row.id
+                ? "bg-[color-mix(in_srgb,var(--color-mdpva-gold)_15%,var(--color-mdpva-white))] dark:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_10%,var(--card))]"
+                : "bg-mdpva-white dark:bg-card",
             )}
           >
             {selection ? (
-              <TableCell onClick={(event) => event.stopPropagation()}>
+              <TableCell
+                className="sticky left-0 z-10 bg-inherit"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <Checkbox
                   checked={selection.isSelected(row.id)}
                   onCheckedChange={() => selection.toggle(row.id)}
@@ -91,7 +113,12 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                 />
               </TableCell>
             ) : null}
-            <TableCell className="sticky left-0 z-10 bg-inherit">
+            <TableCell
+              className={cn(
+                "sticky z-10 bg-inherit",
+                selection ? "left-10" : "left-0",
+              )}
+            >
               <div className="flex items-center gap-2.5">
                 <MemberAvatar
                   firstName={row.firstName}

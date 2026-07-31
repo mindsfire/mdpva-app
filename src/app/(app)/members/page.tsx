@@ -151,26 +151,31 @@ export default async function MembersDirectoryPage({
         </Suspense>
       </div>
 
-      {rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border">
-          <p className="text-muted-foreground">No members match.</p>
-          <Button variant="outline" render={<Link href="/members" />}>
-            Clear filters
-          </Button>
-        </div>
-      ) : (
-        <DirectoryTransitionProvider>
-          <MembersSelectionProvider
-            isAdmin={hasRole(sessionUser.role, "admin")}
+      <DirectoryTransitionProvider>
+        <MembersSelectionProvider
+          isAdmin={hasRole(sessionUser.role, "admin")}
+          ids={rows.map((row) => row.id)}
+        >
+          {/* The drawer must render whenever `?member=` is present, even when
+              the current filters return zero rows — otherwise a deep link
+              like `?q=zzzz&member=<id>` orphans the param on desktop while
+              still showing the sheet below lg. `ids: []` and a no-op
+              `step()` are already tolerated by MemberDrawerNavProvider. */}
+          <MembersDirectoryLayout
             ids={rows.map((row) => row.id)}
+            activeId={memberParam ?? null}
+            member={selectedMember}
+            role={sessionUser.role}
+            initialWidth={peekWidth}
           >
-            <MembersDirectoryLayout
-              ids={rows.map((row) => row.id)}
-              activeId={memberParam ?? null}
-              member={selectedMember}
-              role={sessionUser.role}
-              initialWidth={peekWidth}
-            >
+            {rows.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border">
+                <p className="text-muted-foreground">No members match.</p>
+                <Button variant="outline" render={<Link href="/members" />}>
+                  Clear filters
+                </Button>
+              </div>
+            ) : (
               <div className="flex flex-col gap-5">
                 <DirectoryResults>
                   <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
@@ -189,10 +194,10 @@ export default async function MembersDirectoryPage({
                   totalPages={totalPages}
                 />
               </div>
-            </MembersDirectoryLayout>
-          </MembersSelectionProvider>
-        </DirectoryTransitionProvider>
-      )}
+            )}
+          </MembersDirectoryLayout>
+        </MembersSelectionProvider>
+      </DirectoryTransitionProvider>
 
       {memberParam ? (
         <MemberSheetNarrow

@@ -48,12 +48,13 @@ export function MemberDrawer({
     <div
       ref={panelRef}
       style={{ width, maxWidth: width }}
-      className="relative shrink-0 overflow-y-auto rounded-lg border border-mdpva-border p-4 dark:border-border"
+      className="sticky top-4 max-h-[calc(100vh-2rem)] shrink-0 overflow-y-auto rounded-lg border border-mdpva-border p-4 dark:border-border"
+      role="region"
       aria-label="Member details"
       aria-busy={isPending}
     >
       <SheetResizer panelRef={panelRef} containerRef={containerRef} />
-      <MemberDrawerKeys />
+      <MemberDrawerKeys regionRef={containerRef} />
 
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className="text-xs text-muted-foreground">

@@ -95,8 +95,18 @@ export function MemberDrawerNavProvider({
  *
  * Ignores events originating in a text field or with a modifier held, so
  * typing in the search box and native shortcuts are unaffected.
+ *
+ * Arrow navigation is scoped to the directory region via `regionRef`
+ * (the table + drawer container): outside that region — e.g. focus on
+ * `body` after clicking elsewhere on the page — arrows must scroll the
+ * page normally rather than stepping the drawer. Escape closes regardless
+ * of focus location, since it never competes with scrolling.
  */
-export function MemberDrawerKeys() {
+export function MemberDrawerKeys({
+  regionRef,
+}: {
+  regionRef?: React.RefObject<HTMLElement | null>;
+}) {
   const { next, prev, close } = useMemberDrawerNav();
 
   // `next`/`prev`/`close` are recreated whenever the provider's `value` memo
@@ -108,6 +118,13 @@ export function MemberDrawerKeys() {
   React.useEffect(() => {
     handlersRef.current = { next, prev, close };
   }, [next, prev, close]);
+
+  // regionRef is captured via a ref-to-the-ref so the listener effect below
+  // can stay mounted once (stable deps) while still reading the latest ref.
+  const regionRefRef = React.useRef(regionRef);
+  React.useEffect(() => {
+    regionRefRef.current = regionRef;
+  }, [regionRef]);
 
   React.useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -121,19 +138,31 @@ export function MemberDrawerKeys() {
       ) {
         return;
       }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handlersRef.current.close();
+        return;
+      }
+
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+
+      // Arrow navigation only acts when focus is inside the directory
+      // region (the table or the drawer). Outside it, arrows must scroll
+      // the page normally — no preventDefault.
+      const region = regionRefRef.current?.current;
+      if (region && !region.contains(target)) return;
+
       if (event.key === "ArrowDown") {
         // Ignore OS key-repeat: each step triggers a server fetch, and
         // holding the key down would spray requests at the database.
         if (event.repeat) return;
         event.preventDefault();
         handlersRef.current.next();
-      } else if (event.key === "ArrowUp") {
+      } else {
         if (event.repeat) return;
         event.preventDefault();
         handlersRef.current.prev();
-      } else if (event.key === "Escape") {
-        event.preventDefault();
-        handlersRef.current.close();
       }
     }
     window.addEventListener("keydown", onKeyDown);
