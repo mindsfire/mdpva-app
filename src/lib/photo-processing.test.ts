@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import sharp from "sharp";
 
-import { MAX_UPLOAD_BYTES, processPhoto, sniffImageType } from "./photo-processing";
+import {
+  MAX_UPLOAD_BYTES,
+  processLegacyPhoto,
+  processPhoto,
+  sniffImageType,
+} from "./photo-processing";
+import { PASSPORT_ASPECT, PASSPORT_HEIGHT, PASSPORT_WIDTH } from "./photo-constants";
 
 const JPEG_MAGIC = Buffer.from([0xff, 0xd8, 0xff, 0xe0]);
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -71,5 +77,43 @@ describe("processPhoto", () => {
 describe("MAX_UPLOAD_BYTES", () => {
   it("is 8 MB", () => {
     expect(MAX_UPLOAD_BYTES).toBe(8 * 1024 * 1024);
+  });
+});
+
+describe("processLegacyPhoto", () => {
+  const ratio = (w: number, h: number) => w / h;
+
+  // Regression: the first implementation asked for 600x771 with
+  // `withoutEnlargement: true`. sharp skips the entire resize when the
+  // requested box exceeds the source, so it skipped the crop too and stored
+  // every ledger photo at its original aspect ratio.
+  it.each([
+    [162, 162, "square"],
+    [289, 193, "landscape"],
+    [124, 207, "very narrow"],
+    [199, 315, "tall"],
+    [161, 206, "already near 7:9"],
+  ])("crops a %ix%i (%s) source to 7:9", async (w, h) => {
+    const out = await processLegacyPhoto(await makePng(w, h));
+    expect(ratio(out.width, out.height)).toBeCloseTo(PASSPORT_ASPECT, 1);
+  });
+
+  it("never enlarges a small source", async () => {
+    const out = await processLegacyPhoto(await makePng(162, 162));
+    expect(out.width).toBeLessThanOrEqual(162);
+    expect(out.height).toBeLessThanOrEqual(162);
+  });
+
+  it("caps a large source at the passport geometry", async () => {
+    const out = await processLegacyPhoto(await makePng(2000, 3000));
+    expect(out.width).toBe(PASSPORT_WIDTH);
+    expect(out.height).toBe(PASSPORT_HEIGHT);
+  });
+
+  it("keeps as much of the source as the ratio allows", async () => {
+    // 200x400 is taller than 7:9, so full width survives and height is trimmed.
+    const out = await processLegacyPhoto(await makePng(200, 400));
+    expect(out.width).toBe(200);
+    expect(out.height).toBe(Math.round(200 / PASSPORT_ASPECT));
   });
 });
