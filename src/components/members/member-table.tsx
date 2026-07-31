@@ -45,8 +45,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <Table className="min-w-[880px]">
+    <Table className="min-w-[880px]">
       <TableHeader>
         <TableRow>
           {selection ? (
@@ -78,7 +77,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
             onClick={() => open(row.id)}
             aria-current={activeId === row.id ? "true" : undefined}
             className={cn(
-              "cursor-pointer",
+              "cursor-pointer bg-mdpva-white dark:bg-card",
               activeId === row.id &&
                 "bg-mdpva-gold/15 dark:bg-mdpva-gold/10",
             )}
@@ -129,7 +128,6 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
           </TableRow>
         ))}
       </TableBody>
-      </Table>
-    </div>
+    </Table>
   );
 }
