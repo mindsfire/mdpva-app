@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, ilike, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { members } from "@/db/schema";
+import { members, users } from "@/db/schema";
 import {
   DEFAULT_PER_PAGE,
   type MembersSort,
@@ -68,6 +68,15 @@ export interface MemberDetail {
   deathFundCovered: boolean;
   photoKey: string | null;
   notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  /**
+   * Display name of the admin who last changed this record, or null when no
+   * person has — every ledger-imported member has `updated_by` null because a
+   * script wrote them. A dash in the UI is therefore meaningful: it marks a
+   * record untouched since the import.
+   */
+  updatedByName: string | null;
 }
 
 const UUID_RE =
@@ -87,36 +96,47 @@ export async function getMemberById(id: string): Promise<MemberDetail | null> {
   if (!isUuid(id)) return null;
 
   const [row] = await db
-    .select()
+    .select({
+      member: members,
+      updatedByName: users.name,
+    })
     .from(members)
+    // Left join: `updated_by` is null for every imported member, and an inner
+    // join would silently return "not found" for all 1307 of them.
+    .leftJoin(users, eq(members.updatedBy, users.id))
     .where(and(eq(members.id, id), isNull(members.deletedAt)))
     .limit(1);
 
   if (!row) return null;
 
+  const { member, updatedByName } = row;
+
   return {
-    id: row.id,
-    memberId: row.memberId,
-    legacyId: row.legacyId,
-    firstName: row.firstName,
-    lastName: row.lastName,
-    email: row.email,
-    phone: row.phone,
-    profession: row.profession,
-    businessName: row.businessName,
-    addressLine1: row.addressLine1,
-    addressLine2: row.addressLine2,
-    area: row.area,
-    city: row.city,
-    state: row.state,
-    pincode: row.pincode,
-    dob: row.dob,
-    bloodGroup: row.bloodGroup,
-    status: row.status,
-    feesPaidUpto: row.feesPaidUpto,
-    deathFundCovered: row.deathFundCovered,
-    photoKey: row.photoKey,
-    notes: row.notes,
+    id: member.id,
+    memberId: member.memberId,
+    legacyId: member.legacyId,
+    firstName: member.firstName,
+    lastName: member.lastName,
+    email: member.email,
+    phone: member.phone,
+    profession: member.profession,
+    businessName: member.businessName,
+    addressLine1: member.addressLine1,
+    addressLine2: member.addressLine2,
+    area: member.area,
+    city: member.city,
+    state: member.state,
+    pincode: member.pincode,
+    dob: member.dob,
+    bloodGroup: member.bloodGroup,
+    status: member.status,
+    feesPaidUpto: member.feesPaidUpto,
+    deathFundCovered: member.deathFundCovered,
+    photoKey: member.photoKey,
+    notes: member.notes,
+    createdAt: member.createdAt,
+    updatedAt: member.updatedAt,
+    updatedByName,
   };
 }
 

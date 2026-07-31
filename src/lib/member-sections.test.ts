@@ -27,6 +27,9 @@ function member(overrides: Partial<MemberDetail> = {}): MemberDetail {
     deathFundCovered: true,
     photoKey: null,
     notes: "Imported from the paper ledger.",
+    createdAt: new Date("2025-01-01"),
+    updatedAt: new Date("2025-06-15"),
+    updatedByName: null,
     ...overrides,
   };
 }
