@@ -40,9 +40,9 @@ export function MemberDrawer({
 
   const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams}` : ""}`;
 
-  // The `top-[4.5rem]` offset clears the app's own sticky header (z-40, ~56px
-  // tall): pinned at `top-4` the panel's close button and hint row slid
-  // underneath it as soon as the page was scrolled.
+  // Pinned directly beneath the app's sticky header (z-40, 56px tall) and
+  // sized to the rest of the viewport, so no strip of table shows above or
+  // below it while the list scrolls past.
   //
   // `overscroll-contain` below stops scroll chaining to the page: without it,
   // reaching the end of the drawer hands the wheel to the document and the
@@ -50,7 +50,7 @@ export function MemberDrawer({
   return (
     <div
       ref={panelRef}
-      className="pointer-events-auto sticky top-[4.5rem] max-h-[calc(100vh-5.5rem)] w-full overflow-y-auto overscroll-contain rounded-lg border border-mdpva-border bg-mdpva-white p-4 shadow-xl dark:border-border dark:bg-card"
+      className="pointer-events-auto sticky top-14 h-[calc(100vh-3.5rem)] w-full overflow-y-auto overscroll-contain rounded-lg border border-mdpva-border bg-mdpva-white p-4 shadow-xl dark:border-border dark:bg-card"
       role="region"
       aria-label="Member details"
       aria-busy={isPending}
