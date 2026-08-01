@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 
 import { MemberForm } from "@/components/members/member-form";
+import { fullName } from "@/lib/member-name";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 import type { MemberDetail } from "@/lib/members-query";
 
@@ -37,7 +38,7 @@ export function MemberFormPage({
                 { label: "Dashboard", href: "/" },
                 { label: "Members", href: "/members" },
                 {
-                  label: `${member?.firstName} ${member?.lastName}`,
+                  label: fullName(member?.firstName, member?.lastName),
                   href: `/members/${member?.id}`,
                 },
                 { label: "Edit" },
@@ -52,7 +53,7 @@ export function MemberFormPage({
         <p className="mt-1 text-sm text-muted-foreground">
           {mode === "create"
             ? "A member ID is generated automatically once you save."
-            : `${member?.firstName} ${member?.lastName} · ${member?.memberId}`}
+            : `${fullName(member?.firstName, member?.lastName)} · ${member?.memberId}`}
         </p>
       </div>
 

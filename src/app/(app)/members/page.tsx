@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { MemberFilters } from "@/components/members/filters";
 import { MemberCard } from "@/components/members/member-card";
 import { MemberTable } from "@/components/members/member-table";
-import { MemberSheet } from "@/components/members/member-sheet";
+import { MemberSheetNarrow } from "@/components/members/member-sheet-narrow";
+import { MembersDirectoryLayout } from "@/components/members/members-directory-layout";
 import { MembersPagination } from "@/components/members/members-pagination";
 import {
   DirectoryResults,
@@ -113,80 +114,95 @@ export default async function MembersDirectoryPage({
         </Suspense>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground">
-            Members
-          </h1>
-          <div className="flex items-center gap-2">
-            {hasRole(sessionUser.role, "admin") ? (
-              <Button
-                variant="outline"
-                size="sm"
-                render={
-                  <a href={withParams("/api/export/members", currentParams)} download />
-                }
-              >
-                Export CSV
-              </Button>
-            ) : null}
-            {hasRole(sessionUser.role, "editor") ? (
-              <Button
-                render={
-                  <Link
-                    href={`/members/new?back=${encodeURIComponent(backToDirectory)}`}
-                  />
-                }
-                size="sm"
-              >
-                <PlusIcon />
-                Add member
-              </Button>
-            ) : null}
-          </div>
-        </div>
-        <Suspense fallback={null}>
-          <MemberFilters />
-        </Suspense>
-      </div>
-
-      {rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border">
-          <p className="text-muted-foreground">No members match.</p>
-          <Button variant="outline" render={<Link href="/members" />}>
-            Clear filters
-          </Button>
-        </div>
-      ) : (
-        <DirectoryTransitionProvider>
-          <MembersSelectionProvider
-            isAdmin={hasRole(sessionUser.role, "admin")}
+      <DirectoryTransitionProvider>
+        <MembersSelectionProvider
+          isAdmin={hasRole(sessionUser.role, "admin")}
+          ids={rows.map((row) => row.id)}
+        >
+          {/* The drawer must render whenever `?member=` is present, even when
+              the current filters return zero rows — otherwise a deep link
+              like `?q=zzzz&member=<id>` orphans the param on desktop while
+              still showing the sheet below lg. `ids: []` and a no-op
+              `step()` are already tolerated by MemberDrawerNavProvider. */}
+          <MembersDirectoryLayout
             ids={rows.map((row) => row.id)}
+            activeId={memberParam ?? null}
+            member={selectedMember}
+            role={sessionUser.role}
+            initialWidth={peekWidth}
           >
-            <div className="flex flex-col gap-5">
-              <DirectoryResults>
-                <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
-                  <MemberTable rows={rows} />
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground">
+                  Members
+                </h1>
+                <div className="flex items-center gap-2">
+                  {hasRole(sessionUser.role, "admin") ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      render={
+                        <a href={withParams("/api/export/members", currentParams)} download />
+                      }
+                    >
+                      Export CSV
+                    </Button>
+                  ) : null}
+                  {hasRole(sessionUser.role, "editor") ? (
+                    <Button
+                      render={
+                        <Link
+                          href={`/members/new?back=${encodeURIComponent(backToDirectory)}`}
+                        />
+                      }
+                      size="sm"
+                    >
+                      <PlusIcon />
+                      Add member
+                    </Button>
+                  ) : null}
                 </div>
-                <div className="flex flex-col gap-2.5 md:hidden">
-                  {rows.map((row) => (
-                    <MemberCard key={row.id} row={row} />
-                  ))}
-                </div>
-              </DirectoryResults>
-              <MembersPagination
-                page={page}
-                perPage={perPage}
-                total={total}
-                totalPages={totalPages}
-              />
+              </div>
+              <Suspense fallback={null}>
+                <MemberFilters />
+              </Suspense>
             </div>
-          </MembersSelectionProvider>
-        </DirectoryTransitionProvider>
-      )}
+
+            {rows.length === 0 ? (
+              <div
+                className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border"
+              >
+                <p className="text-muted-foreground">No members match.</p>
+                <Button variant="outline" render={<Link href="/members" />}>
+                  Clear filters
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-5">
+                <DirectoryResults rowCount={perPage}>
+                  <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
+                    <MemberTable rows={rows} />
+                  </div>
+                  <div className="flex flex-col gap-2.5 md:hidden">
+                    {rows.map((row) => (
+                      <MemberCard key={row.id} row={row} />
+                    ))}
+                  </div>
+                </DirectoryResults>
+                <MembersPagination
+                  page={page}
+                  perPage={perPage}
+                  total={total}
+                  totalPages={totalPages}
+                />
+              </div>
+            )}
+          </MembersDirectoryLayout>
+        </MembersSelectionProvider>
+      </DirectoryTransitionProvider>
 
       {memberParam ? (
-        <MemberSheet
+        <MemberSheetNarrow
           member={selectedMember}
           role={sessionUser.role}
           initialWidth={peekWidth}

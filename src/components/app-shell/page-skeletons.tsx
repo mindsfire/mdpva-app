@@ -45,11 +45,19 @@ export function CardSkeleton({
   );
 }
 
-/** Mirrors MemberTable's column widths so rows don't jump on swap. */
+/**
+ * Mirrors MemberTable's column widths so rows don't jump on swap.
+ *
+ * The heights are pinned to the real table's measured geometry rather than
+ * derived from padding: header row 40px (`h-10` cells), body rows 49px (a
+ * 32px avatar plus 8px above and below plus the 1px bottom border). Every row
+ * keeps that border — `TableRow` has no `last:border-0`, so dropping it here
+ * would leave the skeleton a pixel short and nudge the pagination on swap.
+ */
 export function MemberTableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
     <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
-      <div className="flex items-center gap-4 border-b border-mdpva-border px-4 py-3 dark:border-border">
+      <div className="flex h-10 items-center gap-4 border-b border-mdpva-border px-4 dark:border-border">
         <Skeleton className="h-3 w-16" />
         <Skeleton className="h-3 w-20" />
         <Skeleton className="ml-auto h-3 w-16" />
@@ -57,7 +65,7 @@ export function MemberTableSkeleton({ rows = 8 }: { rows?: number }) {
       {Array.from({ length: rows }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 border-b border-mdpva-border px-4 py-3 last:border-0 dark:border-border"
+          className="flex h-[49px] items-center gap-4 border-b border-mdpva-border px-4 dark:border-border"
         >
           <Skeleton className="size-8 shrink-0 rounded-full" />
           <Skeleton className="h-4 w-32" />

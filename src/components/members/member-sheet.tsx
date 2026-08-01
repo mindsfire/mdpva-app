@@ -40,10 +40,13 @@ export function MemberSheet({
     const params = new URLSearchParams(searchParams.toString());
     params.delete("member");
     const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
   const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams}` : ""}`;
+  // Capped at the viewport below: the width cookie is shared with the desktop
+  // drawer, so a panel dragged out to 681px would otherwise render that wide
+  // on a 390px phone and clip its own labels off-screen.
   const width = clampPeekWidth(initialWidth ?? PEEK_MIN_WIDTH);
 
   return (
@@ -56,7 +59,7 @@ export function MemberSheet({
       <SheetContent
         ref={panelRef}
         className="overflow-y-auto p-4 sm:max-w-none!"
-        style={{ width, maxWidth: width }}
+        style={{ width: `min(${width}px, 100vw)`, maxWidth: "100vw" }}
       >
         <SheetResizer panelRef={panelRef} />
         <SheetHeader className="p-0">

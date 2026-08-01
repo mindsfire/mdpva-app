@@ -45,7 +45,14 @@ export default async function AppLayout({
       }
     >
       <AppSidebar isAdmin={isAdmin} />
-      <SidebarInset className="bg-mdpva-paper text-mdpva-ink dark:bg-background dark:text-foreground">
+      {/* `min-w-0` is load-bearing: SidebarInset is a flex item of the body
+          row, so its default `min-width: auto` resolves to its min-content
+          width. Once the members drawer docks beside the table, that
+          min-content exceeds the space left by the sidebar, the inset refuses
+          to shrink, and the whole document scrolls horizontally — which also
+          re-parents the table's sticky columns to the viewport, sliding them
+          over the sidebar. */}
+      <SidebarInset className="min-w-0 bg-mdpva-paper text-mdpva-ink dark:bg-background dark:text-foreground">
         <header className="sticky top-0 z-40 border-b border-mdpva-border bg-mdpva-paper/95 backdrop-blur supports-backdrop-filter:bg-mdpva-paper/80 dark:border-border dark:bg-background/95 dark:supports-backdrop-filter:bg-background/80">
           <div className="flex items-center gap-2 px-4 py-3 sm:px-6">
             <SidebarTrigger className="-ml-1" />
@@ -60,7 +67,13 @@ export default async function AppLayout({
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6">
+        {/* Full width by default: the app is an internal tool used on wide
+            monitors, and a fixed cap left a third of a 2560px screen empty.
+            Pages that need a reading measure (forms, prose) set their own
+            max-width on the content that needs it, rather than the shell
+            deciding for every route — so a new route is wide automatically
+            and only narrows deliberately. */}
+        <main className="w-full flex-1 px-4 py-6 sm:px-6">
           {children}
         </main>
       </SidebarInset>
