@@ -235,3 +235,39 @@ development before any feature that writes data is built.
 - Any change to mobile.
 - Any change to the edit form.
 - Column visibility preferences or user-configurable table columns.
+
+---
+
+## 11. Layout revisions after browser testing (2026-08-01)
+
+The docked layout in §2 shipped, was tried in the browser, and went through
+three shapes before settling. **The approved version is `915f600`** — docked,
+non-floating, drawer owns the full right column. Revert to that SHA if a later
+change makes the layout worse.
+
+| Commit | Shape | Outcome |
+|---|---|---|
+| `3cfd3f6` | Docked beside the table | Fixed the shell overflow that broke every alignment |
+| `9c7e4bc` | Floating over the table | Rejected — table felt covered |
+| `b7567bc` | Floating, full viewport height | Rejected with it |
+| **`915f600`** | **Docked, full right column, centre grip** | **Approved** |
+
+Changes to the locked decisions in §7:
+
+- **Page header moved inside the results column.** The heading, Export CSV /
+  Add member and the filter row now shrink with the table and return to full
+  width when the drawer closes, so the drawer owns the right strip top to
+  bottom. The breadcrumb deliberately stays full width.
+- **`scroll: false` on every drawer navigation.** `router.push` scrolls to top
+  by default, which threw you back to row 1 after reading row 100. This is
+  load-bearing, not cosmetic.
+- **The resize handle lives in the gap with a centred grip**, and is a sibling
+  of the scroll area — an `overflow-y-auto` on the same box clips it away.
+- **`SidebarInset` needs `min-w-0`** (`src/app/(app)/layout.tsx`). Without it
+  the inset cannot shrink, the document scrolls sideways, and the table's
+  sticky columns re-anchor to the viewport and slide over the sidebar.
+- **`clampPeekWidth` reserves the 16px flex gap** so the table keeps a true
+  `MIN_TABLE_WIDTH`.
+
+Still unverified, deliberately: **Edit and Delete**, because local dev points
+at the production database (§9).
