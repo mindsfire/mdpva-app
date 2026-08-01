@@ -78,20 +78,30 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
               />
             </TableHead>
           ) : null}
+          {/* Membership No. leads, and it and Name are both pinned, so
+              scrolling right never leaves you unsure which row you are on.
+              Each offset must equal the total width of the columns to its
+              left exactly, or scrolled cells show through the seam — hence
+              the explicit w-36/min-w-36 and the 184px (40 + 144) for Name.
+              w-36 is chosen to exceed the header text's own min-content width
+              (~120px): a narrower value is silently ignored by table layout,
+              which is what made Name overlap this column by 8px. */}
+          <TableHead
+            className={cn(
+              "sticky z-20 w-36 min-w-36 bg-inherit",
+              selection ? "left-10" : "left-0",
+            )}
+          >
+            Membership No.
+          </TableHead>
           <TableHead
             className={cn(
               "sticky z-20 bg-inherit",
-              selection ? "left-10" : "left-0",
+              selection ? "left-[184px]" : "left-36",
             )}
           >
             Name
           </TableHead>
-          {/* "Membership No." is the legacy ledger number — the identifier
-              the association and its members actually use. The generated
-              MDPVA-YYYY-NNNN value is labelled "Unique ID" and is not shown
-              here. Both column names in the database are unchanged; this is
-              presentation only. */}
-          <TableHead>Membership No.</TableHead>
           <TableHead>Phone</TableHead>
           <TableHead>Profession</TableHead>
           <TableHead>Status</TableHead>
@@ -161,8 +171,16 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
             ) : null}
             <TableCell
               className={cn(
-                "sticky z-10 bg-inherit",
+                "sticky z-10 w-36 min-w-36 bg-inherit text-muted-foreground",
                 selection ? "left-10" : "left-0",
+              )}
+            >
+              {row.legacyId ?? "—"}
+            </TableCell>
+            <TableCell
+              className={cn(
+                "sticky z-10 bg-inherit",
+                selection ? "left-[184px]" : "left-36",
               )}
             >
               <div className="flex items-center gap-2.5">
@@ -176,9 +194,6 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                   {fullName(row.firstName, row.lastName)}
                 </span>
               </div>
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {row.legacyId ?? "—"}
             </TableCell>
             <TableCell className="text-muted-foreground">
               {row.phone ?? "—"}
