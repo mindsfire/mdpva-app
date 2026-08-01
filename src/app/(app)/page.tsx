@@ -183,7 +183,7 @@ export default async function DashboardPage() {
                         {fullName(m.firstName, m.lastName)}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {m.memberId} · <ProfessionLabel profession={m.profession} />
+                        {m.legacyId ?? m.memberId} · <ProfessionLabel profession={m.profession} />
                       </p>
                     </div>
                     <span className="shrink-0 text-xs text-muted-foreground">

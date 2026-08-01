@@ -86,11 +86,12 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
           >
             Name
           </TableHead>
-          {/* Member ID is deliberately not shown: the association treats the
-              legacy ledger number as the member's identifier for now. The
-              column still exists in the database, in search and in the CSV
-              export — this is presentation only. */}
-          <TableHead>Legacy ID</TableHead>
+          {/* "Membership No." is the legacy ledger number — the identifier
+              the association and its members actually use. The generated
+              MDPVA-YYYY-NNNN value is labelled "Unique ID" and is not shown
+              here. Both column names in the database are unchanged; this is
+              presentation only. */}
+          <TableHead>Membership No.</TableHead>
           <TableHead>Phone</TableHead>
           <TableHead>Profession</TableHead>
           <TableHead>Status</TableHead>

@@ -243,7 +243,7 @@ export function MemberForm({
               name="legacyId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Legacy ID</FormLabel>
+                  <FormLabel>Membership No.</FormLabel>
                   <FormControl>
                     <Input
                       {...field}

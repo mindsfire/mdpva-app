@@ -38,7 +38,7 @@ type Phase =
 const FIELD_LABELS: Record<string, string> = {
   email: "Email",
   phone: "Phone",
-  legacyId: "Legacy ID",
+  legacyId: "Membership No.",
 };
 
 function SummaryPill({

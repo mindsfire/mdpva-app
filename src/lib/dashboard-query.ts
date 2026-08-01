@@ -12,6 +12,7 @@ export interface DashboardStats {
   recent: {
     id: string;
     memberId: string;
+    legacyId: string | null;
     firstName: string;
     lastName: string | null;
     profession: "photographer" | "videographer" | "both" | null;
@@ -45,6 +46,9 @@ export async function getDashboardStats(now = new Date()): Promise<DashboardStat
     .select({
       id: members.id,
       memberId: members.memberId,
+      // Selected so the card can lead with the membership number and fall
+      // back to the generated id for members who have none yet.
+      legacyId: members.legacyId,
       firstName: members.firstName,
       lastName: members.lastName,
       profession: members.profession,

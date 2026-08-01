@@ -60,14 +60,19 @@ export function MemberProfileView({
           <h2 className="font-serif text-lg font-medium text-foreground">
             {fullName(member.firstName, member.lastName)}
           </h2>
-          <p className="text-xs text-muted-foreground">{member.memberId}</p>
-          {/* Always shown, even when empty: at the desk an operator needs to
-              know whether this member has an old printed ID card number. */}
+          {/* Membership No. leads: it is what members quote and what the
+              office looks them up by. Always shown even when empty, so an
+              operator can see at a glance that a member has no number yet.
+              The generated id follows as "Unique ID" — a system value, kept
+              visible because support and the CSV export still use it. */}
           <p className="text-xs text-muted-foreground">
-            Legacy ID:{" "}
+            Membership No.:{" "}
             <span className={member.legacyId ? "text-foreground" : undefined}>
               {member.legacyId ?? "—"}
             </span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Unique ID: {member.memberId}
           </p>
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
             <StatusBadge status={member.status} />
