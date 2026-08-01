@@ -58,7 +58,7 @@ export function ApplicationStatus({
     rejected: {
       title: S.statusRejectedTitle,
       body: S.statusRejectedBody,
-      tone: "bg-destructive/10 border-destructive/30",
+      tone: "bg-destructive-soft border-destructive/30",
     },
   }[status];
 
@@ -88,7 +88,7 @@ export function ApplicationStatus({
       </div>
 
       {rejectionReason ? (
-        <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3">
+        <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive-soft px-4 py-3">
           <p className="text-xs font-semibold tracking-[0.12em] text-destructive uppercase">
             <Bi s={S.reasonGiven} sep="·" />
           </p>

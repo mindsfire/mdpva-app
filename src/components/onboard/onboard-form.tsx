@@ -627,7 +627,7 @@ export function OnboardForm({
         {submitError ? (
           <p
             role="alert"
-            className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+            className="mt-4 rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2.5 text-sm text-destructive"
           >
             {submitMessage(submitError)}
           </p>

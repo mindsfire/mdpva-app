@@ -138,29 +138,16 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
             aria-current={activeId === row.id ? "true" : undefined}
             className={cn(
               "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset",
-              // `bg-mdpva-gold/15` and `bg-mdpva-white` are both in the
-              // `background-color` group, so twMerge (via `cn`) keeps only
-              // the last one — the row's computed background becomes a
-              // 15%-alpha translucent color, and the sticky Name cell's
-              // `bg-inherit` inherits that translucency, letting other
-              // columns show through as the table scrolls horizontally.
-              // Using `color-mix` produces a single solid (opaque) color
-              // instead of an alpha-blended one, so there's nothing left
-              // for twMerge to strip and nothing translucent to inherit.
-              //
-              // `TableRow` also carries `hover:bg-muted/50`, which is in a
-              // different tailwind-merge group (it's a state-variant utility,
-              // not a plain `bg-*`) so twMerge keeps BOTH it and our `bg-*`
-              // classes — on hover the browser applies both, and since both
-              // are backgrounds on the same element the later one in the
-              // generated stylesheet wins, which for `hover:` is not
-              // guaranteed to be ours. Rather than fight the cascade, we
-              // neutralise the inherited hover utility with an explicit
-              // `hover:bg-[...]` using the same opaque `color-mix` colors, so
-              // hovering never reintroduces alpha.
+              // Row backgrounds are solid tokens, never alpha or color-mix.
+              // The sticky Membership No. and Name cells use `bg-inherit`, so
+              // anything translucent here lets scrolled columns show through
+              // them — and a `color-mix()` a browser cannot parse leaves the
+              // row with no background at all. `hover:` is pinned too, because
+              // TableRow's own `hover:bg-muted/50` survives tailwind-merge and
+              // would otherwise reintroduce alpha on hover.
               activeId === row.id
-                ? "bg-[color-mix(in_srgb,var(--color-mdpva-gold)_15%,var(--color-mdpva-white))] hover:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_15%,var(--color-mdpva-white))] dark:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_10%,var(--card))] dark:hover:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_10%,var(--card))]"
-                : "bg-mdpva-white hover:bg-[color-mix(in_srgb,var(--color-muted)_50%,var(--color-mdpva-white))] dark:bg-card dark:hover:bg-[color-mix(in_srgb,var(--color-muted)_50%,var(--card))]",
+                ? "bg-row-active hover:bg-row-active"
+                : "bg-mdpva-white hover:bg-row-hover dark:bg-card dark:hover:bg-row-hover",
             )}
           >
             {selection ? (
