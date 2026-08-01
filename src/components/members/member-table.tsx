@@ -49,7 +49,16 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
   // 32px content, leaving an 8px slot between it and the Name column (pinned
   // at `left-10`) through which scrolled cells showed. The two must agree.
   return (
-    <Table className="min-w-[880px]">
+    <Table
+      className="min-w-[880px]"
+      // Matches the drawer: the horizontal scrollbar's thumb is transparent
+      // until the pointer is over the table, and `scrollbar-gutter: stable`
+      // holds its track open either way so rows never shift as it appears.
+      containerClassName={cn(
+        "[scrollbar-gutter:stable] [scrollbar-color:transparent_transparent] [scrollbar-width:thin]",
+        "hover:[scrollbar-color:color-mix(in_srgb,var(--muted-foreground)_45%,transparent)_transparent]",
+      )}
+    >
       <TableHeader>
         {/* The header row is painted explicitly so the sticky cells below can
             inherit it. They used to hard-code `bg-mdpva-white dark:bg-card`,
