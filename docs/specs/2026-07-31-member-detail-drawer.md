@@ -241,9 +241,9 @@ development before any feature that writes data is built.
 ## 11. Layout revisions after browser testing (2026-08-01)
 
 The docked layout in §2 shipped, was tried in the browser, and went through
-three shapes before settling. **The approved version is `915f600`** — docked,
-non-floating, drawer owns the full right column. Revert to that SHA if a later
-change makes the layout worse.
+three shapes before settling. The first approved version was `915f600`; several
+rounds of fixes followed. **The locked version is `e26aa49`** — revert to that
+SHA if a later change makes the layout worse.
 
 | Commit | Shape | Outcome |
 |---|---|---|
@@ -271,3 +271,27 @@ Changes to the locked decisions in §7:
 
 Still unverified, deliberately: **Edit and Delete**, because local dev points
 at the production database (§9).
+
+### Locked at `e26aa49` (2026-08-01)
+
+Everything below was verified in the browser at 1440, 2560 and 3840px wide, in
+both themes. `tsc`, `eslint`, 290 tests and `next build` clean.
+
+- **Scroll position survives** opening, stepping and closing (`scroll: false`).
+- **Open is optimistic**: the panel mounts in the same frame as the click and
+  shows a skeleton; closing needs no fetch at all. One indicator, not two —
+  the spinner is gone.
+- **Page transitions use the same skeletons as `loading.tsx`**, pinned to the
+  real table's geometry (40px header, 49px rows; both states measure 532px for
+  ten rows), so nothing shifts on swap.
+- **Scrollbars reveal on hover only** — drawer and table alike — hidden by
+  colour with `scrollbar-gutter: stable`, so content never reflows.
+- **The shell is full width for every route.** Content that needs a reading
+  measure caps itself; only the member form does. A new route is wide
+  automatically — do not reintroduce a cap in `(app)/layout.tsx`.
+- **The drawer width is clamped in CSS against its container**, because the
+  stored width is one number shared by every screen: 785px is honoured at
+  2560 and becomes 665px at 1440, where the table holds its 480px minimum.
+
+Still unverified: **Edit and Delete**, which write to the production database.
+
