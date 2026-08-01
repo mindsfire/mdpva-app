@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Loader2Icon, XIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -79,15 +79,11 @@ export function MemberDrawer({
         )}
       >
         <div className="mb-3 flex items-center justify-between gap-2">
+          {/* No spinner here: the skeleton below already says the record is
+              loading, and two indicators for one wait read as two waits.
+              `aria-busy` on the panel carries it for assistive tech. */}
           <span className="text-xs text-muted-foreground">
-            {isPending ? (
-              <span className="flex items-center gap-1.5">
-                <Loader2Icon className="size-3 animate-spin" />
-                Loading…
-              </span>
-            ) : (
-              "↑ ↓ to move · Esc to close"
-            )}
+            ↑ ↓ to move · Esc to close
           </span>
           <Button
             variant="ghost"
