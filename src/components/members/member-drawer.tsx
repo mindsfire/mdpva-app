@@ -64,8 +64,19 @@ export function MemberDrawer({
 
       {/* The scroll area is a child, not this element: the resize handle sits
           in the gap to the left of the panel, and an `overflow-y-auto` on the
-          same box clipped it out of sight. */}
-      <div className="h-full overflow-y-auto overscroll-contain rounded-lg border border-mdpva-border bg-mdpva-white p-4 shadow-sm dark:border-border dark:bg-card">
+          same box clipped it out of sight.
+
+          The scrollbar shows only while the pointer is over the panel. It is
+          hidden by painting the thumb transparent rather than by removing the
+          scrollbar, and `scrollbar-gutter: stable` reserves its track either
+          way — so the text never reflows as it appears and disappears. */}
+      <div
+        className={cn(
+          "h-full overflow-y-auto overscroll-contain rounded-lg border border-mdpva-border bg-mdpva-white p-4 shadow-sm dark:border-border dark:bg-card",
+          "[scrollbar-gutter:stable] [scrollbar-color:transparent_transparent] [scrollbar-width:thin]",
+          "hover:[scrollbar-color:color-mix(in_srgb,var(--muted-foreground)_45%,transparent)_transparent]",
+        )}
+      >
         <div className="mb-3 flex items-center justify-between gap-2">
           <span className="text-xs text-muted-foreground">
             {isPending ? (
