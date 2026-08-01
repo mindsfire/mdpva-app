@@ -16,6 +16,12 @@ export const PEEK_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
  * remaining columns stay reachable by scrolling, never dropped.
  */
 export const MIN_TABLE_WIDTH = 480;
+/**
+ * The `gap-4` between the table region and the drawer. It sits inside the
+ * container too, so the ceiling has to reserve it — otherwise the table
+ * settles at `MIN_TABLE_WIDTH − 16` when the drawer is dragged fully open.
+ */
+export const DRAWER_GAP = 16;
 
 /**
  * Clamp a drawer width to the allowed range.
@@ -29,7 +35,10 @@ export function clampPeekWidth(px: number, containerWidth?: number): number {
   const ceiling =
     containerWidth === undefined
       ? PEEK_MAX_WIDTH
-      : Math.min(PEEK_MAX_WIDTH, containerWidth - MIN_TABLE_WIDTH);
+      : Math.min(
+          PEEK_MAX_WIDTH,
+          containerWidth - MIN_TABLE_WIDTH - DRAWER_GAP,
+        );
   return Math.max(PEEK_MIN_WIDTH, Math.min(ceiling, Math.round(px)));
 }
 

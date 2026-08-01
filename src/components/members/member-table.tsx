@@ -44,12 +44,16 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
     }
   }
 
+  // The checkbox column carries `min-w-10` as well as `w-10`: under table
+  // auto-layout a bare `width` is only a suggestion, and it collapsed to its
+  // 32px content, leaving an 8px slot between it and the Name column (pinned
+  // at `left-10`) through which scrolled cells showed. The two must agree.
   return (
     <Table className="min-w-[880px]">
       <TableHeader>
         <TableRow>
           {selection ? (
-            <TableHead className="sticky left-0 z-20 w-10 bg-mdpva-white dark:bg-card">
+            <TableHead className="sticky left-0 z-20 w-10 min-w-10 bg-mdpva-white dark:bg-card">
               <Checkbox
                 checked={allSelected}
                 indeterminate={someSelected}
@@ -124,7 +128,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
           >
             {selection ? (
               <TableCell
-                className="sticky left-0 z-10 bg-inherit"
+                className="sticky left-0 z-10 w-10 min-w-10 bg-inherit"
                 onClick={(event) => event.stopPropagation()}
                 onKeyDown={(event) => event.stopPropagation()}
               >

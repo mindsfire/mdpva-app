@@ -45,7 +45,14 @@ export default async function AppLayout({
       }
     >
       <AppSidebar isAdmin={isAdmin} />
-      <SidebarInset className="bg-mdpva-paper text-mdpva-ink dark:bg-background dark:text-foreground">
+      {/* `min-w-0` is load-bearing: SidebarInset is a flex item of the body
+          row, so its default `min-width: auto` resolves to its min-content
+          width. Once the members drawer docks beside the table, that
+          min-content exceeds the space left by the sidebar, the inset refuses
+          to shrink, and the whole document scrolls horizontally — which also
+          re-parents the table's sticky columns to the viewport, sliding them
+          over the sidebar. */}
+      <SidebarInset className="min-w-0 bg-mdpva-paper text-mdpva-ink dark:bg-background dark:text-foreground">
         <header className="sticky top-0 z-40 border-b border-mdpva-border bg-mdpva-paper/95 backdrop-blur supports-backdrop-filter:bg-mdpva-paper/80 dark:border-border dark:bg-background/95 dark:supports-backdrop-filter:bg-background/80">
           <div className="flex items-center gap-2 px-4 py-3 sm:px-6">
             <SidebarTrigger className="-ml-1" />

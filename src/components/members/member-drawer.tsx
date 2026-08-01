@@ -44,11 +44,14 @@ export function MemberDrawer({
   const width = clampPeekWidth(initialWidth ?? PEEK_MIN_WIDTH);
   const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams}` : ""}`;
 
+  // `overscroll-contain` below stops scroll chaining to the page: without it,
+  // reaching the end of the drawer hands the wheel to the document and the
+  // whole directory scrolls out from under you mid-read.
   return (
     <div
       ref={panelRef}
       style={{ width, maxWidth: width }}
-      className="sticky top-4 max-h-[calc(100vh-2rem)] shrink-0 overflow-y-auto rounded-lg border border-mdpva-border p-4 dark:border-border"
+      className="sticky top-4 max-h-[calc(100vh-2rem)] shrink-0 overflow-y-auto overscroll-contain rounded-lg border border-mdpva-border p-4 dark:border-border"
       role="region"
       aria-label="Member details"
       aria-busy={isPending}
