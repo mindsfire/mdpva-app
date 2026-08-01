@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { Loader2Icon, XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { Role } from "@/lib/rbac";
 import type { MemberDetail } from "@/lib/members-query";
@@ -98,21 +99,63 @@ export function MemberDrawer({
           </Button>
         </div>
 
-        {/* Dimmed rather than replaced while loading: swapping to a skeleton on
-          every arrow-key step would flash the whole panel. */}
-        <div className={cn("transition-opacity", isPending && "opacity-50")}>
-          {member ? (
+        {/* The panel mounts before its data arrives, so "no member yet" is the
+            normal opening state, not an error. A skeleton shaped like the real
+            record covers the fetch; "Member not found" is only the truth once
+            the navigation has settled and still produced nothing. */}
+        {member ? (
+          <div className={cn("transition-opacity", isPending && "opacity-50")}>
             <MemberProfileView
               member={member}
               role={role}
               editHref={`/members/${member.id}/edit?back=${encodeURIComponent(currentUrl)}`}
               onDeleted={close}
             />
-          ) : (
-            <p className="text-sm text-muted-foreground">Member not found.</p>
-          )}
+          </div>
+        ) : isPending ? (
+          <MemberDrawerSkeleton />
+        ) : (
+          <p className="text-sm text-muted-foreground">Member not found.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Placeholder shaped like MemberProfileView — identity block, then four
+ * labelled sections in the same two-column grid — so the panel does not
+ * visibly re-lay-out when the real record replaces it.
+ */
+function MemberDrawerSkeleton() {
+  return (
+    <div className="@container" aria-hidden>
+      <div className="flex items-center gap-3">
+        <Skeleton className="size-14 shrink-0 rounded-full" />
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-3 w-20" />
         </div>
       </div>
+      <div className="mt-3 flex gap-2">
+        <Skeleton className="h-5 w-16 rounded-full" />
+        <Skeleton className="h-5 w-12 rounded-full" />
+      </div>
+
+      {[0, 1, 2, 3].map((section) => (
+        <div key={section} className="mt-6">
+          <Skeleton className="h-3 w-24" />
+          <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-4 @sm:grid-cols-2">
+            {[0, 1, 2, 3].map((field) => (
+              <div key={field} className="flex flex-col gap-1.5">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

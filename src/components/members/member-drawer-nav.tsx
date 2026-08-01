@@ -48,6 +48,12 @@ export function MemberDrawerNavProvider({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = React.useTransition();
+  // The URL is the source of truth, but waiting for the server round-trip
+  // before reflecting a click made opening feel unresponsive and — worse —
+  // made *closing* wait on a fetch it has no use for. `useOptimistic` shows
+  // the new selection immediately and reverts on its own if the navigation
+  // fails; React discards the optimistic value once `activeId` catches up.
+  const [optimisticId, setOptimisticId] = React.useOptimistic(activeId);
 
   const go = React.useCallback(
     (id: string | null) => {
@@ -56,6 +62,7 @@ export function MemberDrawerNavProvider({
       else params.delete("member");
       const query = params.toString();
       startTransition(() => {
+        setOptimisticId(id);
         // `scroll: false` is essential, not cosmetic: the default scrolls to
         // the top of the document on every push, so opening or stepping to a
         // member at row 100 threw you back to row 1 and you had to scroll all
@@ -65,32 +72,32 @@ export function MemberDrawerNavProvider({
         });
       });
     },
-    [pathname, router, searchParams],
+    [pathname, router, searchParams, setOptimisticId],
   );
 
   const step = React.useCallback(
     (delta: number) => {
-      if (!activeId) return;
-      const index = ids.indexOf(activeId);
+      if (!optimisticId) return;
+      const index = ids.indexOf(optimisticId);
       if (index === -1) return;
       const target = ids[index + delta];
       // Deliberately does not paginate: stepping past the last row on a page
       // would change the list under the user without them asking.
       if (target) go(target);
     },
-    [activeId, go, ids],
+    [go, ids, optimisticId],
   );
 
   const value = React.useMemo<MemberDrawerNav>(
     () => ({
-      activeId,
+      activeId: optimisticId,
       isPending,
       open: (id: string) => go(id),
       close: () => go(null),
       next: () => step(1),
       prev: () => step(-1),
     }),
-    [activeId, go, isPending, step],
+    [go, isPending, optimisticId, step],
   );
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
