@@ -60,19 +60,17 @@ export function MemberProfileView({
           <h2 className="font-serif text-lg font-medium text-foreground">
             {fullName(member.firstName, member.lastName)}
           </h2>
-          {/* Membership No. leads: it is what members quote and what the
-              office looks them up by. Always shown even when empty, so an
-              operator can see at a glance that a member has no number yet.
-              The generated id follows as "Unique ID" — a system value, kept
-              visible because support and the CSV export still use it. */}
+          {/* Membership No. is the only identifier shown: it is what members
+              quote and what the office looks them up by. Always rendered even
+              when empty, so an operator can see at a glance that a member has
+              no number yet. The generated MDPVA-YYYY-NNNN value stays in
+              search and the CSV export, but is off the profile deliberately —
+              two identifiers side by side was the confusion to avoid. */}
           <p className="text-xs text-muted-foreground">
             Membership No.:{" "}
             <span className={member.legacyId ? "text-foreground" : undefined}>
               {member.legacyId ?? "—"}
             </span>
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Unique ID: {member.memberId}
           </p>
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
             <StatusBadge status={member.status} />
