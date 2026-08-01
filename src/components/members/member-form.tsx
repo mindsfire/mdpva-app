@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { fullName } from "@/lib/member-name";
 import type { MemberDetail } from "@/lib/members-query";
 import { memberInputSchema, type MemberInput } from "@/lib/validation/member";
 import { PhotoUploader } from "@/components/members/photo-uploader";
@@ -141,16 +142,18 @@ export function MemberForm({
   }
 
   return (
+    // The shell is full width, so the form caps itself below: input fields
+    // stretched across a 2560px monitor are harder to fill in, not easier.
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-5"
+        className="flex w-full max-w-[1400px] flex-col gap-5"
       >
         {duplicates.length > 0 ? (
           <div className="rounded-lg border border-mdpva-gold/50 bg-mdpva-gold/10 px-3 py-2 text-sm text-mdpva-accent dark:text-mdpva-gold">
             Possible duplicate:{" "}
             {duplicates
-              .map((d) => `${d.firstName} ${d.lastName} (${d.memberId})`)
+              .map((d) => `${fullName(d.firstName, d.lastName)} (${d.memberId})`)
               .join(", ")}
           </div>
         ) : null}

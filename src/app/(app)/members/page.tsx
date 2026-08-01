@@ -106,7 +106,7 @@ export default async function MembersDirectoryPage({
   const backToDirectory = withParams("/members", currentParams);
 
   return (
-    <div data-wide-page className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <PageBreadcrumb items={[{ label: "Dashboard", href: "/" }, { label: "Members" }]} />
       <div className="sm:hidden">
         <Suspense fallback={null}>

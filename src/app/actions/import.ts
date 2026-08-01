@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { inArray, isNull, or, sql, and, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
+import { fullName } from "@/lib/member-name";
 import { members } from "@/db/schema";
 import { requireRole } from "@/lib/rbac";
 import { insertValidatedMembers } from "@/lib/member-insert";
@@ -95,7 +96,7 @@ async function findDuplicates(
     legacyId: new Map<string, number>(),
   };
   for (const { row, input } of rows) {
-    const name = `${input.firstName} ${input.lastName}`;
+    const name = fullName(input.firstName, input.lastName);
     for (const field of ["email", "phone", "legacyId"] as const) {
       const raw = input[field];
       if (!raw) continue;
@@ -130,7 +131,7 @@ async function findDuplicates(
   const existingLegacy = new Set(existing.map((m) => m.legacyId).filter(Boolean) as string[]);
 
   for (const { row, input } of rows) {
-    const name = `${input.firstName} ${input.lastName}`;
+    const name = fullName(input.firstName, input.lastName);
     if (input.email && existingEmail.has(input.email.toLowerCase())) {
       duplicates.push({ row, name, field: "email", value: input.email, existing: true });
     }

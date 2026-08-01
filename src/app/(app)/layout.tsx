@@ -67,12 +67,13 @@ export default async function AppLayout({
             </div>
           </div>
         </header>
-        {/* Content is capped at 1600px so forms and prose keep a readable
-            measure on a wide monitor. A page that is genuinely better full
-            width — the members directory, which is a table plus a drawer —
-            opts out by marking its root `data-wide-page`, rather than every
-            other page having to opt in. */}
-        <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 has-[[data-wide-page]]:max-w-none sm:px-6">
+        {/* Full width by default: the app is an internal tool used on wide
+            monitors, and a fixed cap left a third of a 2560px screen empty.
+            Pages that need a reading measure (forms, prose) set their own
+            max-width on the content that needs it, rather than the shell
+            deciding for every route — so a new route is wide automatically
+            and only narrows deliberately. */}
+        <main className="w-full flex-1 px-4 py-6 sm:px-6">
           {children}
         </main>
       </SidebarInset>
