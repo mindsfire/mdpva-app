@@ -40,7 +40,7 @@ export function MemberSheet({
     const params = new URLSearchParams(searchParams.toString());
     params.delete("member");
     const query = params.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
   const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams}` : ""}`;

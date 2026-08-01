@@ -169,7 +169,10 @@ export default async function MembersDirectoryPage({
             initialWidth={peekWidth}
           >
             {rows.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border">
+              <div
+                style={{ marginRight: "var(--member-drawer-width, 0px)" }}
+                className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border"
+              >
                 <p className="text-muted-foreground">No members match.</p>
                 <Button variant="outline" render={<Link href="/members" />}>
                   Clear filters
@@ -187,12 +190,16 @@ export default async function MembersDirectoryPage({
                     ))}
                   </div>
                 </DirectoryResults>
-                <MembersPagination
-                  page={page}
-                  perPage={perPage}
-                  total={total}
-                  totalPages={totalPages}
-                />
+                {/* Kept clear of the floating drawer, which spans the full
+                    height of this container. */}
+                <div style={{ marginRight: "var(--member-drawer-width, 0px)" }}>
+                  <MembersPagination
+                    page={page}
+                    perPage={perPage}
+                    total={total}
+                    totalPages={totalPages}
+                  />
+                </div>
               </div>
             )}
           </MembersDirectoryLayout>

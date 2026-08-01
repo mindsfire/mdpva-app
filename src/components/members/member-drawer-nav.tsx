@@ -56,7 +56,13 @@ export function MemberDrawerNavProvider({
       else params.delete("member");
       const query = params.toString();
       startTransition(() => {
-        router.push(query ? `${pathname}?${query}` : pathname);
+        // `scroll: false` is essential, not cosmetic: the default scrolls to
+        // the top of the document on every push, so opening or stepping to a
+        // member at row 100 threw you back to row 1 and you had to scroll all
+        // the way down again to reach its neighbour.
+        router.push(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
       });
     },
     [pathname, router, searchParams],

@@ -14,7 +14,6 @@ import {
   MemberDrawerKeys,
   useMemberDrawerNav,
 } from "@/components/members/member-drawer-nav";
-import { clampPeekWidth, PEEK_MIN_WIDTH } from "@/lib/peek-prefs";
 
 /**
  * Non-modal member detail panel docked to the right of the directory.
@@ -28,12 +27,10 @@ import { clampPeekWidth, PEEK_MIN_WIDTH } from "@/lib/peek-prefs";
 export function MemberDrawer({
   member,
   role,
-  initialWidth,
   containerRef,
 }: {
   member: MemberDetail | null;
   role: Role;
-  initialWidth?: number;
   containerRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -41,22 +38,28 @@ export function MemberDrawer({
   const searchParams = useSearchParams();
   const { close, isPending } = useMemberDrawerNav();
 
-  const width = clampPeekWidth(initialWidth ?? PEEK_MIN_WIDTH);
   const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams}` : ""}`;
 
+  // The `top-[4.5rem]` offset clears the app's own sticky header (z-40, ~56px
+  // tall): pinned at `top-4` the panel's close button and hint row slid
+  // underneath it as soon as the page was scrolled.
+  //
   // `overscroll-contain` below stops scroll chaining to the page: without it,
   // reaching the end of the drawer hands the wheel to the document and the
   // whole directory scrolls out from under you mid-read.
   return (
     <div
       ref={panelRef}
-      style={{ width, maxWidth: width }}
-      className="sticky top-4 max-h-[calc(100vh-2rem)] shrink-0 overflow-y-auto overscroll-contain rounded-lg border border-mdpva-border p-4 dark:border-border"
+      className="pointer-events-auto sticky top-[4.5rem] max-h-[calc(100vh-5.5rem)] w-full overflow-y-auto overscroll-contain rounded-lg border border-mdpva-border bg-mdpva-white p-4 shadow-xl dark:border-border dark:bg-card"
       role="region"
       aria-label="Member details"
       aria-busy={isPending}
     >
-      <SheetResizer panelRef={panelRef} containerRef={containerRef} />
+      <SheetResizer
+        panelRef={panelRef}
+        containerRef={containerRef}
+        varTargetRef={containerRef}
+      />
       <MemberDrawerKeys regionRef={containerRef} />
 
       <div className="mb-3 flex items-center justify-between gap-2">

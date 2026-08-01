@@ -17,11 +17,27 @@ import {
  * 384px — dragging narrower is clamped, per the design decision that the default
  * is already the minimum comfortable width.
  */
+/**
+ * Custom property the docked drawer is sized with. The drawer panel, its
+ * absolutely-positioned wrapper and the table's right margin all read it, so
+ * writing it once during a drag keeps them in lockstep without a re-render
+ * per pointermove.
+ */
+export const DRAWER_WIDTH_VAR = "--member-drawer-width";
+
 export function SheetResizer({
   panelRef,
   containerRef,
+  varTargetRef,
 }: {
   panelRef: React.RefObject<HTMLDivElement | null>;
+  /**
+   * When supplied, the drag writes `DRAWER_WIDTH_VAR` on this element instead
+   * of setting an inline width on the panel — the docked drawer is sized off
+   * that variable, and so is the space the table can scroll into. The modal
+   * sheet passes nothing and keeps the direct-width behaviour.
+   */
+  varTargetRef?: React.RefObject<HTMLDivElement | null>;
   /**
    * When supplied, the drawer's maximum width also depends on this element's
    * width, so it can never squeeze the table below `MIN_TABLE_WIDTH`. The
@@ -47,6 +63,16 @@ export function SheetResizer({
         containerWidth,
       );
 
+      function applyWidth(px: number) {
+        const varTarget = varTargetRef?.current;
+        if (varTarget) {
+          varTarget.style.setProperty(DRAWER_WIDTH_VAR, `${px}px`);
+          return;
+        }
+        panel!.style.width = `${px}px`;
+        panel!.style.maxWidth = `${px}px`;
+      }
+
       function onMove(moveEvent: PointerEvent) {
         // The panel is right-anchored, so its width is the distance from the
         // pointer to the container's right edge.
@@ -54,8 +80,7 @@ export function SheetResizer({
           containerRef?.current?.getBoundingClientRect().right ??
           window.innerWidth;
         width = clampPeekWidth(right - moveEvent.clientX, containerWidth);
-        panel!.style.width = `${width}px`;
-        panel!.style.maxWidth = `${width}px`;
+        applyWidth(width);
       }
 
       function onUp() {
@@ -70,14 +95,19 @@ export function SheetResizer({
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", onUp);
     },
-    [panelRef, containerRef],
+    [panelRef, containerRef, varTargetRef],
   );
 
   function reset() {
-    const panel = panelRef.current;
-    if (panel) {
-      panel.style.width = `${PEEK_MIN_WIDTH}px`;
-      panel.style.maxWidth = `${PEEK_MIN_WIDTH}px`;
+    const varTarget = varTargetRef?.current;
+    if (varTarget) {
+      varTarget.style.setProperty(DRAWER_WIDTH_VAR, `${PEEK_MIN_WIDTH}px`);
+    } else {
+      const panel = panelRef.current;
+      if (panel) {
+        panel.style.width = `${PEEK_MIN_WIDTH}px`;
+        panel.style.maxWidth = `${PEEK_MIN_WIDTH}px`;
+      }
     }
     document.cookie = `${PEEK_WIDTH_COOKIE}=; path=/; max-age=0; SameSite=Lax`;
   }
