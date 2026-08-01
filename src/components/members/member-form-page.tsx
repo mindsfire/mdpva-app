@@ -50,11 +50,14 @@ export function MemberFormPage({
         <h1 className="font-serif text-2xl font-medium tracking-tight">
           {mode === "create" ? "Add member" : "Edit member"}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {mode === "create"
-            ? "A member ID is generated automatically once you save."
-            : `${fullName(member?.firstName, member?.lastName)} · ${member?.memberId}`}
-        </p>
+        {/* Nothing under the heading when creating: the generated id is no
+            longer surfaced in the UI, so explaining it only raised a question
+            the form does not answer. */}
+        {mode === "create" ? null : (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {fullName(member?.firstName, member?.lastName)}
+          </p>
+        )}
       </div>
 
       <MemberForm

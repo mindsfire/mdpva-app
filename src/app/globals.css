@@ -61,6 +61,10 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-destructive-soft-strong: var(--destructive-soft-strong);
+  --color-row-active: var(--row-active);
+  --color-row-hover: var(--row-hover);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -100,7 +104,21 @@
   --muted-foreground: var(--color-mdpva-muted);
   --accent: var(--color-mdpva-gold);
   --accent-foreground: var(--color-mdpva-ink);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: #dc2626;
+  /* Solid tints rather than `bg-destructive/10`. Tailwind emits the alpha
+     version inside `@supports (color: lab(...))`, which is a test for lab()
+     and not for color-mix() — a browser with one and not the other applies a
+     declaration it cannot parse and falls back to the *solid* colour beneath,
+     so red text landed on a red background and error messages and the Delete
+     button rendered blank. These need no colour function at all. */
+  --destructive-soft: #fdeceb;
+  --destructive-soft-strong: #fadcda;
+  /* Row surfaces for the members table, as literal colours for the same
+     reason: the sticky columns inherit the row background, so it has to be
+     opaque in every browser or scrolled cells show through them. Values are
+     the mixes they replace — gold 15% on white, and muted 50% on white. */
+  --row-active: #f7f5ec;
+  --row-hover: #eeeeec;
   --border: var(--color-mdpva-border);
   --input: var(--color-mdpva-border);
   --ring: var(--color-mdpva-accent);
@@ -135,7 +153,11 @@
   --muted-foreground: #a8a698;
   --accent: #d8cd96;
   --accent-foreground: #161513;
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: #f87171;
+  --destructive-soft: #3a1d1b;
+  --destructive-soft-strong: #4a2523;
+  --row-active: #2c2a20;
+  --row-hover: #1f1e17;
   --border: #2a2925;
   --input: #2a2925;
   --ring: #d8cd96;
@@ -175,7 +197,11 @@
   --muted-foreground: var(--color-mdpva-muted);
   --accent: var(--color-mdpva-gold);
   --accent-foreground: var(--color-mdpva-ink);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: #dc2626;
+  --destructive-soft: #fdeceb;
+  --destructive-soft-strong: #fadcda;
+  --row-active: #f7f5ec;
+  --row-hover: #eeeeec;
   --border: var(--color-mdpva-border);
   --input: var(--color-mdpva-border);
   --ring: var(--color-mdpva-accent);

@@ -72,7 +72,7 @@ export function OnboardingProgressCard({
       {cannotSelfVerify > 0 ? (
         <p className="mt-3 text-xs text-muted-foreground">
           {cannotSelfVerify} member{cannotSelfVerify === 1 ? "" : "s"} can&apos;t
-          use the form — no ledger number or no usable phone on record. They need
+          use the form — no membership number or no usable phone on record. They need
           to be handled at the office.
         </p>
       ) : null}

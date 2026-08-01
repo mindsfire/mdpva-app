@@ -177,7 +177,7 @@ export const memberInputSchema = z.object({
   deathFundCovered: z.boolean().default(false),
 
   notes: optionalText(MAX_LENGTHS.notes, "Notes"),
-  legacyId: optionalText(MAX_LENGTHS.legacyId, "Legacy ID"),
+  legacyId: optionalText(MAX_LENGTHS.legacyId, "Membership No."),
 });
 
 export type MemberInput = z.infer<typeof memberInputSchema>;

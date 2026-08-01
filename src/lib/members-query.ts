@@ -149,15 +149,32 @@ const DEFAULT_SORT: MembersSort = "name";
  */
 const NAME_SORT_KEY = sql`lower(trim(${members.firstName} || ' ' || coalesce(${members.lastName}, '')))`;
 
+/**
+ * Membership numbers are stored as text but read as numbers, so sorting the
+ * column directly would put 10 before 2. Digits are extracted and cast, and
+ * anything with no digits at all (or no number yet) sorts last in *both*
+ * directions — an empty value leading the list is never what you asked for.
+ */
+const MEMBERSHIP_SORT_KEY = sql`nullif(regexp_replace(coalesce(${members.legacyId}, ''), '[^0-9]', '', 'g'), '')::bigint`;
+
 const SORT_CONFIG = {
   name: { column: NAME_SORT_KEY, direction: "asc" as const },
   name_desc: { column: NAME_SORT_KEY, direction: "desc" as const },
+  membership: {
+    column: sql`${MEMBERSHIP_SORT_KEY} asc nulls last`,
+    direction: "raw" as const,
+  },
+  membership_desc: {
+    column: sql`${MEMBERSHIP_SORT_KEY} desc nulls last`,
+    direction: "raw" as const,
+  },
   newest: { column: members.createdAt, direction: "desc" as const },
 } satisfies Record<
   MembersSort,
   {
     column: SQL | typeof members.createdAt;
-    direction: "asc" | "desc";
+    /** "raw" means the column expression already carries its own direction. */
+    direction: "asc" | "desc" | "raw";
   }
 >;
 
@@ -276,7 +293,6 @@ export async function searchMembers(
   const where = buildMembersWhere(params);
   const activeSort = params.sort ?? DEFAULT_SORT;
   const { column, direction } = SORT_CONFIG[activeSort];
-  const orderFn = direction === "asc" ? asc : desc;
 
   const perPage = params.perPage ?? DEFAULT_PER_PAGE;
 
@@ -306,7 +322,13 @@ export async function searchMembers(
     })
     .from(members)
     .where(where)
-    .orderBy(orderFn(column), orderFn(members.id))
+    // `members.id` is the tiebreaker so pagination is stable when the sort
+    // key repeats — which membership numbers do, for the members that have
+    // none.
+    .orderBy(
+      direction === "raw" ? column : direction === "asc" ? asc(column) : desc(column),
+      asc(members.id),
+    )
     .limit(perPage)
     .offset((page - 1) * perPage);
 

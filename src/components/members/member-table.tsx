@@ -8,6 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { usePathname, useSearchParams } from "next/navigation";
+import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from "lucide-react";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import type { MemberRow } from "@/lib/members-query";
 import { fullName } from "@/lib/member-name";
@@ -20,6 +23,8 @@ import {
 } from "./member-badges";
 import { useMembersSelection } from "./selection";
 import { useMemberDrawerNav } from "@/components/members/member-drawer-nav";
+import { useDirectoryTransition } from "@/components/members/directory-transition";
+import type { MembersSort } from "@/lib/members-params";
 import { cn } from "@/lib/utils";
 
 export function MemberTable({ rows }: { rows: MemberRow[] }) {
@@ -50,7 +55,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
   // at `left-10`) through which scrolled cells showed. The two must agree.
   return (
     <Table
-      className="min-w-[880px]"
+      className="min-w-[800px]"
       // Matches the drawer: the horizontal scrollbar's thumb is transparent
       // until the pointer is over the table, and `scrollbar-gutter: stable`
       // holds its track open either way so rows never shift as it appears.
@@ -78,16 +83,32 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
               />
             </TableHead>
           ) : null}
-          <TableHead
+          {/* Membership No. leads, and it and Name are both pinned, so
+              scrolling right never leaves you unsure which row you are on.
+              Each offset must equal the total width of the columns to its
+              left exactly, or scrolled cells show through the seam — hence
+              the explicit w-36/min-w-36 and the 184px (40 + 144) for Name.
+              w-36 is chosen to exceed the header text's own min-content width
+              (~120px): a narrower value is silently ignored by table layout,
+              which is what made Name overlap this column by 8px. */}
+          <SortableHead
+            label="Membership No."
+            asc="membership"
+            desc="membership_desc"
             className={cn(
-              "sticky z-20 bg-inherit",
+              "sticky z-20 w-36 min-w-36 bg-inherit",
               selection ? "left-10" : "left-0",
             )}
-          >
-            Name
-          </TableHead>
-          <TableHead>Member ID</TableHead>
-          <TableHead>Legacy ID</TableHead>
+          />
+          <SortableHead
+            label="Name"
+            asc="name"
+            desc="name_desc"
+            className={cn(
+              "sticky z-20 bg-inherit",
+              selection ? "left-[184px]" : "left-36",
+            )}
+          />
           <TableHead>Phone</TableHead>
           <TableHead>Profession</TableHead>
           <TableHead>Status</TableHead>
@@ -117,29 +138,16 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
             aria-current={activeId === row.id ? "true" : undefined}
             className={cn(
               "cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset",
-              // `bg-mdpva-gold/15` and `bg-mdpva-white` are both in the
-              // `background-color` group, so twMerge (via `cn`) keeps only
-              // the last one — the row's computed background becomes a
-              // 15%-alpha translucent color, and the sticky Name cell's
-              // `bg-inherit` inherits that translucency, letting other
-              // columns show through as the table scrolls horizontally.
-              // Using `color-mix` produces a single solid (opaque) color
-              // instead of an alpha-blended one, so there's nothing left
-              // for twMerge to strip and nothing translucent to inherit.
-              //
-              // `TableRow` also carries `hover:bg-muted/50`, which is in a
-              // different tailwind-merge group (it's a state-variant utility,
-              // not a plain `bg-*`) so twMerge keeps BOTH it and our `bg-*`
-              // classes — on hover the browser applies both, and since both
-              // are backgrounds on the same element the later one in the
-              // generated stylesheet wins, which for `hover:` is not
-              // guaranteed to be ours. Rather than fight the cascade, we
-              // neutralise the inherited hover utility with an explicit
-              // `hover:bg-[...]` using the same opaque `color-mix` colors, so
-              // hovering never reintroduces alpha.
+              // Row backgrounds are solid tokens, never alpha or color-mix.
+              // The sticky Membership No. and Name cells use `bg-inherit`, so
+              // anything translucent here lets scrolled columns show through
+              // them — and a `color-mix()` a browser cannot parse leaves the
+              // row with no background at all. `hover:` is pinned too, because
+              // TableRow's own `hover:bg-muted/50` survives tailwind-merge and
+              // would otherwise reintroduce alpha on hover.
               activeId === row.id
-                ? "bg-[color-mix(in_srgb,var(--color-mdpva-gold)_15%,var(--color-mdpva-white))] hover:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_15%,var(--color-mdpva-white))] dark:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_10%,var(--card))] dark:hover:bg-[color-mix(in_srgb,var(--color-mdpva-gold)_10%,var(--card))]"
-                : "bg-mdpva-white hover:bg-[color-mix(in_srgb,var(--color-muted)_50%,var(--color-mdpva-white))] dark:bg-card dark:hover:bg-[color-mix(in_srgb,var(--color-muted)_50%,var(--card))]",
+                ? "bg-row-active hover:bg-row-active"
+                : "bg-mdpva-white hover:bg-row-hover dark:bg-card dark:hover:bg-row-hover",
             )}
           >
             {selection ? (
@@ -157,8 +165,16 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
             ) : null}
             <TableCell
               className={cn(
-                "sticky z-10 bg-inherit",
+                "sticky z-10 w-36 min-w-36 bg-inherit text-muted-foreground",
                 selection ? "left-10" : "left-0",
+              )}
+            >
+              {row.legacyId ?? "—"}
+            </TableCell>
+            <TableCell
+              className={cn(
+                "sticky z-10 bg-inherit",
+                selection ? "left-[184px]" : "left-36",
               )}
             >
               <div className="flex items-center gap-2.5">
@@ -172,12 +188,6 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                   {fullName(row.firstName, row.lastName)}
                 </span>
               </div>
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {row.memberId}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {row.legacyId ?? "—"}
             </TableCell>
             <TableCell className="text-muted-foreground">
               {row.phone ?? "—"}
@@ -198,5 +208,69 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
         ))}
       </TableBody>
     </Table>
+  );
+}
+
+/**
+ * Column header that sorts the directory.
+ *
+ * Sorting lives in the URL like every other directory control, so a sorted
+ * view is linkable and survives a reload. Navigating through the shared
+ * directory transition means a sort shows the same skeleton a page change
+ * does, rather than freezing on the old order.
+ */
+function SortableHead({
+  label,
+  asc: ascValue,
+  desc: descValue,
+  className,
+}: {
+  label: string;
+  asc: MembersSort;
+  desc: MembersSort;
+  className?: string;
+}) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { navigate } = useDirectoryTransition();
+
+  const current = searchParams.get("sort");
+  const isAsc = current === ascValue;
+  const isDesc = current === descValue;
+  // First click sorts ascending; clicking the active column flips it.
+  const next = isAsc ? descValue : ascValue;
+
+  function sort() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("sort", next);
+    // A new order invalidates the current page position.
+    params.delete("page");
+    navigate(`${pathname}?${params.toString()}`);
+  }
+
+  return (
+    <TableHead
+      className={className}
+      aria-sort={isAsc ? "ascending" : isDesc ? "descending" : "none"}
+    >
+      <button
+        type="button"
+        onClick={sort}
+        className="-mx-1.5 flex cursor-pointer items-center gap-1 rounded px-1.5 py-1 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+        aria-label={`Sort by ${label}, ${next.endsWith("_desc") ? "descending" : "ascending"}`}
+      >
+        {label}
+        {isAsc ? (
+          <ArrowUpIcon className="size-3.5" />
+        ) : isDesc ? (
+          <ArrowDownIcon className="size-3.5" />
+        ) : (
+          // Always rendered, just faint, so the column reads as sortable
+          // before it is used — and so the header never changes width when
+          // the icon swaps in.
+          <ChevronsUpDownIcon className="size-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
   );
 }

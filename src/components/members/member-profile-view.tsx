@@ -13,6 +13,7 @@ import { fullName } from "@/lib/member-name";
 import {
   DeathFundBadge,
   FeesBadge,
+  initials,
   StatusBadge,
 } from "@/components/members/member-badges";
 
@@ -49,27 +50,40 @@ export function MemberProfileView({
 
   return (
     <div className="@container flex flex-col gap-6">
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3 sm:gap-4">
+        {/* Mobile keeps the circular avatar. On desktop the photo is shown as
+            a portrait close to the 7:9 it is stored at (600x771): a small
+            circle crops the sides off a passport photo and is too small to
+            recognise a face in. */}
         <MemberAvatar
           firstName={member.firstName}
           lastName={member.lastName}
           photoKey={member.photoKey}
           size="lg"
+          className="sm:hidden"
         />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h2 className="font-serif text-lg font-medium text-foreground">
+        <MemberPortrait
+          firstName={member.firstName}
+          lastName={member.lastName}
+          photoKey={member.photoKey}
+        />
+        <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-1.5 sm:pt-0.5">
+          <h2 className="font-serif text-lg font-medium text-foreground sm:text-xl">
             {fullName(member.firstName, member.lastName)}
           </h2>
-          <p className="text-xs text-muted-foreground">{member.memberId}</p>
-          {/* Always shown, even when empty: at the desk an operator needs to
-              know whether this member has an old printed ID card number. */}
+          {/* Membership No. is the only identifier shown: it is what members
+              quote and what the office looks them up by. Always rendered even
+              when empty, so an operator can see at a glance that a member has
+              no number yet. The generated MDPVA-YYYY-NNNN value stays in
+              search and the CSV export, but is off the profile deliberately —
+              two identifiers side by side was the confusion to avoid. */}
           <p className="text-xs text-muted-foreground">
-            Legacy ID:{" "}
+            Membership No.:{" "}
             <span className={member.legacyId ? "text-foreground" : undefined}>
               {member.legacyId ?? "—"}
             </span>
           </p>
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <div className="flex flex-wrap items-center gap-1.5 pt-1 sm:pt-1.5">
             <StatusBadge status={member.status} />
             <FeesBadge feesPaidUpto={member.feesPaidUpto} />
             <DeathFundBadge covered={member.deathFundCovered} />
@@ -124,6 +138,43 @@ export function MemberProfileView({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Desktop-only portrait. Photos are stored at 7:9 (600x771 after
+ * `processLegacyPhoto`), so the frame matches that ratio and the image fills
+ * it without distortion. Sized a little under its stored width, and wider
+ * again once the panel is roomy.
+ */
+function MemberPortrait({
+  firstName,
+  lastName,
+  photoKey,
+}: {
+  firstName: string;
+  lastName: string | null;
+  photoKey: string | null;
+}) {
+  const name = fullName(firstName, lastName);
+
+  return (
+    <div className="hidden aspect-[7/9] w-32 shrink-0 overflow-hidden rounded-lg ring-1 ring-mdpva-gold/60 sm:block @2xl:w-40">
+      {photoKey ? (
+        // Served by our own /api/photos route, which already resizes and
+        // caches, so next/image would add a second optimisation pass.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/api/photos/${photoKey}`}
+          alt={name}
+          className="size-full object-cover"
+        />
+      ) : (
+        <div className="flex size-full items-center justify-center bg-mdpva-gold/20 font-serif text-2xl text-mdpva-accent dark:text-mdpva-gold">
+          {initials(firstName, lastName)}
+        </div>
+      )}
     </div>
   );
 }

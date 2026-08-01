@@ -37,7 +37,7 @@ const dateFmt = new Intl.DateTimeFormat("en-IN", {
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-mdpva-gold/25 text-mdpva-accent dark:text-mdpva-gold",
   approved: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-  rejected: "bg-destructive/15 text-destructive",
+  rejected: "bg-destructive-soft text-destructive",
   superseded: "bg-muted text-muted-foreground",
 };
 

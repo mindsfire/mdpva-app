@@ -44,9 +44,14 @@ const TOGGLE_OPTIONS: FilterOption[] = [
   { label: "Death fund covered", param: "deathFund", value: "true" },
 ];
 
+// Kept in step with the sortable column headers in MemberTable: clicking a
+// header sets the same `?sort=` values, so the menu always shows what the
+// table is actually sorted by.
 const SORT_OPTIONS = [
   { label: "Name A–Z", value: "name" },
   { label: "Name Z–A", value: "name_desc" },
+  { label: "Membership No. ↑", value: "membership" },
+  { label: "Membership No. ↓", value: "membership_desc" },
   { label: "Newest first", value: "newest" },
 ] as const;
 

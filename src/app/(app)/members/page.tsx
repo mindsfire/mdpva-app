@@ -9,7 +9,7 @@ import {
   searchMembers,
   type MembersQueryParams,
 } from "@/lib/members-query";
-import { parsePage, parsePerPage } from "@/lib/members-params";
+import { parsePage, parsePerPage, parseSort } from "@/lib/members-params";
 import { Button } from "@/components/ui/button";
 import { MemberFilters } from "@/components/members/filters";
 import { MemberCard } from "@/components/members/member-card";
@@ -62,10 +62,7 @@ function toQueryParams(searchParams: SearchParams): MembersQueryParams {
         : undefined,
     feesDue: first(searchParams.feesDue) === "true",
     deathFund: first(searchParams.deathFund) === "true",
-    sort:
-      sort === "name" || sort === "name_desc" || sort === "newest"
-        ? sort
-        : undefined,
+    sort: parseSort(sort),
     page: parsePage(first(searchParams.page)),
     perPage: parsePerPage(first(searchParams.perPage)),
   };
