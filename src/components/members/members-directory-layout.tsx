@@ -44,10 +44,10 @@ export function MembersDirectoryLayout({
     <MemberDrawerNavProvider ids={ids} activeId={activeId}>
       <div
         ref={containerRef}
-        className="relative"
-        // Only set while the drawer is open: the table's right margin reads
-        // this variable and must fall back to 0 when there's no panel to
-        // scroll clear of.
+        className="flex items-start gap-4"
+        // Only set while the drawer is open. The drawer's width reads it, and
+        // the resizer writes it, so a drag moves the panel and the column it
+        // leaves for the table together without a re-render.
         style={
           showDrawer
             ? ({
@@ -56,22 +56,17 @@ export function MembersDirectoryLayout({
             : undefined
         }
       >
-        {children}
+        {/* The page heading, its Export/Add buttons and the filter row live
+            inside this column, not above it — so opening the drawer hands the
+            whole right-hand strip over, top to bottom, and closing it returns
+            them to full width. */}
+        <div className="flex min-w-0 flex-1 flex-col gap-5">{children}</div>
         {showDrawer ? (
-          // The drawer floats above the table rather than sitting beside it,
-          // so the list keeps its full width and reads as a whole surface with
-          // a panel resting on top. `pointer-events-none` on the wrapper means
-          // only the panel itself intercepts clicks — the strip of table below
-          // it stays clickable. The table gets a matching right margin (see
-          // MemberTable) so every column can still be scrolled clear of the
-          // panel; nothing is permanently hidden underneath it.
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-30 w-(--member-drawer-width)">
-            <MemberDrawer
-              member={member}
-              role={role}
-              containerRef={containerRef}
-            />
-          </div>
+          <MemberDrawer
+            member={member}
+            role={role}
+            containerRef={containerRef}
+          />
         ) : null}
       </div>
     </MemberDrawerNavProvider>

@@ -48,15 +48,8 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
   // auto-layout a bare `width` is only a suggestion, and it collapsed to its
   // 32px content, leaving an 8px slot between it and the Name column (pinned
   // at `left-10`) through which scrolled cells showed. The two must agree.
-  // The right margin is the drawer's width while it's open (0 otherwise). It
-  // extends the scroll container's scrollable width — padding on the container
-  // does not, reliably — so the columns sitting under the floating panel can
-  // always be scrolled out from beneath it.
   return (
-    <Table
-      className="min-w-[880px]"
-      style={{ marginRight: "var(--member-drawer-width, 0px)" }}
-    >
+    <Table className="min-w-[880px]">
       <TableHeader>
         <TableRow>
           {selection ? (

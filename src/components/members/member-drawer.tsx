@@ -50,7 +50,7 @@ export function MemberDrawer({
   return (
     <div
       ref={panelRef}
-      className="pointer-events-auto sticky top-14 h-[calc(100vh-3.5rem)] w-full overflow-y-auto overscroll-contain rounded-lg border border-mdpva-border bg-mdpva-white p-4 shadow-xl dark:border-border dark:bg-card"
+      className="sticky top-14 h-[calc(100vh-4.5rem)] w-(--member-drawer-width) shrink-0"
       role="region"
       aria-label="Member details"
       aria-busy={isPending}
@@ -62,40 +62,45 @@ export function MemberDrawer({
       />
       <MemberDrawerKeys regionRef={containerRef} />
 
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
-          {isPending ? (
-            <span className="flex items-center gap-1.5">
-              <Loader2Icon className="size-3 animate-spin" />
-              Loading…
-            </span>
-          ) : (
-            "↑ ↓ to move · Esc to close"
-          )}
-        </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={close}
-          aria-label="Close member details"
-        >
-          <XIcon />
-        </Button>
-      </div>
+      {/* The scroll area is a child, not this element: the resize handle sits
+          in the gap to the left of the panel, and an `overflow-y-auto` on the
+          same box clipped it out of sight. */}
+      <div className="h-full overflow-y-auto overscroll-contain rounded-lg border border-mdpva-border bg-mdpva-white p-4 shadow-sm dark:border-border dark:bg-card">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <span className="text-xs text-muted-foreground">
+            {isPending ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2Icon className="size-3 animate-spin" />
+                Loading…
+              </span>
+            ) : (
+              "↑ ↓ to move · Esc to close"
+            )}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={close}
+            aria-label="Close member details"
+          >
+            <XIcon />
+          </Button>
+        </div>
 
-      {/* Dimmed rather than replaced while loading: swapping to a skeleton on
+        {/* Dimmed rather than replaced while loading: swapping to a skeleton on
           every arrow-key step would flash the whole panel. */}
-      <div className={cn("transition-opacity", isPending && "opacity-50")}>
-        {member ? (
-          <MemberProfileView
-            member={member}
-            role={role}
-            editHref={`/members/${member.id}/edit?back=${encodeURIComponent(currentUrl)}`}
-            onDeleted={close}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">Member not found.</p>
-        )}
+        <div className={cn("transition-opacity", isPending && "opacity-50")}>
+          {member ? (
+            <MemberProfileView
+              member={member}
+              role={role}
+              editHref={`/members/${member.id}/edit?back=${encodeURIComponent(currentUrl)}`}
+              onDeleted={close}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">Member not found.</p>
+          )}
+        </div>
       </div>
     </div>
   );

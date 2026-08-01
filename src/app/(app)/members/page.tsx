@@ -114,43 +114,6 @@ export default async function MembersDirectoryPage({
         </Suspense>
       </div>
 
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground">
-            Members
-          </h1>
-          <div className="flex items-center gap-2">
-            {hasRole(sessionUser.role, "admin") ? (
-              <Button
-                variant="outline"
-                size="sm"
-                render={
-                  <a href={withParams("/api/export/members", currentParams)} download />
-                }
-              >
-                Export CSV
-              </Button>
-            ) : null}
-            {hasRole(sessionUser.role, "editor") ? (
-              <Button
-                render={
-                  <Link
-                    href={`/members/new?back=${encodeURIComponent(backToDirectory)}`}
-                  />
-                }
-                size="sm"
-              >
-                <PlusIcon />
-                Add member
-              </Button>
-            ) : null}
-          </div>
-        </div>
-        <Suspense fallback={null}>
-          <MemberFilters />
-        </Suspense>
-      </div>
-
       <DirectoryTransitionProvider>
         <MembersSelectionProvider
           isAdmin={hasRole(sessionUser.role, "admin")}
@@ -168,9 +131,45 @@ export default async function MembersDirectoryPage({
             role={sessionUser.role}
             initialWidth={peekWidth}
           >
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <h1 className="font-serif text-2xl font-medium tracking-tight text-foreground">
+                  Members
+                </h1>
+                <div className="flex items-center gap-2">
+                  {hasRole(sessionUser.role, "admin") ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      render={
+                        <a href={withParams("/api/export/members", currentParams)} download />
+                      }
+                    >
+                      Export CSV
+                    </Button>
+                  ) : null}
+                  {hasRole(sessionUser.role, "editor") ? (
+                    <Button
+                      render={
+                        <Link
+                          href={`/members/new?back=${encodeURIComponent(backToDirectory)}`}
+                        />
+                      }
+                      size="sm"
+                    >
+                      <PlusIcon />
+                      Add member
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+              <Suspense fallback={null}>
+                <MemberFilters />
+              </Suspense>
+            </div>
+
             {rows.length === 0 ? (
               <div
-                style={{ marginRight: "var(--member-drawer-width, 0px)" }}
                 className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border"
               >
                 <p className="text-muted-foreground">No members match.</p>
@@ -190,16 +189,12 @@ export default async function MembersDirectoryPage({
                     ))}
                   </div>
                 </DirectoryResults>
-                {/* Kept clear of the floating drawer, which spans the full
-                    height of this container. */}
-                <div style={{ marginRight: "var(--member-drawer-width, 0px)" }}>
-                  <MembersPagination
-                    page={page}
-                    perPage={perPage}
-                    total={total}
-                    totalPages={totalPages}
-                  />
-                </div>
+                <MembersPagination
+                  page={page}
+                  perPage={perPage}
+                  total={total}
+                  totalPages={totalPages}
+                />
               </div>
             )}
           </MembersDirectoryLayout>

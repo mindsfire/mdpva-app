@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { GripVerticalIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -11,20 +12,19 @@ import {
 } from "@/lib/peek-prefs";
 
 /**
- * Drag handle on the peek sheet's leading (left) edge. The sheet is anchored
- * to the right, so its width is `containerRight - clientX` or `viewportWidth - clientX`
+ * Custom property the docked drawer is sized with. Writing it once during a
+ * drag resizes the panel — and so the column left for the table — without a
+ * re-render per pointermove.
+ */
+export const DRAWER_WIDTH_VAR = "--member-drawer-width";
+
+/**
+ * Drag handle on the panel's leading (left) edge. The panel is anchored to the
+ * right, so its width is `containerRight - clientX` or `viewportWidth - clientX`
  * depending on whether a container is supplied. Only ever widens past the original
  * 384px — dragging narrower is clamped, per the design decision that the default
  * is already the minimum comfortable width.
  */
-/**
- * Custom property the docked drawer is sized with. The drawer panel, its
- * absolutely-positioned wrapper and the table's right margin all read it, so
- * writing it once during a drag keeps them in lockstep without a re-render
- * per pointermove.
- */
-export const DRAWER_WIDTH_VAR = "--member-drawer-width";
-
 export function SheetResizer({
   panelRef,
   containerRef,
@@ -119,13 +119,32 @@ export function SheetResizer({
       aria-label="Resize panel"
       onPointerDown={onPointerDown}
       onDoubleClick={reset}
-      title="Drag to widen · double-click to reset"
+      title="Drag to resize · double-click to reset"
       className={cn(
-        "absolute inset-y-0 left-0 z-50 hidden w-1.5 cursor-col-resize touch-none sm:block",
+        "absolute inset-y-0 z-50 hidden cursor-col-resize touch-none sm:flex sm:items-center sm:justify-center",
+        // Docked, the handle lives in the gap between table and drawer so it
+        // reads as the seam between two panes rather than a sliver of the
+        // panel. The modal sheet keeps it on its own left edge.
+        varTargetRef ? "-left-4 w-4" : "left-0 w-1.5",
         "after:absolute after:inset-y-0 after:left-1/2 after:w-px after:-translate-x-1/2 after:transition-colors",
         "hover:after:bg-mdpva-accent/50 dark:hover:after:bg-mdpva-gold/50",
         dragging && "after:bg-mdpva-accent/70 dark:after:bg-mdpva-gold/70",
       )}
-    />
+    >
+      {/* A grip at the vertical centre: the hairline alone gave no hint that
+          the seam was draggable. */}
+      {varTargetRef ? (
+        <span
+          className={cn(
+            "relative z-10 flex h-9 w-4 items-center justify-center rounded-full border border-mdpva-border bg-mdpva-white text-muted-foreground transition-colors dark:border-border dark:bg-card",
+            "hover:border-mdpva-accent/60 hover:text-foreground dark:hover:border-mdpva-gold/60",
+            dragging &&
+              "border-mdpva-accent/70 text-foreground dark:border-mdpva-gold/70",
+          )}
+        >
+          <GripVerticalIcon className="size-3" />
+        </span>
+      ) : null}
+    </div>
   );
 }
