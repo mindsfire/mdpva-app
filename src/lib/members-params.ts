@@ -14,10 +14,32 @@ export type MemberStatusFilter = "active" | "inactive" | "suspended";
 export type ProfessionFilter = "photographer" | "videographer" | "both";
 
 /**
- * `name` (last_name asc, default) / `name_desc` (last_name desc) / `newest`
- * (created_at desc).
+ * `name` / `name_desc` sort on the displayed full name (the default),
+ * `membership` / `membership_desc` on the membership number, and `newest` on
+ * created_at desc. The membership pair is driven by the sortable column
+ * header in the table as well as the sort menu.
  */
-export type MembersSort = "name" | "name_desc" | "newest";
+export type MembersSort =
+  | "name"
+  | "name_desc"
+  | "membership"
+  | "membership_desc"
+  | "newest";
+
+export const MEMBERS_SORTS: readonly MembersSort[] = [
+  "name",
+  "name_desc",
+  "membership",
+  "membership_desc",
+  "newest",
+] as const;
+
+/** Narrows an untrusted `?sort=` value. */
+export function parseSort(value: string | undefined): MembersSort | undefined {
+  return MEMBERS_SORTS.includes(value as MembersSort)
+    ? (value as MembersSort)
+    : undefined;
+}
 
 export function parsePerPage(value: string | undefined): PerPage {
   const n = Number(value);

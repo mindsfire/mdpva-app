@@ -8,6 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { usePathname, useSearchParams } from "next/navigation";
+import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from "lucide-react";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import type { MemberRow } from "@/lib/members-query";
 import { fullName } from "@/lib/member-name";
@@ -20,6 +23,8 @@ import {
 } from "./member-badges";
 import { useMembersSelection } from "./selection";
 import { useMemberDrawerNav } from "@/components/members/member-drawer-nav";
+import { useDirectoryTransition } from "@/components/members/directory-transition";
+import type { MembersSort } from "@/lib/members-params";
 import { cn } from "@/lib/utils";
 
 export function MemberTable({ rows }: { rows: MemberRow[] }) {
@@ -86,22 +91,24 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
               w-36 is chosen to exceed the header text's own min-content width
               (~120px): a narrower value is silently ignored by table layout,
               which is what made Name overlap this column by 8px. */}
-          <TableHead
+          <SortableHead
+            label="Membership No."
+            asc="membership"
+            desc="membership_desc"
             className={cn(
               "sticky z-20 w-36 min-w-36 bg-inherit",
               selection ? "left-10" : "left-0",
             )}
-          >
-            Membership No.
-          </TableHead>
-          <TableHead
+          />
+          <SortableHead
+            label="Name"
+            asc="name"
+            desc="name_desc"
             className={cn(
               "sticky z-20 bg-inherit",
               selection ? "left-[184px]" : "left-36",
             )}
-          >
-            Name
-          </TableHead>
+          />
           <TableHead>Phone</TableHead>
           <TableHead>Profession</TableHead>
           <TableHead>Status</TableHead>
@@ -214,5 +221,69 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
         ))}
       </TableBody>
     </Table>
+  );
+}
+
+/**
+ * Column header that sorts the directory.
+ *
+ * Sorting lives in the URL like every other directory control, so a sorted
+ * view is linkable and survives a reload. Navigating through the shared
+ * directory transition means a sort shows the same skeleton a page change
+ * does, rather than freezing on the old order.
+ */
+function SortableHead({
+  label,
+  asc: ascValue,
+  desc: descValue,
+  className,
+}: {
+  label: string;
+  asc: MembersSort;
+  desc: MembersSort;
+  className?: string;
+}) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { navigate } = useDirectoryTransition();
+
+  const current = searchParams.get("sort");
+  const isAsc = current === ascValue;
+  const isDesc = current === descValue;
+  // First click sorts ascending; clicking the active column flips it.
+  const next = isAsc ? descValue : ascValue;
+
+  function sort() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("sort", next);
+    // A new order invalidates the current page position.
+    params.delete("page");
+    navigate(`${pathname}?${params.toString()}`);
+  }
+
+  return (
+    <TableHead
+      className={className}
+      aria-sort={isAsc ? "ascending" : isDesc ? "descending" : "none"}
+    >
+      <button
+        type="button"
+        onClick={sort}
+        className="-mx-1.5 flex cursor-pointer items-center gap-1 rounded px-1.5 py-1 transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+        aria-label={`Sort by ${label}, ${next.endsWith("_desc") ? "descending" : "ascending"}`}
+      >
+        {label}
+        {isAsc ? (
+          <ArrowUpIcon className="size-3.5" />
+        ) : isDesc ? (
+          <ArrowDownIcon className="size-3.5" />
+        ) : (
+          // Always rendered, just faint, so the column reads as sortable
+          // before it is used — and so the header never changes width when
+          // the icon swaps in.
+          <ChevronsUpDownIcon className="size-3.5 opacity-40" />
+        )}
+      </button>
+    </TableHead>
   );
 }
