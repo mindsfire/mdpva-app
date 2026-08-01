@@ -2,9 +2,11 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Loader2Icon } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import {
+  MemberCardsSkeleton,
+  MemberTableSkeleton,
+} from "@/components/app-shell/page-skeletons";
 
 interface DirectoryTransition {
   isPending: boolean;
@@ -61,41 +63,34 @@ export function DirectoryTransitionProvider({
 }
 
 /**
- * Dims the (server-rendered) results while a navigation is in flight and
- * floats a spinner over them. Kept as a wrapper so the rows themselves stay
- * server components.
+ * Swaps the (server-rendered) results for a skeleton while a navigation is in
+ * flight. Kept as a wrapper so the rows themselves stay server components.
+ *
+ * A skeleton rather than a spinner over dimmed rows: paging is a *replacement*
+ * of the list, and leaving the old page faintly readable underneath invites
+ * you to keep reading rows that are about to vanish. The same skeletons the
+ * route's loading.tsx uses, so a first load and a page change look alike.
  */
-export function DirectoryResults({ children }: { children: React.ReactNode }) {
+export function DirectoryResults({
+  children,
+  rowCount = 10,
+}: {
+  children: React.ReactNode;
+  /** Rows to draw while loading — the page size, so the height barely moves. */
+  rowCount?: number;
+}) {
   const { isPending } = useDirectoryTransition();
 
-  return (
-    <div className="relative" aria-busy={isPending}>
-      {isPending ? (
-        // Sticky, and placed *before* the rows: the controls that trigger
-        // this sit at the bottom of a long list, so a pill anchored to the
-        // top of the container would be scrolled out of sight exactly when
-        // it matters. Sticking from the top of the container keeps it in
-        // view for the whole list. `h-0` keeps it out of the layout so
-        // nothing shifts when it appears, and staying in flow (rather than
-        // `fixed`) centres it on the content column instead of the
-        // viewport, which the sidebar would skew.
-        <div className="pointer-events-none sticky top-20 z-50 flex h-0 justify-center">
-          <span className="flex items-center gap-2 rounded-full border border-mdpva-border bg-mdpva-white px-3 py-1.5 text-sm text-muted-foreground shadow-md dark:border-border dark:bg-card">
-            <Loader2Icon className="size-3.5 animate-spin" />
-            Loading…
-          </span>
-        </div>
-      ) : null}
-      <div
-        className={cn(
-          "transition-opacity duration-150",
-          isPending && "pointer-events-none opacity-40",
-        )}
-      >
-        {children}
+  if (isPending) {
+    return (
+      <div aria-busy>
+        <MemberTableSkeleton rows={rowCount} />
+        <MemberCardsSkeleton rows={rowCount} />
       </div>
-    </div>
-  );
+    );
+  }
+
+  return <div>{children}</div>;
 }
 
 /**
