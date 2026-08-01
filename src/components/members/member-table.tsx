@@ -51,9 +51,16 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
   return (
     <Table className="min-w-[880px]">
       <TableHeader>
-        <TableRow>
+        {/* The header row is painted explicitly so the sticky cells below can
+            inherit it. They used to hard-code `bg-mdpva-white dark:bg-card`,
+            which is the *body row* colour — a visibly lighter block than the
+            rest of the header, which is transparent and shows the page behind
+            it. `hover:` is pinned to the same colour because TableRow carries
+            `hover:bg-muted/50`, and a translucent hover would be inherited by
+            the sticky cells and let scrolled columns show through. */}
+        <TableRow className="bg-mdpva-paper hover:bg-mdpva-paper dark:bg-background dark:hover:bg-background">
           {selection ? (
-            <TableHead className="sticky left-0 z-20 w-10 min-w-10 bg-mdpva-white dark:bg-card">
+            <TableHead className="sticky left-0 z-20 w-10 min-w-10 bg-inherit">
               <Checkbox
                 checked={allSelected}
                 indeterminate={someSelected}
@@ -64,7 +71,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
           ) : null}
           <TableHead
             className={cn(
-              "sticky z-20 bg-mdpva-white dark:bg-card",
+              "sticky z-20 bg-inherit",
               selection ? "left-10" : "left-0",
             )}
           >
