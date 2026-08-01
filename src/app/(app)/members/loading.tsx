@@ -10,7 +10,7 @@ import {
  *  real page uses. */
 export default function MembersDirectoryLoading() {
   return (
-    <div className="flex flex-col gap-5">
+    <div data-wide-page className="flex flex-col gap-5">
       <BreadcrumbSkeleton />
 
       <div className="flex flex-col gap-3">

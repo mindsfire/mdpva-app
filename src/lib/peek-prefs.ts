@@ -8,7 +8,13 @@
 export const PEEK_WIDTH_COOKIE = "member_peek_width";
 /** The panel's original fixed width — never allow narrower than this. */
 export const PEEK_MIN_WIDTH = 384;
-export const PEEK_MAX_WIDTH = 900;
+/**
+ * Ceiling for the drawer. Generous because the directory is full-width on a
+ * wide monitor: at 2560px the container leaves well over 1500px spare, and
+ * capping at 900 left the space unused. `MIN_TABLE_WIDTH` still guarantees
+ * the table its share, so this only binds on genuinely large screens.
+ */
+export const PEEK_MAX_WIDTH = 1400;
 export const PEEK_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 /**
  * The narrowest the members table may become while the drawer is open.

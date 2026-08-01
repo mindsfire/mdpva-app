@@ -111,7 +111,7 @@ export function MemberProfileView({
                 {section.fields[0]?.value ?? "—"}
               </p>
             ) : (
-              <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2 @2xl:grid-cols-3">
                 {section.fields.map((field) => (
                   <Detail
                     key={field.label}
