@@ -49,20 +49,16 @@ export function MemberCard({ row }: { row: MemberRow }) {
           <span className="truncate font-serif text-base font-medium text-foreground">
             {fullName(row.firstName, row.lastName)}
           </span>
+          {/* Legacy ledger number, not the generated member ID — the same
+              identifier the table leads with. */}
           <span className="shrink-0 text-xs text-muted-foreground">
-            {row.memberId}
+            {row.legacyId ?? row.memberId}
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
           <span>{row.phone ?? "—"}</span>
           <span aria-hidden="true">·</span>
           <ProfessionLabel profession={row.profession} />
-          {row.legacyId ? (
-            <>
-              <span aria-hidden="true">·</span>
-              <span>Legacy {row.legacyId}</span>
-            </>
-          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
           <StatusBadge status={row.status} />

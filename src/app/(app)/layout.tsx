@@ -56,7 +56,14 @@ export default async function AppLayout({
         <header className="sticky top-0 z-40 border-b border-mdpva-border bg-mdpva-paper/95 backdrop-blur supports-backdrop-filter:bg-mdpva-paper/80 dark:border-border dark:bg-background/95 dark:supports-backdrop-filter:bg-background/80">
           <div className="flex items-center gap-2 px-4 py-3 sm:px-6">
             <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-1 h-4!" />
+            {/* `data-vertical:self-center` overrides the Separator's own
+                `data-vertical:self-stretch`: with an explicit height, stretch
+                resolves like flex-start, so the rule sat 8px above the centre
+                of the trigger beside it and read as misaligned. */}
+            <Separator
+              orientation="vertical"
+              className="mr-1 h-4! data-vertical:self-center"
+            />
             <div className="hidden flex-1 sm:block">
               <Suspense fallback={null}>
                 <SearchInput />

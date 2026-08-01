@@ -50,7 +50,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
   // at `left-10`) through which scrolled cells showed. The two must agree.
   return (
     <Table
-      className="min-w-[880px]"
+      className="min-w-[800px]"
       // Matches the drawer: the horizontal scrollbar's thumb is transparent
       // until the pointer is over the table, and `scrollbar-gutter: stable`
       // holds its track open either way so rows never shift as it appears.
@@ -86,7 +86,10 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
           >
             Name
           </TableHead>
-          <TableHead>Member ID</TableHead>
+          {/* Member ID is deliberately not shown: the association treats the
+              legacy ledger number as the member's identifier for now. The
+              column still exists in the database, in search and in the CSV
+              export — this is presentation only. */}
           <TableHead>Legacy ID</TableHead>
           <TableHead>Phone</TableHead>
           <TableHead>Profession</TableHead>
@@ -172,9 +175,6 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                   {fullName(row.firstName, row.lastName)}
                 </span>
               </div>
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {row.memberId}
             </TableCell>
             <TableCell className="text-muted-foreground">
               {row.legacyId ?? "—"}
