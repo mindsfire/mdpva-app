@@ -30,7 +30,12 @@ export interface MemberRow {
   firstName: string;
   lastName: string | null;
   phone: string | null;
-  profession: "photographer" | "videographer" | "both" | null;
+  profession:
+    | "photographer"
+    | "videographer"
+    | "both"
+    | "drone_operator"
+    | null;
   status: "active" | "inactive" | "suspended";
   feesPaidUpto: number | null;
   deathFundCovered: boolean;
@@ -53,7 +58,12 @@ export interface MemberDetail {
   lastName: string | null;
   email: string | null;
   phone: string | null;
-  profession: "photographer" | "videographer" | "both" | null;
+  profession:
+    | "photographer"
+    | "videographer"
+    | "both"
+    | "drone_operator"
+    | null;
   businessName: string | null;
   addressLine1: string;
   addressLine2: string | null;

@@ -86,6 +86,13 @@ describe("buildMemberSections", () => {
     expect(value).toBe("Photo & Video");
   });
 
+  it("maps drone_operator to its display label", () => {
+    const value = flatten(member({ profession: "drone_operator" })).find(
+      (f) => f.label === "Profession",
+    )?.value;
+    expect(value).toBe("Drone Operator");
+  });
+
   it("renders death fund cover as words, not a boolean", () => {
     expect(
       flatten(member({ deathFundCovered: false })).find(

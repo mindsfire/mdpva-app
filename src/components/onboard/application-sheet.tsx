@@ -16,7 +16,12 @@ export interface SheetValues {
   pincode: string;
   city: string;
   state: string;
-  profession: "" | "photographer" | "videographer" | "both";
+  profession:
+    | ""
+    | "photographer"
+    | "videographer"
+    | "both"
+    | "drone_operator";
   businessName: string;
   dob: string;
   bloodGroup: string;
@@ -28,6 +33,7 @@ const PROFESSION_LABEL: Record<string, string> = {
   photographer: `${S.photographer.en} / ${S.photographer.kn}`,
   videographer: `${S.videographer.en} / ${S.videographer.kn}`,
   both: `${S.both.en} / ${S.both.kn}`,
+  drone_operator: `${S.droneOperator.en} / ${S.droneOperator.kn}`,
 };
 
 /** A filled-in value, or a dash placeholder when the member hasn't typed yet. */

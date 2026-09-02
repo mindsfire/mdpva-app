@@ -11,7 +11,11 @@ export type PerPage = (typeof PER_PAGE_OPTIONS)[number];
 export const DEFAULT_PER_PAGE: PerPage = 10;
 
 export type MemberStatusFilter = "active" | "inactive" | "suspended";
-export type ProfessionFilter = "photographer" | "videographer" | "both";
+export type ProfessionFilter =
+  | "photographer"
+  | "videographer"
+  | "both"
+  | "drone_operator";
 
 /**
  * `name` / `name_desc` sort on the displayed full name (the default),

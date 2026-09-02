@@ -209,7 +209,12 @@ export interface ExportableMember {
   lastName: string | null;
   email: string | null;
   phone: string | null;
-  profession: "photographer" | "videographer" | "both" | null;
+  profession:
+    | "photographer"
+    | "videographer"
+    | "both"
+    | "drone_operator"
+    | null;
   businessName: string | null;
   addressLine1: string | null;
   addressLine2: string | null;

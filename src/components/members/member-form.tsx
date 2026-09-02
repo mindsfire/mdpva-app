@@ -361,6 +361,7 @@ export function MemberForm({
                       <SelectItem value="photographer">Photographer</SelectItem>
                       <SelectItem value="videographer">Videographer</SelectItem>
                       <SelectItem value="both">Photo &amp; Video</SelectItem>
+                      <SelectItem value="drone_operator">Drone Operator</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

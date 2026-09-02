@@ -63,6 +63,7 @@ export function ProfessionLabel({
     photographer: "Photographer",
     videographer: "Videographer",
     both: "Photo & Video",
+    drone_operator: "Drone Operator",
   };
   return <span>{labels[profession]}</span>;
 }

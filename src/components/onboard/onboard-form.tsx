@@ -574,6 +574,9 @@ export function OnboardForm({
                 <option value="both">
                   {S.both.en} · {S.both.kn}
                 </option>
+                <option value="drone_operator">
+                  {S.droneOperator.en} · {S.droneOperator.kn}
+                </option>
               </select>
             </span>
             <span className="flex flex-col gap-1.5">

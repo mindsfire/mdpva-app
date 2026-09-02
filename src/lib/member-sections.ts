@@ -18,6 +18,7 @@ export const PROFESSION_LABELS: Record<
   photographer: "Photographer",
   videographer: "Videographer",
   both: "Photo & Video",
+  drone_operator: "Drone Operator",
 };
 
 /** Stable, unambiguous day format — avoids 07/08 being read either way round. */

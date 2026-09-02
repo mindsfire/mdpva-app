@@ -8,14 +8,22 @@ export interface DashboardStats {
   active: number;
   feesDue: number;
   deathFundCovered: number;
-  professions: { profession: "photographer" | "videographer" | "both"; count: number }[];
+  professions: {
+    profession: "photographer" | "videographer" | "both" | "drone_operator";
+    count: number;
+  }[];
   recent: {
     id: string;
     memberId: string;
     legacyId: string | null;
     firstName: string;
     lastName: string | null;
-    profession: "photographer" | "videographer" | "both" | null;
+    profession:
+      | "photographer"
+      | "videographer"
+      | "both"
+      | "drone_operator"
+      | null;
     photoKey: string | null;
     createdAt: Date;
   }[];
@@ -38,6 +46,7 @@ export async function getDashboardStats(now = new Date()): Promise<DashboardStat
       photographers: sql<number>`count(*) filter (where ${members.profession} = 'photographer')::int`,
       videographers: sql<number>`count(*) filter (where ${members.profession} = 'videographer')::int`,
       both: sql<number>`count(*) filter (where ${members.profession} = 'both')::int`,
+      droneOperators: sql<number>`count(*) filter (where ${members.profession} = 'drone_operator')::int`,
     })
     .from(members)
     .where(isNull(members.deletedAt));
@@ -69,6 +78,10 @@ export async function getDashboardStats(now = new Date()): Promise<DashboardStat
       { profession: "photographer", count: aggregates?.photographers ?? 0 },
       { profession: "videographer", count: aggregates?.videographers ?? 0 },
       { profession: "both", count: aggregates?.both ?? 0 },
+      {
+        profession: "drone_operator",
+        count: aggregates?.droneOperators ?? 0,
+      },
     ],
     recent,
   };
