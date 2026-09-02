@@ -155,7 +155,7 @@ const NAME_SORT_KEY = sql`lower(trim(${members.firstName} || ' ' || coalesce(${m
  * anything with no digits at all (or no number yet) sorts last in *both*
  * directions — an empty value leading the list is never what you asked for.
  */
-const MEMBERSHIP_SORT_KEY = sql`nullif(regexp_replace(coalesce(${members.legacyId}, ''), '[^0-9]', '', 'g'), '')::bigint`;
+export const MEMBERSHIP_SORT_KEY = sql`nullif(regexp_replace(coalesce(${members.legacyId}, ''), '[^0-9]', '', 'g'), '')::bigint`;
 
 const SORT_CONFIG = {
   name: { column: NAME_SORT_KEY, direction: "asc" as const },

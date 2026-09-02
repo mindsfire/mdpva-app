@@ -31,6 +31,64 @@ export const CSV_HEADERS = [
 
 export type CsvHeader = (typeof CSV_HEADERS)[number];
 
+/**
+ * Every column the export can emit, with the label the field-picker shows.
+ *
+ * `key` is the machine header written into the file — it stays identical to the
+ * import columns so an export round-trips back through the importer, and the
+ * existing round-trip test keeps passing. `label` is display-only.
+ *
+ * The generated `member_id` (`MDPVA-YYYY-NNNN`) is deliberately not offered
+ * here: it exists for internal/system reference only. `legacy_id` — the
+ * ledger number staff and members actually recognise — is the sole
+ * "membership number" column, and leads the list.
+ *
+ * The order here is the canonical file order and MUST contain exactly the
+ * same keys as `CSV_HEADERS` (with `legacy_id` moved to the front) — a unit
+ * test asserts it, so adding a CSV column without a matching label fails CI
+ * rather than silently dropping out of the picker.
+ */
+export const EXPORT_FIELDS = [
+  { key: "legacy_id", label: "Membership No. (ledger)" },
+  { key: "first_name", label: "First name" },
+  { key: "last_name", label: "Last name" },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "profession", label: "Profession" },
+  { key: "business_name", label: "Business name" },
+  { key: "address_line1", label: "Address line 1" },
+  { key: "address_line2", label: "Address line 2" },
+  { key: "area", label: "Area" },
+  { key: "city", label: "City" },
+  { key: "state", label: "State" },
+  { key: "pincode", label: "Pincode" },
+  { key: "dob", label: "Date of birth" },
+  { key: "blood_group", label: "Blood group" },
+  { key: "status", label: "Status" },
+  { key: "fees_paid_upto", label: "Fees paid upto" },
+  { key: "death_fund_covered", label: "Death fund covered" },
+  { key: "notes", label: "Notes" },
+] as const;
+
+export type ExportFieldKey = (typeof EXPORT_FIELDS)[number]["key"];
+
+/** The full column set, in canonical order — the default when none is chosen. */
+export const ALL_EXPORT_FIELDS: ExportFieldKey[] = EXPORT_FIELDS.map((f) => f.key);
+
+/**
+ * Columns the importer hard-requires (`parseMembersCsv` missingHeaders list).
+ * Dropping any of these produces a file that cannot be re-imported, so the
+ * dialog warns when the selection omits one — it does not block, since a
+ * report-shaped export (phone list, roster) is a legitimate use.
+ */
+export const IMPORT_REQUIRED_FIELDS: ExportFieldKey[] = [
+  "first_name",
+  "last_name",
+  "address_line1",
+  "city",
+  "state",
+];
+
 export interface CsvRowError {
   /** 1-based data row number (header excluded). */
   row: number;
@@ -146,7 +204,6 @@ export function parseMembersCsv(text: string): ParseResult {
 }
 
 export interface ExportableMember {
-  memberId: string;
   legacyId: string | null;
   firstName: string;
   lastName: string | null;
@@ -168,9 +225,18 @@ export interface ExportableMember {
   notes: string | null;
 }
 
-export function membersToCsv(members: ExportableMember[]): string {
+/**
+ * Serialise members to CSV. `columns` selects which fields appear, in canonical
+ * order; it defaults to the full set so existing callers and the import
+ * round-trip are unaffected. Every row is still built in full — `Papa.unparse`
+ * emits only the requested `columns`, so a field the caller dropped never
+ * reaches the file.
+ */
+export function membersToCsv(
+  members: ExportableMember[],
+  columns: readonly ExportFieldKey[] = ALL_EXPORT_FIELDS,
+): string {
   const data = members.map((m) => ({
-    member_id: m.memberId,
     first_name: m.firstName,
     last_name: m.lastName,
     email: m.email ?? "",
@@ -207,7 +273,7 @@ export function membersToCsv(members: ExportableMember[]): string {
   );
 
   return Papa.unparse(safe, {
-    columns: ["member_id", ...CSV_HEADERS],
+    columns: [...columns],
     newline: "\n",
   });
 }
