@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { bulkApproveApplications } from "@/app/actions/applications";
 import type { QueueRow } from "@/app/actions/applications";
 import { Button } from "@/components/ui/button";
+import { photoUrl } from "@/lib/photo-url";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -162,7 +163,7 @@ export function QueueTable({
                   {row.photoKey ? (
                     // eslint-disable-next-line @next/next/no-img-element -- auth-gated stream from R2, not a static asset
                     <img
-                      src={`/api/photos/${row.photoKey}`}
+                      src={photoUrl(row.photoKey, row.memberUpdatedAt) ?? undefined}
                       alt=""
                       className="h-12 w-[37px] rounded-sm object-cover"
                     />

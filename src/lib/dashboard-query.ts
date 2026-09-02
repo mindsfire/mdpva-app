@@ -17,6 +17,7 @@ export interface DashboardStats {
     lastName: string | null;
     profession: "photographer" | "videographer" | "both" | null;
     photoKey: string | null;
+    updatedAt: Date;
     createdAt: Date;
   }[];
 }
@@ -53,6 +54,7 @@ export async function getDashboardStats(now = new Date()): Promise<DashboardStat
       lastName: members.lastName,
       profession: members.profession,
       photoKey: members.photoKey,
+      updatedAt: members.updatedAt,
       createdAt: members.createdAt,
     })
     .from(members)

@@ -234,6 +234,7 @@ export interface QueueRow {
   memberIdCode: string;
   submittedName: string;
   photoKey: string | null;
+  memberUpdatedAt: Date;
   createdAt: Date;
 }
 
@@ -255,6 +256,7 @@ export async function listApplications(
       createdAt: memberApplications.createdAt,
       legacyId: members.legacyId,
       memberIdCode: members.memberId,
+      memberUpdatedAt: members.updatedAt,
     })
     .from(memberApplications)
     .innerJoin(members, eq(members.id, memberApplications.memberId))
@@ -279,6 +281,7 @@ export async function listApplications(
     memberIdCode: r.memberIdCode,
     submittedName: `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || "—",
     photoKey: r.photoKey,
+    memberUpdatedAt: r.memberUpdatedAt,
     createdAt: r.createdAt,
   }));
 }

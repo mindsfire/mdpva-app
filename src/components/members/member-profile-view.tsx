@@ -10,6 +10,7 @@ import { buildMemberSections } from "@/lib/member-sections";
 import { DeleteMemberDialog } from "@/components/members/delete-dialog";
 import { MemberAvatar } from "@/components/members/member-avatar";
 import { fullName } from "@/lib/member-name";
+import { photoUrl } from "@/lib/photo-url";
 import {
   DeathFundBadge,
   FeesBadge,
@@ -59,6 +60,7 @@ export function MemberProfileView({
           firstName={member.firstName}
           lastName={member.lastName}
           photoKey={member.photoKey}
+          updatedAt={member.updatedAt}
           size="lg"
           className="sm:hidden"
         />
@@ -66,6 +68,7 @@ export function MemberProfileView({
           firstName={member.firstName}
           lastName={member.lastName}
           photoKey={member.photoKey}
+          updatedAt={member.updatedAt}
         />
         <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-1.5 sm:pt-0.5">
           <h2 className="font-serif text-lg font-medium text-foreground sm:text-xl">
@@ -152,24 +155,23 @@ function MemberPortrait({
   firstName,
   lastName,
   photoKey,
+  updatedAt,
 }: {
   firstName: string;
   lastName: string | null;
   photoKey: string | null;
+  updatedAt: Date | null;
 }) {
   const name = fullName(firstName, lastName);
+  const src = photoUrl(photoKey, updatedAt);
 
   return (
     <div className="hidden aspect-[7/9] w-32 shrink-0 overflow-hidden rounded-lg ring-1 ring-mdpva-gold/60 sm:block @2xl:w-40">
-      {photoKey ? (
+      {src ? (
         // Served by our own /api/photos route, which already resizes and
         // caches, so next/image would add a second optimisation pass.
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={`/api/photos/${photoKey}`}
-          alt={name}
-          className="size-full object-cover"
-        />
+        <img src={src} alt={name} className="size-full object-cover" />
       ) : (
         <div className="flex size-full items-center justify-center bg-mdpva-gold/20 font-serif text-2xl text-mdpva-accent dark:text-mdpva-gold">
           {initials(firstName, lastName)}

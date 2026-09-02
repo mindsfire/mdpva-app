@@ -176,6 +176,7 @@ export default async function DashboardPage() {
                       firstName={m.firstName}
                       lastName={m.lastName}
                       photoKey={m.photoKey}
+                      updatedAt={m.updatedAt}
                       size="sm"
                     />
                     <div className="min-w-0 flex-1">
