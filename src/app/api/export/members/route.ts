@@ -1,4 +1,4 @@
-import { asc } from "drizzle-orm";
+import { asc, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/auth";
@@ -7,12 +7,33 @@ import { members } from "@/db/schema";
 import { hasRole } from "@/lib/rbac";
 import {
   buildMembersWhere,
+  MEMBERSHIP_SORT_KEY,
   type MembersQueryParams,
   type MemberStatusFilter,
   type ProfessionFilter,
   type MembersSort,
 } from "@/lib/members-query";
-import { membersToCsv } from "@/lib/csv/member-csv";
+import {
+  ALL_EXPORT_FIELDS,
+  membersToCsv,
+  type ExportFieldKey,
+} from "@/lib/csv/member-csv";
+
+const EXPORT_FIELD_KEYS = new Set<string>(ALL_EXPORT_FIELDS);
+
+/**
+ * Narrow the untrusted `?fields=` value to known columns, in canonical order.
+ * An absent or fully-invalid param exports every field, so a bookmarked or
+ * hand-edited URL degrades to the full export rather than an empty file.
+ */
+function parseFields(raw: string | null): ExportFieldKey[] {
+  if (!raw) return ALL_EXPORT_FIELDS;
+  const chosen = new Set(
+    raw.split(",").filter((k): k is ExportFieldKey => EXPORT_FIELD_KEYS.has(k)),
+  );
+  if (chosen.size === 0) return ALL_EXPORT_FIELDS;
+  return ALL_EXPORT_FIELDS.filter((k) => chosen.has(k));
+}
 
 function parseParams(searchParams: URLSearchParams): MembersQueryParams {
   const status = searchParams.get("status");
@@ -52,9 +73,9 @@ export async function GET(request: NextRequest) {
   }
 
   const params = parseParams(request.nextUrl.searchParams);
+  const fields = parseFields(request.nextUrl.searchParams.get("fields"));
   const rows = await db
     .select({
-      memberId: members.memberId,
       legacyId: members.legacyId,
       firstName: members.firstName,
       lastName: members.lastName,
@@ -77,9 +98,12 @@ export async function GET(request: NextRequest) {
     })
     .from(members)
     .where(buildMembersWhere(params))
-    .orderBy(asc(members.lastName), asc(members.id));
+    // Always membership-number order (1, 2, 3 …), the numberless members last.
+    // The previous `asc(lastName)` collapsed to a random UUID order because
+    // every member has a null surname (Kannada single names, schema.ts:63).
+    .orderBy(sql`${MEMBERSHIP_SORT_KEY} asc nulls last`, asc(members.id));
 
-  const csv = membersToCsv(rows);
+  const csv = membersToCsv(rows, fields);
   const stamp = new Date().toISOString().slice(0, 10);
   return new NextResponse(csv, {
     headers: {

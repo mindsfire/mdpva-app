@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ALL_EXPORT_FIELDS,
   CSV_HEADERS,
   coerceRow,
+  EXPORT_FIELDS,
+  IMPORT_REQUIRED_FIELDS,
   membersToCsv,
   parseMembersCsv,
   templateCsv,
+  type ExportableMember,
 } from "./member-csv";
 
 const HEADER_LINE = CSV_HEADERS.join(",");
@@ -151,11 +155,10 @@ describe("templateCsv / membersToCsv", () => {
     expect(result.unknownHeaders).toEqual([]);
   });
 
-  it("export round-trips through the importer (minus member_id)", () => {
+  it("export round-trips cleanly through the importer", () => {
     const out = membersToCsv([
       {
-        memberId: "MDPVA-2026-0001",
-        legacyId: null,
+        legacyId: "77",
         firstName: "Asha",
         lastName: "Rao",
         email: null,
@@ -176,11 +179,102 @@ describe("templateCsv / membersToCsv", () => {
       notes: null,
       },
     ]);
-    expect(out.split("\n")[0]).toBe(["member_id", ...CSV_HEADERS].join(","));
+    // legacy_id leads the default export (the recognised membership number);
+    // the generated member_id is never emitted at all.
+    expect(out.split("\n")[0]).toBe(ALL_EXPORT_FIELDS.join(","));
     const reparsed = parseMembersCsv(out);
     expect(reparsed.errors).toEqual([]);
     expect(reparsed.rows[0]?.input.firstName).toBe("Asha");
-    // member_id is intentionally ignored on import (server-generated).
-    expect(reparsed.unknownHeaders).toEqual(["member_id"]);
+    expect(reparsed.rows[0]?.input.legacyId).toBe("77");
+    expect(reparsed.unknownHeaders).toEqual([]);
+  });
+});
+
+describe("EXPORT_FIELDS", () => {
+  // The picker's field list and the CSV writer's columns must never drift: the
+  // canonical file order is `legacy_id` first, then every other CSV_HEADERS
+  // column in their original relative order, and never the generated
+  // member_id. A field added to one without the other should fail here rather
+  // than silently vanish from the dialog or the file.
+  it("matches CSV_HEADERS with legacy_id moved to the front", () => {
+    const expected = [
+      "legacy_id",
+      ...CSV_HEADERS.filter((h) => h !== "legacy_id"),
+    ];
+    expect(ALL_EXPORT_FIELDS).toEqual(expected);
+    expect(EXPORT_FIELDS.map((f) => f.key)).toEqual(expected);
+  });
+
+  it("never offers the generated member_id as a field", () => {
+    expect(ALL_EXPORT_FIELDS).not.toContain("member_id");
+  });
+
+  it("puts legacy_id first", () => {
+    expect(ALL_EXPORT_FIELDS[0]).toBe("legacy_id");
+    expect(EXPORT_FIELDS[0]?.key).toBe("legacy_id");
+  });
+
+  it("gives every field a non-empty label", () => {
+    for (const field of EXPORT_FIELDS) {
+      expect(field.label.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("lists only importer-required columns as required", () => {
+    for (const key of IMPORT_REQUIRED_FIELDS) {
+      expect(ALL_EXPORT_FIELDS).toContain(key);
+    }
+    // Mirrors parseMembersCsv's missingHeaders list.
+    expect(IMPORT_REQUIRED_FIELDS).toEqual([
+      "first_name",
+      "last_name",
+      "address_line1",
+      "city",
+      "state",
+    ]);
+  });
+});
+
+describe("membersToCsv column selection", () => {
+  const MEMBER: ExportableMember = {
+    legacyId: "42",
+    firstName: "Asha",
+    lastName: null,
+    email: "asha@example.com",
+    phone: "9000000001",
+    profession: "photographer",
+    businessName: null,
+    addressLine1: "5 Temple St",
+    addressLine2: null,
+    area: null,
+    city: "Mysuru",
+    state: "Karnataka",
+    pincode: "570001",
+    dob: null,
+    bloodGroup: null,
+    status: "active",
+    feesPaidUpto: 2026,
+    deathFundCovered: true,
+    notes: null,
+  };
+
+  it("emits only the requested columns, in canonical order", () => {
+    // Deliberately pass out of order; the writer keeps the caller's order.
+    const out = membersToCsv([MEMBER], ["phone", "legacy_id", "first_name"]);
+    const [header, row] = out.split("\n");
+    expect(header).toBe("phone,legacy_id,first_name");
+    expect(row).toBe("9000000001,42,Asha");
+  });
+
+  it("defaults to the full column set when none is given", () => {
+    const out = membersToCsv([MEMBER]);
+    expect(out.split("\n")[0]).toBe(ALL_EXPORT_FIELDS.join(","));
+  });
+
+  it("still escapes formula-injection in a narrowed export", () => {
+    const evil = { ...MEMBER, firstName: "=HYPERLINK(1)" };
+    const out = membersToCsv([evil], ["first_name"]);
+    // Escaped values are prefixed so a spreadsheet treats them as text.
+    expect(out).toContain("'=HYPERLINK(1)");
   });
 });

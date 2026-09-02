@@ -25,6 +25,12 @@ import { SearchInput } from "@/components/members/search-input";
 import { MembersSelectionProvider } from "@/components/members/selection";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 import { parsePeekWidthCookie, PEEK_WIDTH_COOKIE } from "@/lib/peek-prefs";
+import { ExportCsvDialog } from "@/components/members/export-dialog";
+import { ALL_EXPORT_FIELDS } from "@/lib/csv/member-csv";
+import {
+  EXPORT_FIELDS_COOKIE,
+  parseExportFieldsCookie,
+} from "@/lib/export-prefs";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -84,9 +90,15 @@ export default async function MembersDirectoryPage({
       ? resolvedSearchParams.member
       : undefined;
   const selectedMember = memberParam ? await getMemberById(memberParam) : null;
+  const cookieStore = await cookies();
   const peekWidth = parsePeekWidthCookie(
-    (await cookies()).get(PEEK_WIDTH_COOKIE)?.value,
+    cookieStore.get(PEEK_WIDTH_COOKIE)?.value,
   );
+  // Remembered export selection; falls back to all fields for a first-time or
+  // corrupted cookie.
+  const exportFields =
+    parseExportFieldsCookie(cookieStore.get(EXPORT_FIELDS_COOKIE)?.value) ??
+    ALL_EXPORT_FIELDS;
 
   const currentParams: Record<string, string | undefined> = {
     q: params.q,
@@ -135,15 +147,10 @@ export default async function MembersDirectoryPage({
                 </h1>
                 <div className="flex items-center gap-2">
                   {hasRole(sessionUser.role, "admin") ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      render={
-                        <a href={withParams("/api/export/members", currentParams)} download />
-                      }
-                    >
-                      Export CSV
-                    </Button>
+                    <ExportCsvDialog
+                      initialFields={exportFields}
+                      currentParams={currentParams}
+                    />
                   ) : null}
                   {hasRole(sessionUser.role, "editor") ? (
                     <Button
