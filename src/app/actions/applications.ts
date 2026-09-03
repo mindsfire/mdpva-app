@@ -253,6 +253,7 @@ export interface QueueRow {
   memberIdCode: string;
   submittedName: string;
   photoKey: string | null;
+  aadhaarLast4: string | null;
   memberUpdatedAt: Date;
   createdAt: Date;
 }
@@ -272,6 +273,7 @@ export async function listApplications(
       firstName: memberApplications.firstName,
       lastName: memberApplications.lastName,
       photoKey: memberApplications.photoKey,
+      aadhaarLast4: memberApplications.aadhaarLast4,
       createdAt: memberApplications.createdAt,
       legacyId: members.legacyId,
       memberIdCode: members.memberId,
@@ -300,6 +302,7 @@ export async function listApplications(
     memberIdCode: r.memberIdCode,
     submittedName: `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || "—",
     photoKey: r.photoKey,
+    aadhaarLast4: r.aadhaarLast4,
     memberUpdatedAt: r.memberUpdatedAt,
     createdAt: r.createdAt,
   }));

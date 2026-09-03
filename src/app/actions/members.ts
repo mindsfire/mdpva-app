@@ -5,6 +5,7 @@ import { and, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { members } from "@/db/schema";
+import { blindIndex, encryptPii } from "@/lib/crypto/pii";
 import { mapUniqueViolation } from "@/lib/db-errors";
 import { generateMemberId } from "@/lib/member-id";
 import { requireRole } from "@/lib/rbac";
@@ -57,6 +58,22 @@ function toValues(input: MemberInput) {
 }
 
 /**
+ * `aadhaar` is handled separately from `toValues` because blank must mean
+ * "leave the stored value alone", not "clear it" — the same convention
+ * `applicationToMemberValues` uses for every optional field. Returning `{}`
+ * on blank means the caller can spread this directly into `.set()`/`.values()`
+ * without an explicit clear.
+ */
+function aadhaarFields(aadhaar: string | null) {
+  if (aadhaar === null) return {};
+  return {
+    aadhaarEnc: encryptPii(aadhaar),
+    aadhaarHash: blindIndex(aadhaar),
+    aadhaarLast4: aadhaar.slice(-4),
+  };
+}
+
+/**
  * Editor+. Validates `input`, generates `member_id` from the
  * `members_seq` Postgres sequence, and inserts the row. Unique-index
  * violations (email/phone/legacy_id already in use) are mapped to a
@@ -81,7 +98,11 @@ export async function createMember(
 
     const [inserted] = await db
       .insert(members)
-      .values({ ...toValues(parsed.data), memberId })
+      .values({
+        ...toValues(parsed.data),
+        ...aadhaarFields(parsed.data.aadhaar),
+        memberId,
+      })
       .returning({ id: members.id, memberId: members.memberId });
 
     revalidatePath(DIRECTORY_PATH);
@@ -116,6 +137,7 @@ export async function updateMember(
       .update(members)
       .set({
         ...toValues(parsed.data),
+        ...aadhaarFields(parsed.data.aadhaar),
         updatedBy: sessionUser.id,
         updatedAt: new Date(),
       })

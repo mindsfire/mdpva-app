@@ -13,6 +13,10 @@ const CONSTRAINT_MESSAGES: Record<string, { field?: string; error: string }> = {
     field: "legacyId",
     error: "A member with this legacy ID already exists.",
   },
+  members_aadhaar_hash_active: {
+    field: "aadhaar",
+    error: "A member with this Aadhaar number already exists.",
+  },
   members_member_id_unique: {
     error: "That member ID is already in use. Please try again.",
   },
