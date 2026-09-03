@@ -1,6 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  /*
+   * sharp ships two native builds in this tree — the app's own (photo
+   * processing) and Next's bundled copy (next/image) — at different
+   * versions, each needing its own libvips .so. Output file tracing was
+   * only including one of them, so the app's sharp calls 500'd in
+   * production with "cannot open shared object file: libvips-cpp.so...".
+   * Force both native builds into every route's trace.
+   */
+  outputFileTracingIncludes: {
+    "/*": ["./node_modules/sharp/**/*", "./node_modules/@img/**/*"],
+  },
   experimental: {
     /*
      * Server actions default to a 1MB body limit, and photo submission is a
