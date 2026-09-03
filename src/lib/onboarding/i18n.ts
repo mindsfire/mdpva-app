@@ -93,7 +93,7 @@ export const STRINGS = {
 
   photographer: t("Photographer", "ಛಾಯಾಗ್ರಾಹಕ"),
   videographer: t("Videographer", "ವೀಡಿಯೋಗ್ರಾಹಕ"),
-  photoAndVideo: t("Photo & Video", "ಎರಡೂ"),
+  photoAndVideo: t("Photo & Video", "ಫೋಟೋ ಮತ್ತು ವೀಡಿಯೋ"),
   droneOperator: t("Drone Operator", "ಡ್ರೋನ್ ಆಪರೇಟರ್"),
 
   optional: t("Optional", "ಐಚ್ಛಿಕ"),
