@@ -1,10 +1,11 @@
 "use server";
 
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull, ne } from "drizzle-orm";
 
 import { db } from "@/db";
-import { memberApplications } from "@/db/schema";
+import { memberApplications, members } from "@/db/schema";
+import { blindIndex, encryptPii } from "@/lib/crypto/pii";
 import { isUniqueViolationOn } from "@/lib/db-errors";
 import {
   generateApplicationNo,
@@ -59,6 +60,7 @@ export async function submitApplicationAction(
     businessName: formData.get("businessName"),
     dob: formData.get("dob"),
     bloodGroup: formData.get("bloodGroup"),
+    aadhaar: formData.get("aadhaar"),
   });
 
   if (!parsed.success) {
@@ -68,6 +70,35 @@ export async function submitApplicationAction(
       error: first?.message ?? "Please check the details and try again.",
       field: first?.path[0]?.toString(),
     };
+  }
+
+  // The schema's job ends at "12 valid digits" — never let that plaintext
+  // reach `.values()` below. Everything from here on refers only to the
+  // encrypted form and the blind index.
+  const { aadhaar, ...applicationValues } = parsed.data;
+  const aadhaarHash = blindIndex(aadhaar);
+  const aadhaarFields = {
+    aadhaarEnc: encryptPii(aadhaar),
+    aadhaarHash,
+    aadhaarLast4: aadhaar.slice(-4),
+  };
+
+  // One Aadhaar, one member. Self-resubmission (the member's own existing row)
+  // is not a conflict.
+  const [aadhaarConflict] = await db
+    .select({ id: members.id })
+    .from(members)
+    .where(
+      and(
+        eq(members.aadhaarHash, aadhaarHash),
+        ne(members.id, session.memberId),
+        isNull(members.deletedAt),
+      ),
+    )
+    .limit(1);
+
+  if (aadhaarConflict) {
+    return { ok: false, error: "aadhaar_taken", field: "aadhaar" };
   }
 
   // Photo is required on a first submission; on a resubmission the member may
@@ -128,7 +159,8 @@ export async function submitApplicationAction(
           applicationNo,
           memberId: session.memberId,
           status: "pending",
-          ...parsed.data,
+          ...applicationValues,
+          ...aadhaarFields,
           // Carried over when the member kept their existing photo.
           photoKey: hasNewPhoto ? null : (existing?.photoKey ?? null),
         })

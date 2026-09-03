@@ -96,6 +96,7 @@ export async function GET(request: NextRequest) {
       feesPaidUpto: members.feesPaidUpto,
       deathFundCovered: members.deathFundCovered,
       notes: members.notes,
+      aadhaarLast4: members.aadhaarLast4,
     })
     .from(members)
     .where(buildMembersWhere(params))

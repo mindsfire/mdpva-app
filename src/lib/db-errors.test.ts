@@ -36,6 +36,17 @@ describe("mapUniqueViolation", () => {
     });
   });
 
+  it("maps members_aadhaar_hash_active to a friendly aadhaar message", () => {
+    const result = mapUniqueViolation({
+      code: "23505",
+      constraint: "members_aadhaar_hash_active",
+    });
+    expect(result).toEqual({
+      field: "aadhaar",
+      error: "A member with this Aadhaar number already exists.",
+    });
+  });
+
   it("maps members_member_id_unique to a generic message with no field", () => {
     const result = mapUniqueViolation({
       code: "23505",

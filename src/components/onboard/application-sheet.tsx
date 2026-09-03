@@ -1,6 +1,7 @@
 import { MdpvaLogo } from "@/components/brand/mdpva-logo";
 import { Bi } from "@/components/onboard/bilingual";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
+import { maskAadhaar } from "@/lib/validation/aadhaar";
 import { formatPhone } from "@/lib/validation/phone";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +11,7 @@ export interface SheetValues {
   lastName: string;
   phone: string;
   email: string;
+  aadhaar: string;
   addressLine1: string;
   addressLine2: string;
   area: string;
@@ -191,6 +193,16 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
         </Row>
         <Row num="4." label="Email" labelKn={S.email.kn}>
           <Val>{values.email}</Val>
+        </Row>
+        {/* Masked — the sheet is a live preview, never a place to display a
+            full Aadhaar number back to the screen. */}
+        <Row num="4a." label={S.aadhaar.en} labelKn={S.aadhaar.kn}>
+          <Val numeric>
+            {(() => {
+              const digits = values.aadhaar.replace(/\D/g, "");
+              return digits ? maskAadhaar(digits.slice(-4)) : "";
+            })()}
+          </Val>
         </Row>
       </div>
 

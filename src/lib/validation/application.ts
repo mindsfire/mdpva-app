@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { isValidAadhaar, normalizeAadhaar } from "./aadhaar";
 import { normalizePhone } from "./phone";
 import {
   graphemeLength,
@@ -133,6 +134,20 @@ export const applicationInputSchema = z.object({
   ),
 
   bloodGroup: optionalText(MAX_LENGTHS.bloodGroup, "Blood group"),
+
+  /**
+   * Required on the public form. Normalized to 12 bare digits here; the
+   * caller (the submit action) is responsible for encrypting it before it
+   * ever reaches the database — this schema must never be the thing that
+   * makes a plaintext Aadhaar easy to log or serialize.
+   */
+  aadhaar: z
+    .unknown()
+    .transform((v) => (typeof v === "string" ? normalizeAadhaar(v) : null))
+    .refine((v) => v !== null, { message: "Aadhaar number is required" })
+    .refine((v) => v === null || isValidAadhaar(v), {
+      message: "Enter a valid 12-digit Aadhaar number",
+    }),
 });
 
 function isPlausibleBirthDate(iso: string): boolean {

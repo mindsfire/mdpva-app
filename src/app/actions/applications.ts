@@ -9,6 +9,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { memberApplications, members } from "@/db/schema";
+import { isUniqueViolationOn } from "@/lib/db-errors";
 import { requireRole } from "@/lib/rbac";
 import { r2, R2_BUCKET, photoKeyFor } from "@/lib/r2";
 import { normalizePhone } from "@/lib/validation/phone";
@@ -58,6 +59,9 @@ function applicationToMemberValues(app: typeof memberApplications.$inferSelect) 
     pincode: keepIfBlank(app.pincode),
     dob: keepIfBlank(app.dob),
     bloodGroup: keepIfBlank(app.bloodGroup),
+    aadhaarEnc: keepIfBlank(app.aadhaarEnc),
+    aadhaarHash: keepIfBlank(app.aadhaarHash),
+    aadhaarLast4: keepIfBlank(app.aadhaarLast4),
   };
 }
 
@@ -120,15 +124,30 @@ export async function approveApplication(
       });
   }
 
-  await db
-    .update(members)
-    .set({
-      ...applicationToMemberValues(claimed),
-      ...(livePhotoKey ? { photoKey: livePhotoKey } : {}),
-      updatedBy: sessionUser.id,
-      updatedAt: new Date(),
-    })
-    .where(eq(members.id, claimed.memberId));
+  try {
+    await db
+      .update(members)
+      .set({
+        ...applicationToMemberValues(claimed),
+        ...(livePhotoKey ? { photoKey: livePhotoKey } : {}),
+        updatedBy: sessionUser.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(members.id, claimed.memberId));
+  } catch (err) {
+    // Another member was approved with this same Aadhaar first — surfaced to
+    // the admin as a review decision, not swallowed. The application stays
+    // "approved" (already committed above); the admin resolves the conflict
+    // manually rather than the system silently overwriting either record.
+    if (isUniqueViolationOn(err, "members_aadhaar_hash_active")) {
+      return {
+        ok: false,
+        error:
+          "This Aadhaar number is already on file for another member. Resolve the conflict before approving.",
+      };
+    }
+    throw err;
+  }
 
   if (livePhotoKey) {
     // Repoint the application at the promoted object. Left as-is it would
@@ -234,6 +253,7 @@ export interface QueueRow {
   memberIdCode: string;
   submittedName: string;
   photoKey: string | null;
+  aadhaarLast4: string | null;
   memberUpdatedAt: Date;
   createdAt: Date;
 }
@@ -253,6 +273,7 @@ export async function listApplications(
       firstName: memberApplications.firstName,
       lastName: memberApplications.lastName,
       photoKey: memberApplications.photoKey,
+      aadhaarLast4: memberApplications.aadhaarLast4,
       createdAt: memberApplications.createdAt,
       legacyId: members.legacyId,
       memberIdCode: members.memberId,
@@ -281,6 +302,7 @@ export async function listApplications(
     memberIdCode: r.memberIdCode,
     submittedName: `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || "—",
     photoKey: r.photoKey,
+    aadhaarLast4: r.aadhaarLast4,
     memberUpdatedAt: r.memberUpdatedAt,
     createdAt: r.createdAt,
   }));

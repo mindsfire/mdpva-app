@@ -22,6 +22,7 @@ function member(overrides: Partial<MemberDetail> = {}): MemberDetail {
     pincode: "570001",
     dob: "1980-01-31",
     bloodGroup: "O+",
+    aadhaarLast4: "1234",
     status: "active",
     feesPaidUpto: 2026,
     deathFundCovered: true,

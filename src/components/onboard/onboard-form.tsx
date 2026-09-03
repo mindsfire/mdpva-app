@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { Bi } from "@/components/onboard/bilingual";
 import { useRouter } from "next/navigation";
 
 import { endOnboardSessionAction } from "@/app/actions/onboard";
 import { submitApplicationAction } from "@/app/actions/onboard-submit";
+import photoExample from "@/assets/onboard/photo-example.svg";
 import { PhotoCropper } from "@/components/onboard/photo-cropper";
 import {
   Dialog,
@@ -24,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import { DateField, isoToDisplay } from "@/components/ui/date-field";
 import { Input } from "@/components/ui/input";
 import { STRINGS as S, type Bilingual } from "@/lib/onboarding/i18n";
+import { canSubmitApplication } from "@/lib/onboarding/submit-gate";
+import { isValidAadhaar } from "@/lib/validation/aadhaar";
 import { cn } from "@/lib/utils";
 
 type Values = Omit<SheetValues, "photoUrl" | "applicationNo">;
@@ -43,6 +47,8 @@ function submitMessage(code: string): string {
       return "That file isn't a JPEG, PNG or WebP image.";
     case "photo_unreadable":
       return "That image could not be read. Please try a different photo.";
+    case "aadhaar_taken":
+      return "That Aadhaar number is already on file for another member. Please check and try again, or contact the MDPVA office.";
     case "submit_failed":
       return "Something went wrong saving your details. Please try again.";
     default:
@@ -67,6 +73,7 @@ function emptyValues(membershipNo: string, prefill: Partial<Values>): Values {
     businessName: "",
     dob: "",
     bloodGroup: "",
+    aadhaar: "",
     ...prefill,
   };
 }
@@ -144,10 +151,14 @@ export function OnboardForm({
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState<string | null>(null);
   const [consented, setConsented] = React.useState(false);
+  const [aadhaarError, setAadhaarError] = React.useState<string | null>(null);
   // A returning member sees their existing application first, not a blank
   // form — otherwise they cannot tell whether the last one arrived.
   const [editing, setEditing] = React.useState(existing == null);
   const fileRef = React.useRef<HTMLInputElement>(null);
+  const photoSectionRef = React.useRef<HTMLDivElement>(null);
+
+  const hasPhoto = photoBlob != null || Boolean(existing?.photoKey);
 
   // Restore the draft after mount. localStorage is genuinely an external system
   // and is unavailable during SSR, so this is the documented use for an effect —
@@ -159,7 +170,7 @@ export function OnboardForm({
       if (!raw) return;
       const parsed = JSON.parse(raw) as Partial<Values>;
       // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from localStorage, which cannot be read during render
-      setValues((v) => ({ ...v, ...parsed, membershipNo }));
+      setValues((v) => ({ ...v, ...parsed, membershipNo, aadhaar: "" }));
       setRestored(true);
     } catch {
       // A corrupt draft is not worth surfacing — the form still works empty.
@@ -168,11 +179,15 @@ export function OnboardForm({
 
   // Persist text fields only. The photo is deliberately never cached: a base64
   // image is both too large for localStorage and the most sensitive thing in
-  // the payload, on what may well be a shared phone.
+  // the payload, on what may well be a shared phone. Aadhaar is excluded for
+  // the same reason — it's high-sensitivity PII and must be retyped, not
+  // recovered from a shared device.
   React.useEffect(() => {
     const id = window.setTimeout(() => {
       try {
-        window.localStorage.setItem(draftKey, JSON.stringify(values));
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- discarding aadhaar so it's never written to localStorage
+        const { aadhaar: _aadhaar, ...toSave } = values;
+        window.localStorage.setItem(draftKey, JSON.stringify(toSave));
       } catch {
         // Quota or private mode — saving is a convenience, not a requirement.
       }
@@ -210,6 +225,28 @@ export function OnboardForm({
 
   async function onSubmit() {
     setSubmitError(null);
+    setAadhaarError(null);
+
+    // Client-side enforcement of the same two rules the server holds the
+    // line on (`onboard-submit.ts`) — checked here first so a member sees a
+    // clear reason immediately, without a round trip.
+    if (!canSubmitApplication({ consented, hasPhoto })) {
+      setSubmitError("photo_required");
+      photoSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      return;
+    }
+    if (!isValidAadhaar(values.aadhaar)) {
+      setAadhaarError(
+        values.aadhaar
+          ? "Enter a valid 12-digit Aadhaar number"
+          : "Aadhaar number is required",
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
       const fd = new FormData();
@@ -222,6 +259,9 @@ export function OnboardForm({
       const result = await submitApplicationAction(fd);
       if (!result.ok) {
         setSubmitError(result.error);
+        if (result.field === "aadhaar") {
+          setAadhaarError(submitMessage(result.error));
+        }
         return;
       }
       window.localStorage.removeItem(draftKey);
@@ -402,7 +442,7 @@ export function OnboardForm({
         ) : null}
 
         <Group s={S.sectionPhoto}>
-          <div className="flex items-start gap-4">
+          <div ref={photoSectionRef} className="flex items-start gap-4">
             <span
               className={cn(
                 "grid w-[84px] shrink-0 place-items-center overflow-hidden rounded-md border p-1.5 text-center text-[10px] text-muted-foreground",
@@ -424,6 +464,20 @@ export function OnboardForm({
                 S.noPhotoYet.en
               )}
             </span>
+
+            {/* Reference example so a member knows what "plain white
+                background" means before they pick a file. */}
+            <span
+              className="grid w-[70px] shrink-0 place-items-center overflow-hidden rounded-md border border-border"
+              style={{ aspectRatio: "7 / 9" }}
+            >
+              <Image
+                src={photoExample}
+                alt={S.photoExampleCaption.en}
+                className="h-full w-full object-cover"
+              />
+            </span>
+
             <span className="flex min-w-0 flex-1 flex-col gap-2">
               <span className="flex flex-wrap items-center gap-2">
                 <input
@@ -451,6 +505,17 @@ export function OnboardForm({
                 {S.photoHint.en}
                 <span className="font-kn mt-1 block">{S.photoHint.kn}</span>
               </span>
+              <span className="text-[11px] text-muted-foreground/80">
+                {S.photoFormatHint.en}
+                <span className="font-kn mt-1 block">
+                  {S.photoFormatHint.kn}
+                </span>
+              </span>
+              {!hasPhoto && submitError === "photo_required" ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {S.photoRequiredInline.en}
+                </span>
+              ) : null}
             </span>
           </div>
         </Group>
@@ -492,6 +557,35 @@ export function OnboardForm({
                 value={values.email}
                 onChange={(e) => set("email", e.target.value)}
               />
+            </span>
+            <span className="flex flex-col gap-1.5">
+              <Label htmlFor="f-aadhaar" s={S.aadhaar} required />
+              <Input
+                id="f-aadhaar"
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={14}
+                value={values.aadhaar}
+                onChange={(e) => {
+                  set("aadhaar", e.target.value);
+                  if (aadhaarError) setAadhaarError(null);
+                }}
+                onBlur={() => {
+                  if (values.aadhaar && !isValidAadhaar(values.aadhaar)) {
+                    setAadhaarError("Enter a valid 12-digit Aadhaar number");
+                  }
+                }}
+                aria-invalid={aadhaarError != null}
+              />
+              <span className="text-[11px] text-muted-foreground/80">
+                {S.aadhaarHint.en}
+                <span className="font-kn mt-1 block">{S.aadhaarHint.kn}</span>
+              </span>
+              {aadhaarError ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {aadhaarError}
+                </span>
+              ) : null}
             </span>
           </div>
         </Group>
