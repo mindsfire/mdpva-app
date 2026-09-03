@@ -23,6 +23,42 @@ npm run db:seed                  # creates the two seed admins
 npm run dev
 ```
 
+### Local development database
+
+**Point local dev at a Neon branch, not at production.**
+
+The Neon project (`mdpva-app`) has a `dev-local` branch taken from
+`production`. A Neon branch is a copy-on-write clone, so it comes up with the
+full 1307-member dataset — there is nothing to seed, and real data exercises
+the cases seeded data misses (single-token names, ledger conflicts, missing
+phone numbers).
+
+```sh
+# One-off, if the branch is ever removed:
+neonctl branches create --project-id noisy-rain-92583754 --name dev-local --parent production
+
+# Connection string to put in DATABASE_URL:
+neonctl connection-string dev-local --project-id noisy-rain-92583754 --pooled
+
+# Refresh it with current production data whenever it drifts:
+neonctl branches reset dev-local --parent --project-id noisy-rain-92583754
+```
+
+Keep the production URL in `.env.local` commented out as `# PROD_DATABASE_URL=`
+rather than deleting it, so it is obvious which one is live.
+
+**R2 is not branched.** Photos live in a single Cloudflare bucket and the
+database only stores `photo_key`, so a branch shows real photos with no setup —
+but photo *writes* are not isolated:
+
+| Action | Isolated? |
+| --- | --- |
+| Editing a member | Yes — writes stay on the branch |
+| Deleting a member | Yes — soft delete (`deleted_at`), never touches R2 |
+| Uploading/removing a photo | **No** — sends real `PutObject`/`DeleteObject` |
+
+Testing photo upload or removal therefore needs a separate dev bucket.
+
 ### Environment variables
 
 Set these in `.env.local` (never commit real values):
