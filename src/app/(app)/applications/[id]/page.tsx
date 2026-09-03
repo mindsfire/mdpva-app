@@ -7,6 +7,7 @@ import { ReviewActions } from "@/components/applications/review-actions";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { countChanges, diffApplication } from "@/lib/onboarding/diff";
+import { photoUrl } from "@/lib/photo-url";
 import { cn } from "@/lib/utils";
 
 const dateFmt = new Intl.DateTimeFormat("en-IN", {
@@ -96,7 +97,7 @@ export default async function ReviewApplicationPage({
             {app.photoKey ? (
               // eslint-disable-next-line @next/next/no-img-element -- auth-gated stream from R2
               <img
-                src={`/api/photos/${app.photoKey}`}
+                src={photoUrl(app.photoKey) ?? undefined}
                 alt="Submitted photograph"
                 className="w-full max-w-[240px] rounded-lg border border-mdpva-border object-cover dark:border-border"
                 style={{ aspectRatio: "7 / 9" }}
@@ -113,7 +114,7 @@ export default async function ReviewApplicationPage({
               </p>
               {/* eslint-disable-next-line @next/next/no-img-element -- auth-gated stream from R2 */}
               <img
-                src={`/api/photos/${member.photoKey}`}
+                src={photoUrl(member.photoKey, member.updatedAt) ?? undefined}
                 alt="Current photograph"
                 className="w-full max-w-[140px] rounded-lg border border-mdpva-border object-cover opacity-80 dark:border-border"
                 style={{ aspectRatio: "7 / 9" }}

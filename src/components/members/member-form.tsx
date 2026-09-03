@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { fullName } from "@/lib/member-name";
 import type { MemberDetail } from "@/lib/members-query";
 import { memberInputSchema, type MemberInput } from "@/lib/validation/member";
+import { maskAadhaar } from "@/lib/validation/aadhaar";
 import { PhotoUploader } from "@/components/members/photo-uploader";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -74,6 +75,11 @@ function toDefaultValues(member?: MemberDetail | null): MemberFormValues {
     deathFundCovered: member?.deathFundCovered ?? false,
     notes: member?.notes ?? null,
     legacyId: member?.legacyId ?? null,
+    // Never prefilled, even on edit — the stored value is encrypted and this
+    // form has no decryption path. Blank on submit means "leave it as is"
+    // (see `aadhaarFields` in the server action); the placeholder below shows
+    // the masked value already on file so blank doesn't read as "empty".
+    aadhaar: null,
   };
 }
 
@@ -164,6 +170,7 @@ export function MemberForm({
               key={member?.id ?? "new"}
               memberId={member?.id}
               photoKey={member?.photoKey ?? null}
+              photoUpdatedAt={member?.updatedAt ?? null}
             />
           </div>
         </Section>
@@ -252,6 +259,30 @@ export function MemberForm({
                         field.onBlur();
                         void runDuplicateCheck("legacyId");
                       }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="aadhaar"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Aadhaar number</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      inputMode="numeric"
+                      autoComplete="off"
+                      maxLength={14}
+                      placeholder={
+                        member?.aadhaarLast4
+                          ? `${maskAadhaar(member.aadhaarLast4)} on file — leave blank to keep`
+                          : "Not on file"
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -360,7 +391,8 @@ export function MemberForm({
                     <SelectContent>
                       <SelectItem value="photographer">Photographer</SelectItem>
                       <SelectItem value="videographer">Videographer</SelectItem>
-                      <SelectItem value="both">Photo &amp; Video</SelectItem>
+                      <SelectItem value="photo_and_video">Photo &amp; Video</SelectItem>
+                      <SelectItem value="drone_operator">Drone Operator</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

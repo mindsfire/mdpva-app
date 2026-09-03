@@ -24,6 +24,13 @@ export const DIFF_FIELDS = [
   "businessName",
   "dob",
   "bloodGroup",
+  /**
+   * Compares only the last-4 marker, never the encrypted value or the hash —
+   * `aadhaarEnc`/`aadhaarHash` are deliberately not diffable fields, so an
+   * admin reviewing this screen can see *that* the Aadhaar changed without
+   * either side ever rendering the full number.
+   */
+  "aadhaarLast4",
 ] as const;
 
 export type DiffField = (typeof DIFF_FIELDS)[number];
@@ -43,6 +50,7 @@ export const FIELD_LABELS: Record<DiffField, string> = {
   businessName: "Business name",
   dob: "Date of birth",
   bloodGroup: "Blood group",
+  aadhaarLast4: "Aadhaar (last 4)",
 };
 
 /**

@@ -30,6 +30,9 @@ function member(overrides: Partial<Member> = {}): Member {
     pincode: "570001",
     dob: "1980-01-31",
     bloodGroup: "O+",
+    aadhaarEnc: null,
+    aadhaarHash: null,
+    aadhaarLast4: "1234",
     status: "active",
     feesPaidUpto: 2026,
     deathFundCovered: true,
@@ -60,10 +63,17 @@ describe("buildApplicationPdfSections", () => {
   });
 
   it("maps profession to its display label", () => {
-    const value = flatten(member({ profession: "both" })).find(
+    const value = flatten(member({ profession: "photo_and_video" })).find(
       (f) => f.label === "Profession",
     )?.value;
     expect(value).toBe("Photo & Video");
+  });
+
+  it("masks the Aadhaar number, never showing it in full", () => {
+    const value = flatten(member({ aadhaarLast4: "5678" })).find(
+      (f) => f.label === "Aadhaar",
+    )?.value;
+    expect(value).toBe("XXXX XXXX 5678");
   });
 
   it("renders death fund cover as words, not a boolean", () => {
@@ -96,6 +106,7 @@ describe("buildApplicationPdfSections", () => {
         pincode: null,
         dob: null,
         bloodGroup: null,
+        aadhaarLast4: null,
         feesPaidUpto: null,
         notes: null,
       }),

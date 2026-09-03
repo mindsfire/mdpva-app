@@ -95,10 +95,16 @@ export const STRINGS = {
   businessName: t("Studio / business name", "ವ್ಯವಹಾರದ ಹೆಸರು"),
   dob: t("Date of birth", "ಜನ್ಮ ದಿನಾಂಕ"),
   bloodGroup: t("Blood group", "ರಕ್ತದ ಗುಂಪು"),
+  aadhaar: t("Aadhaar number", "ಆಧಾರ್ ಸಂಖ್ಯೆ"),
+  aadhaarHint: t(
+    "12 digits, as printed on your Aadhaar card. Kept private — only office staff can see it.",
+    "ನಿಮ್ಮ ಆಧಾರ್ ಕಾರ್ಡ್‌ನಲ್ಲಿ ಮುದ್ರಿತವಾದ 12 ಅಂಕೆಗಳು. ಇದು ಗೌಪ್ಯವಾಗಿ ಇರಿಸಲಾಗುತ್ತದೆ.",
+  ),
 
   photographer: t("Photographer", "ಛಾಯಾಗ್ರಾಹಕ"),
   videographer: t("Videographer", "ವೀಡಿಯೋಗ್ರಾಹಕ"),
-  both: t("Both", "ಎರಡೂ"),
+  photoAndVideo: t("Photo & Video", "ಫೋಟೋ ಮತ್ತು ವೀಡಿಯೋ"),
+  droneOperator: t("Drone Operator", "ಡ್ರೋನ್ ಆಪರೇಟರ್"),
 
   optional: t("Optional", "ಐಚ್ಛಿಕ"),
   choosePhoto: t("Choose photo", "ಭಾವಚಿತ್ರ ಆಯ್ಕೆಮಾಡಿ"),
@@ -108,7 +114,16 @@ export const STRINGS = {
     "A clear photo of your face, looking at the camera. You can move and zoom it to fit the frame.",
     "ಕ್ಯಾಮೆರಾ ನೋಡುತ್ತಿರುವ ನಿಮ್ಮ ಮುಖದ ಸ್ಪಷ್ಟ ಚಿತ್ರ. ಚೌಕಟ್ಟಿಗೆ ಸರಿಹೊಂದಿಸಲು ಸರಿಸಬಹುದು.",
   ),
+  photoFormatHint: t(
+    "JPEG, PNG or WebP · up to 8 MB · plain white background, like the example.",
+    "JPEG, PNG ಅಥವಾ WebP · 8 MB ವರೆಗೆ · ಉದಾಹರಣೆಯಂತೆ ಸರಳ ಬಿಳಿ ಹಿನ್ನೆಲೆ.",
+  ),
+  photoExampleCaption: t("Example", "ಉದಾಹರಣೆ"),
   noPhotoYet: t("No photo yet", "ಇನ್ನೂ ಚಿತ್ರವಿಲ್ಲ"),
+  photoRequiredInline: t(
+    "A photo is required before you can submit.",
+    "ಸಲ್ಲಿಸುವ ಮೊದಲು ಭಾವಚಿತ್ರ ಅಗತ್ಯ.",
+  ),
 
   draftSaved: t(
     "Saved on this device — you can close this page and come back.",

@@ -48,7 +48,8 @@ function parseParams(searchParams: URLSearchParams): MembersQueryParams {
     profession:
       profession === "photographer" ||
       profession === "videographer" ||
-      profession === "both"
+      profession === "photo_and_video" ||
+      profession === "drone_operator"
         ? (profession as ProfessionFilter)
         : undefined,
     feesDue: searchParams.get("feesDue") === "true",
@@ -95,6 +96,7 @@ export async function GET(request: NextRequest) {
       feesPaidUpto: members.feesPaidUpto,
       deathFundCovered: members.deathFundCovered,
       notes: members.notes,
+      aadhaarLast4: members.aadhaarLast4,
     })
     .from(members)
     .where(buildMembersWhere(params))

@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { isValidAadhaar, normalizeAadhaar } from "./aadhaar";
 import { normalizePhone } from "./phone";
 import {
   graphemeLength,
@@ -145,7 +146,7 @@ export const memberInputSchema = z.object({
     }),
 
   profession: z
-    .enum(["photographer", "videographer", "both"])
+    .enum(["photographer", "videographer", "photo_and_video", "drone_operator"])
     .nullable()
     .default(null),
   businessName: optionalText(
@@ -178,6 +179,21 @@ export const memberInputSchema = z.object({
 
   notes: optionalText(MAX_LENGTHS.notes, "Notes"),
   legacyId: optionalText(MAX_LENGTHS.legacyId, "Membership No."),
+
+  /**
+   * Optional here (unlike the public form) — legacy members migrated from the
+   * paper ledger often don't have one on file yet, and an admin must be able
+   * to save a record without it. When present it's held to the same Verhoeff
+   * check as the public form.
+   */
+  aadhaar: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => normalizeAadhaar(v))
+    .refine((v) => v === null || isValidAadhaar(v), {
+      message: "Enter a valid 12-digit Aadhaar number",
+    }),
 });
 
 export type MemberInput = z.infer<typeof memberInputSchema>;

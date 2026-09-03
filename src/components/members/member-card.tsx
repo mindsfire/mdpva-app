@@ -41,6 +41,7 @@ export function MemberCard({ row }: { row: MemberRow }) {
           firstName={row.firstName}
           lastName={row.lastName}
           photoKey={row.photoKey}
+          updatedAt={row.updatedAt}
           size="lg"
           className="mt-0.5"
         />

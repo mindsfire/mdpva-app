@@ -70,7 +70,10 @@ export async function uploadMemberPhoto(
     }),
   );
 
-  await db.update(members).set({ photoKey: key }).where(eq(members.id, memberId));
+  await db
+    .update(members)
+    .set({ photoKey: key, updatedAt: new Date() })
+    .where(eq(members.id, memberId));
 
   revalidatePath("/members");
   revalidatePath("/");

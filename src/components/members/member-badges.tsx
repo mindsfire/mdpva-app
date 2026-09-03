@@ -62,7 +62,8 @@ export function ProfessionLabel({
   const labels: Record<NonNullable<MemberRow["profession"]>, string> = {
     photographer: "Photographer",
     videographer: "Videographer",
-    both: "Photo & Video",
+    photo_and_video: "Photo & Video",
+    drone_operator: "Drone Operator",
   };
   return <span>{labels[profession]}</span>;
 }

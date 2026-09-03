@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { bulkApproveApplications } from "@/app/actions/applications";
 import type { QueueRow } from "@/app/actions/applications";
 import { Button } from "@/components/ui/button";
+import { maskAadhaar } from "@/lib/validation/aadhaar";
+import { photoUrl } from "@/lib/photo-url";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -138,6 +140,7 @@ export function QueueTable({
               <TableHead>Application</TableHead>
               <TableHead>Member</TableHead>
               <TableHead>Ledger no.</TableHead>
+              <TableHead>Aadhaar</TableHead>
               <TableHead>Submitted</TableHead>
               <TableHead>Status</TableHead>
             </TableRow>
@@ -162,7 +165,7 @@ export function QueueTable({
                   {row.photoKey ? (
                     // eslint-disable-next-line @next/next/no-img-element -- auth-gated stream from R2, not a static asset
                     <img
-                      src={`/api/photos/${row.photoKey}`}
+                      src={photoUrl(row.photoKey, row.memberUpdatedAt) ?? undefined}
                       alt=""
                       className="h-12 w-[37px] rounded-sm object-cover"
                     />
@@ -191,6 +194,9 @@ export function QueueTable({
                 <TableCell>{row.submittedName}</TableCell>
                 <TableCell className="tabular-nums text-muted-foreground">
                   {row.legacyId ?? "—"}
+                </TableCell>
+                <TableCell className="tabular-nums text-muted-foreground">
+                  {row.aadhaarLast4 ? maskAadhaar(row.aadhaarLast4) : "—"}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {dateFmt.format(row.createdAt)}

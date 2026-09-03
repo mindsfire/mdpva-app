@@ -22,6 +22,7 @@ function member(overrides: Partial<MemberDetail> = {}): MemberDetail {
     pincode: "570001",
     dob: "1980-01-31",
     bloodGroup: "O+",
+    aadhaarLast4: "1234",
     status: "active",
     feesPaidUpto: 2026,
     deathFundCovered: true,
@@ -80,10 +81,17 @@ describe("buildMemberSections", () => {
   });
 
   it("maps profession to its display label", () => {
-    const value = flatten(member({ profession: "both" })).find(
+    const value = flatten(member({ profession: "photo_and_video" })).find(
       (f) => f.label === "Profession",
     )?.value;
     expect(value).toBe("Photo & Video");
+  });
+
+  it("maps drone_operator to its display label", () => {
+    const value = flatten(member({ profession: "drone_operator" })).find(
+      (f) => f.label === "Profession",
+    )?.value;
+    expect(value).toBe("Drone Operator");
   });
 
   it("renders death fund cover as words, not a boolean", () => {

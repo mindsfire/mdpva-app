@@ -18,6 +18,7 @@ import { memberApplications, members } from "@/db/schema";
 import { PROFESSION_LABELS } from "@/lib/member-sections";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
 import type { PdfPhoto } from "@/lib/pdf/photo-for-pdf";
+import { maskAadhaar } from "@/lib/validation/aadhaar";
 
 type Member = typeof members.$inferSelect;
 type Application = typeof memberApplications.$inferSelect;
@@ -112,6 +113,13 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
         { label: "Last name", labelKn: S.lastName.kn, value: member.lastName },
         { label: "Date of birth", labelKn: S.dob.kn, value: member.dob },
         { label: "Blood group", labelKn: S.bloodGroup.kn, value: member.bloodGroup },
+        {
+          label: "Aadhaar",
+          labelKn: S.aadhaar.kn,
+          // Masked, same as the member drawer/CSV export — this document
+          // never has access to the encrypted value to unmask it.
+          value: member.aadhaarLast4 ? maskAadhaar(member.aadhaarLast4) : null,
+        },
       ],
     },
     {

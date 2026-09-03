@@ -27,6 +27,7 @@ export const CSV_HEADERS = [
   "fees_paid_upto",
   "death_fund_covered",
   "notes",
+  "aadhaar_last4",
 ] as const;
 
 export type CsvHeader = (typeof CSV_HEADERS)[number];
@@ -68,6 +69,12 @@ export const EXPORT_FIELDS = [
   { key: "fees_paid_upto", label: "Fees paid upto" },
   { key: "death_fund_covered", label: "Death fund covered" },
   { key: "notes", label: "Notes" },
+  /**
+   * Last 4 digits only — never the full number. There is no `aadhaar` column
+   * on this list at all: the full value is encrypted at rest and this file
+   * has no decryption path, by design.
+   */
+  { key: "aadhaar_last4", label: "Aadhaar (last 4)" },
 ] as const;
 
 export type ExportFieldKey = (typeof EXPORT_FIELDS)[number]["key"];
@@ -127,10 +134,15 @@ export function coerceRow(
 ): ReturnType<typeof memberInputSchema.safeParse> {
   const get = (key: CsvHeader) => record[key]?.trim() ?? "";
 
+  // `aadhaar_last4` is a recognised header (so it round-trips through export
+  // and isn't flagged "unknown") but is deliberately never read here: a
+  // masked last-4 value can't be turned back into the encrypted/hashed pair
+  // Aadhaar needs, so a re-imported file simply leaves the field untouched.
+
   const professionRaw = get("profession").toLowerCase();
   const profession =
     professionRaw === "" ? null
-    : professionRaw === "photo & video" || professionRaw === "photo and video" ? "both"
+    : professionRaw === "photo & video" || professionRaw === "photo and video" ? "photo_and_video"
     : professionRaw;
 
   const statusRaw = get("status").toLowerCase();
@@ -209,7 +221,12 @@ export interface ExportableMember {
   lastName: string | null;
   email: string | null;
   phone: string | null;
-  profession: "photographer" | "videographer" | "both" | null;
+  profession:
+    | "photographer"
+    | "videographer"
+    | "photo_and_video"
+    | "drone_operator"
+    | null;
   businessName: string | null;
   addressLine1: string | null;
   addressLine2: string | null;
@@ -223,6 +240,7 @@ export interface ExportableMember {
   feesPaidUpto: number | null;
   deathFundCovered: boolean;
   notes: string | null;
+  aadhaarLast4: string | null;
 }
 
 /**
@@ -256,6 +274,9 @@ export function membersToCsv(
     fees_paid_upto: m.feesPaidUpto ?? "",
     death_fund_covered: m.deathFundCovered ? "yes" : "no",
     notes: m.notes ?? "",
+    // Masked, same as every other place Aadhaar is displayed — never the
+    // full number, which this module never even has access to.
+    aadhaar_last4: m.aadhaarLast4 ? `•••• •••• ${m.aadhaarLast4}` : "",
   }));
 
   // `Papa.unparse` quotes and escapes for CSV *parsing*, but does nothing about
@@ -302,6 +323,7 @@ export function templateCsv(): string {
     fees_paid_upto: "2026",
     death_fund_covered: "yes",
     notes: "",
+    aadhaar_last4: "",
   };
   return Papa.unparse([example], { columns: [...CSV_HEADERS], newline: "\n" });
 }

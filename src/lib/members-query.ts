@@ -30,11 +30,17 @@ export interface MemberRow {
   firstName: string;
   lastName: string | null;
   phone: string | null;
-  profession: "photographer" | "videographer" | "both" | null;
+  profession:
+    | "photographer"
+    | "videographer"
+    | "photo_and_video"
+    | "drone_operator"
+    | null;
   status: "active" | "inactive" | "suspended";
   feesPaidUpto: number | null;
   deathFundCovered: boolean;
   photoKey: string | null;
+  updatedAt: Date;
 }
 
 export interface MembersSearchResult {
@@ -53,7 +59,12 @@ export interface MemberDetail {
   lastName: string | null;
   email: string | null;
   phone: string | null;
-  profession: "photographer" | "videographer" | "both" | null;
+  profession:
+    | "photographer"
+    | "videographer"
+    | "photo_and_video"
+    | "drone_operator"
+    | null;
   businessName: string | null;
   addressLine1: string;
   addressLine2: string | null;
@@ -63,6 +74,8 @@ export interface MemberDetail {
   pincode: string | null;
   dob: string | null;
   bloodGroup: string | null;
+  /** Last 4 digits only — the encrypted value has no read path here by design. */
+  aadhaarLast4: string | null;
   status: "active" | "inactive" | "suspended";
   feesPaidUpto: number | null;
   deathFundCovered: boolean;
@@ -129,6 +142,7 @@ export async function getMemberById(id: string): Promise<MemberDetail | null> {
     pincode: member.pincode,
     dob: member.dob,
     bloodGroup: member.bloodGroup,
+    aadhaarLast4: member.aadhaarLast4,
     status: member.status,
     feesPaidUpto: member.feesPaidUpto,
     deathFundCovered: member.deathFundCovered,
@@ -220,7 +234,7 @@ function buildSearchCondition(rawQuery: string): SQL | null {
   // Match what the UI actually displays, which differs from the stored
   // enum value / boolean.
   if ("photo & video".includes(lower) || "photo and video".includes(lower)) {
-    conditions.push(sql`${members.profession} = 'both'`);
+    conditions.push(sql`${members.profession} = 'photo_and_video'`);
   }
   if ("death fund".includes(lower) || lower === "covered") {
     conditions.push(sql`${members.deathFundCovered} = true`);
@@ -319,6 +333,7 @@ export async function searchMembers(
       feesPaidUpto: members.feesPaidUpto,
       deathFundCovered: members.deathFundCovered,
       photoKey: members.photoKey,
+      updatedAt: members.updatedAt,
     })
     .from(members)
     .where(where)

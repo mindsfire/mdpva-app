@@ -36,7 +36,7 @@ const STATUS_OPTIONS: FilterOption[] = [
 const PROFESSION_OPTIONS: FilterOption[] = [
   { label: "Photographer", param: "profession", value: "photographer" },
   { label: "Videographer", param: "profession", value: "videographer" },
-  { label: "Photo & Video", param: "profession", value: "both" },
+  { label: "Drone Operator", param: "profession", value: "drone_operator" },
 ];
 
 const TOGGLE_OPTIONS: FilterOption[] = [

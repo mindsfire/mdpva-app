@@ -1,0 +1,5 @@
+<svg width="140" height="180" viewBox="0 0 140 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Example passport-style photo on a plain white background">
+  <rect x="0.5" y="0.5" width="139" height="179" fill="#ffffff" stroke="#cfcdc4" stroke-width="1"/>
+  <circle cx="70" cy="66" r="30" fill="#c7c5bb"/>
+  <path d="M22 168c0-30 21.5-52 48-52s48 22 48 52" fill="#c7c5bb"/>
+</svg>

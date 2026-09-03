@@ -62,14 +62,12 @@ async function nextMemberId(): Promise<string> {
   return generateMemberId(year, Number(rows[0].nextval));
 }
 
-// "both" deliberately excluded: another in-flight branch has already
-// migrated the shared `dev-local` Neon branch's `profession` enum away from
-// it (see git branches add-drone-operator-profession /
-// feature/drone-operator-profession) — Neon branches are shared per
-// environment string, not per git branch, so whichever branch runs
-// `db:migrate` last changes the live enum for every branch checked out
-// against it. `photographer`/`videographer` are stable across both shapes.
-const PROFESSIONS = ["photographer", "videographer"] as const;
+const PROFESSIONS = [
+  "photographer",
+  "videographer",
+  "photo_and_video",
+  "drone_operator",
+] as const;
 const STATUSES = ["active", "inactive", "suspended"] as const;
 
 const DEMO_FIRST_NAMES = [
@@ -161,7 +159,15 @@ async function seedDemoMembers(adminId: string): Promise<string[]> {
         email,
         phone,
         profession,
-        businessName: `${firstName} ${profession === "photographer" ? "Photography" : "Films"}`,
+        businessName: `${firstName} ${
+          profession === "photo_and_video"
+            ? "Studio"
+            : profession === "photographer"
+              ? "Photography"
+              : profession === "drone_operator"
+                ? "Aerials"
+                : "Films"
+        }`,
         addressLine1: `${i + 1} MG Road`,
         area: "Central",
         city: "Mangalore",

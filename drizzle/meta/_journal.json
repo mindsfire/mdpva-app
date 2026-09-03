@@ -29,6 +29,27 @@
       "when": 1785496442444,
       "tag": "0003_known_vision",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788363426847,
+      "tag": "0004_material_peter_quill",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788413720484,
+      "tag": "0005_orange_fabian_cortez",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788430606474,
+      "tag": "0006_shallow_calypso",
+      "breakpoints": true
     }
   ]
 }
