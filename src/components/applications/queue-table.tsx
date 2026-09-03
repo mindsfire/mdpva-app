@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, DownloadIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { bulkApproveApplications } from "@/app/actions/applications";
@@ -173,7 +173,20 @@ export function QueueTable({
                   )}
                 </TableCell>
                 <TableCell className="font-medium tabular-nums text-foreground">
-                  {row.applicationNo}
+                  <div className="flex items-center gap-1.5">
+                    {row.applicationNo}
+                    {row.status === "approved" ? (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Download ${row.applicationNo} as PDF`}
+                        onClick={(e) => e.stopPropagation()}
+                        render={<a href={`/api/applications/${row.id}/pdf`} />}
+                      >
+                        <DownloadIcon />
+                      </Button>
+                    ) : null}
+                  </div>
                 </TableCell>
                 <TableCell>{row.submittedName}</TableCell>
                 <TableCell className="tabular-nums text-muted-foreground">

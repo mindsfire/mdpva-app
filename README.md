@@ -18,8 +18,9 @@ tracking, and a small admin panel for managing staff accounts.
 ```sh
 npm install --legacy-peer-deps   # peer-dep resolution can be finicky on this stack
 cp .env.example .env.local       # fill in the values below
+npm run bucket:up                # local MinIO for photos — see "Local dev object storage"
 npm run db:migrate
-npm run db:seed                  # creates the two seed admins
+npm run db:seed -- --demo        # creates the two seed admins + demo members/photos/an application
 npm run dev
 ```
 
@@ -35,10 +36,10 @@ Set these in `.env.local` (never commit real values):
 | `SEED_ADMIN2_EMAIL` | no (default `admin2@mdpva.org`) | Email for the second seed admin account. |
 | `SEED_ADMIN2_PASSWORD` | yes, no default | Password for the second seed admin, same rule as above. |
 | `AUTH_SECRET` | yes | Auth.js session-encryption secret. Generate with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. |
-| `R2_ACCESS_KEY_ID` | yes | R2 API token access key. Cloudflare dashboard → R2 → Manage API Tokens → create an **Account** token, Object Read & Write, scoped to the one bucket. |
-| `R2_SECRET_ACCESS_KEY` | yes | R2 API token secret (shown once at creation). |
-| `R2_ENDPOINT` | yes | The bucket's S3 API endpoint, e.g. `https://<account-id>.r2.cloudflarestorage.com`. |
-| `R2_BUCKET` | yes | R2 bucket name. This app writes only under the `app/members/` prefix, so the bucket can be shared with other projects. |
+| `R2_ACCESS_KEY_ID` | yes | Object storage access key. Local dev: `minioadmin` (see below). Deploys: R2 API token — Cloudflare dashboard → R2 → Manage API Tokens → create an **Account** token, Object Read & Write, scoped to the one bucket. |
+| `R2_SECRET_ACCESS_KEY` | yes | Matching secret key. Local dev: `minioadmin`. Deploys: shown once at R2 token creation. |
+| `R2_ENDPOINT` | yes | The bucket's S3 API endpoint. Local dev: `http://localhost:9000` (MinIO). Deploys: `https://<account-id>.r2.cloudflarestorage.com`. |
+| `R2_BUCKET` | yes | Bucket name. Local dev: `mdpva-dev` (MinIO). Deploys: the real R2 bucket — this app writes only under the `app/members/` prefix, so it can be shared with other projects. |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | no | Turnstile site key (public). Renders the widget. Absent → no widget. |
 | `TURNSTILE_SECRET_KEY` | no | Turnstile secret key. Enforces the check. Absent → verification is skipped. |
 
@@ -97,6 +98,34 @@ The bucket is private. Photos are served through `/api/photos/[...key]`,
 which requires a logged-in session and only ever serves objects under
 `app/members/` — the R2 bucket itself is never public.
 
+### Local dev object storage
+
+Local dev never talks to the real R2 bucket. `DATABASE_URL` points at a Neon
+branch (`dev-local`), which is a cheap copy-on-write clone of production —
+but R2 has no equivalent per-branch isolation, it's just one bucket. Pointing
+local dev's `R2_*` vars at the real bucket means any photo upload or
+application approval writes to production object storage, DB branching or
+not.
+
+Instead, local dev runs a [MinIO](https://min.io) container as a throwaway
+S3-compatible stand-in:
+
+```sh
+npm run bucket:up      # docker compose up -d minio minio-init
+npm run db:seed -- --demo   # demo members get synthetic photos + one pending application
+npm run bucket:down    # stop it; add `docker compose down -v` to also wipe the volume
+```
+
+`.env.example`/`.env.local` already point at it (`R2_ENDPOINT=http://localhost:9000`,
+bucket `mdpva-dev`, credentials `minioadmin`/`minioadmin`). The MinIO web
+console is at `http://localhost:9001` if you want to browse objects directly.
+
+Never test photo-upload or application-approval flows against a real ledger
+member — always use the synthetic demo members `npm run db:seed -- --demo`
+creates. Doing otherwise once overwrote a real member's live R2 photo with
+test data, because approving an application promotes the submitted photo
+straight to that member's permanent key.
+
 ## Commands
 
 ```sh
@@ -108,6 +137,8 @@ npm run test           # vitest run (unit tests)
 npm run db:generate     # generate a Drizzle migration from schema changes
 npm run db:migrate      # apply migrations to DATABASE_URL
 npm run db:seed         # upsert the two seed admins (add --demo for 25 sample members)
+npm run bucket:up       # start local MinIO for photos (see "Local dev object storage")
+npm run bucket:down     # stop it
 ```
 
 ## Roles

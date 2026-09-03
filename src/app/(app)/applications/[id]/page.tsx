@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DownloadIcon } from "lucide-react";
 
 import { getApplicationForReview } from "@/app/actions/applications";
 import { ReviewActions } from "@/components/applications/review-actions";
@@ -60,10 +61,22 @@ export default async function ReviewApplicationPage({
         {isPending ? (
           <ReviewActions applicationId={app.id} applicationNo={app.applicationNo} />
         ) : (
-          <span className="rounded-full bg-muted px-3 py-1 text-sm capitalize text-muted-foreground">
-            {app.status}
-            {app.reviewedAt ? ` · ${dateFmt.format(app.reviewedAt)}` : ""}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-muted px-3 py-1 text-sm capitalize text-muted-foreground">
+              {app.status}
+              {app.reviewedAt ? ` · ${dateFmt.format(app.reviewedAt)}` : ""}
+            </span>
+            {app.status === "approved" ? (
+              <Button
+                variant="outline"
+                size="sm"
+                render={<a href={`/api/applications/${app.id}/pdf`} />}
+              >
+                <DownloadIcon />
+                Download application
+              </Button>
+            ) : null}
+          </div>
         )}
       </div>
 

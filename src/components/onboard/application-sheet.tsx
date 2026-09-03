@@ -129,6 +129,9 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
           <p className="mt-2 font-sans text-[10.5px] tracking-[0.05em] text-[#787770] uppercase">
             {ORG.place}
           </p>
+          <p className="mt-1 text-[10px] text-[#787770] sm:text-[11px]">
+            {ORG.address}
+          </p>
         </div>
       </div>
 

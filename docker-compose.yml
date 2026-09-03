@@ -1,0 +1,35 @@
+services:
+  # Local S3-compatible stand-in for the Cloudflare R2 bucket, used for
+  # local dev. Not connected to the real "mdpva" bucket in any way — this
+  # exists so onboarding/photo-upload/approval testing never touches real
+  # member photos again (see incident: approving a test application against
+  # a real ledger member overwrote their live R2 photo, because dev and prod
+  # pointed at the same bucket while only Postgres was branched).
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000" # S3 API — R2_ENDPOINT points here
+      - "9001:9001" # Web console, http://localhost:9001
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+
+  # One-shot: creates the dev bucket, then exits. Re-run any time with
+  # `docker compose up minio-init` — `mc mb` is a no-op if the bucket
+  # already exists.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin; do sleep 1; done;
+      mc mb -p local/mdpva-dev;
+      echo 'mdpva-dev bucket ready';
+      "
+
+volumes:
+  minio-data:
