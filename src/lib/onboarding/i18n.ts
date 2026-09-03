@@ -35,6 +35,11 @@ export const ORG = {
   nameEn: "Mysuru District Photographers & Videographers Association (R.)",
   nameKn: "ಮೈಸೂರು ಜಿಲ್ಲಾ ಫೋಟೋಗ್ರಾಫರ್ ಅಂಡ್ ವೀಡಿಯೋಗ್ರಾಫರ್ ಅಸೋಸಿಯೇಷನ್ (ರಿ)",
   place: "Mysuru, Karnataka",
+  // Registered office address — shown on the letterhead (onboard sheet and
+  // the admin's downloadable application PDF), not to be confused with a
+  // member's own address below it in either document.
+  address:
+    "#224, Narayana Shastri Road, next to Mahalakshmi Temple, K.R. Mohalla, Mysuru – 570024",
 } as const;
 
 export const STRINGS = {

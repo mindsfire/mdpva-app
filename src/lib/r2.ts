@@ -6,10 +6,16 @@ import { env } from "@/lib/env";
  * R2 is S3-compatible; `region: "auto"` is what Cloudflare's docs specify
  * for the S3 API endpoint. This client is server-only — never imported
  * from a "use client" file.
+ *
+ * `forcePathStyle` makes requests use `endpoint/bucket/key` instead of
+ * `bucket.endpoint/key`. R2 accepts both, but local dev's MinIO stand-in
+ * (see docker-compose.yml) only works path-style — `mdpva-dev.localhost`
+ * doesn't resolve without extra DNS setup. Harmless to force on for real R2.
  */
 export const r2 = new S3Client({
   region: "auto",
   endpoint: env.R2_ENDPOINT,
+  forcePathStyle: true,
   credentials: {
     accessKeyId: env.R2_ACCESS_KEY_ID,
     secretAccessKey: env.R2_SECRET_ACCESS_KEY,
