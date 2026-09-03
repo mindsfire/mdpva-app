@@ -182,6 +182,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                   firstName={row.firstName}
                   lastName={row.lastName}
                   photoKey={row.photoKey}
+                  updatedAt={row.updatedAt}
                   className="size-8"
                 />
                 <span className="font-medium text-foreground">

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { uploadMemberPhoto, removeMemberPhoto } from "@/app/actions/photo";
 import { Button } from "@/components/ui/button";
+import { photoUrl } from "@/lib/photo-url";
 
 /**
  * Photos are keyed by member id (`app/members/<id>.webp`), so upload is
@@ -21,19 +22,22 @@ import { Button } from "@/components/ui/button";
 export function PhotoUploader({
   memberId,
   photoKey,
+  photoUpdatedAt,
   onPhotoChange,
 }: {
   memberId?: string;
   photoKey: string | null;
+  photoUpdatedAt?: Date | null;
   onPhotoChange?: (photoKey: string | null) => void;
 }) {
   const [isBusy, setIsBusy] = React.useState(false);
-  // No cache-buster on the initial URL (pure render) — the serving route's
-  // Cache-Control is short enough that this is fine. handleFile/handleRemove
-  // append one after a mutation, from an event handler, to force a fresh
-  // fetch immediately.
+  // Versioned by the member's updatedAt so a photo that changed elsewhere
+  // (e.g. an onboarding approval) doesn't reuse this member's stale
+  // browser-cached bytes at the same key. handleFile/handleRemove version
+  // with Date.now() instead, since they're reacting to a mutation this
+  // instance just made and need an immediate repaint.
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(
-    photoKey ? `/api/photos/${photoKey}` : null,
+    photoUrl(photoKey, photoUpdatedAt),
   );
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -59,7 +63,7 @@ export function PhotoUploader({
         toast.error(result.error ?? "Could not upload that photo.");
         return;
       }
-      setPreviewUrl(`/api/photos/${result.photoKey}?v=${Date.now()}`);
+      setPreviewUrl(photoUrl(result.photoKey ?? null, Date.now()));
       onPhotoChange?.(result.photoKey ?? null);
       toast.success("Photo updated.");
     } finally {

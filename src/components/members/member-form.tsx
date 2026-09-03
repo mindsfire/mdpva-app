@@ -164,6 +164,7 @@ export function MemberForm({
               key={member?.id ?? "new"}
               memberId={member?.id}
               photoKey={member?.photoKey ?? null}
+              photoUpdatedAt={member?.updatedAt ?? null}
             />
           </div>
         </Section>

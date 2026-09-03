@@ -35,6 +35,7 @@ export interface MemberRow {
   feesPaidUpto: number | null;
   deathFundCovered: boolean;
   photoKey: string | null;
+  updatedAt: Date;
 }
 
 export interface MembersSearchResult {
@@ -319,6 +320,7 @@ export async function searchMembers(
       feesPaidUpto: members.feesPaidUpto,
       deathFundCovered: members.deathFundCovered,
       photoKey: members.photoKey,
+      updatedAt: members.updatedAt,
     })
     .from(members)
     .where(where)
