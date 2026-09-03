@@ -184,6 +184,7 @@ describe("templateCsv / membersToCsv", () => {
         feesPaidUpto: null,
         deathFundCovered: false,
       notes: null,
+      aadhaarLast4: null,
       },
     ]);
     // legacy_id leads the default export (the recognised membership number);
@@ -263,6 +264,7 @@ describe("membersToCsv column selection", () => {
     feesPaidUpto: 2026,
     deathFundCovered: true,
     notes: null,
+    aadhaarLast4: null,
   };
 
   it("emits only the requested columns, in canonical order", () => {

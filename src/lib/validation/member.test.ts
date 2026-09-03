@@ -195,6 +195,32 @@ describe("memberInputSchema", () => {
     });
   });
 
+  describe("aadhaar", () => {
+    it("is optional — accepts null/empty/missing, unlike the public form", () => {
+      expect(memberInputSchema.safeParse(validInput({ aadhaar: null })).success).toBe(true);
+      expect(memberInputSchema.safeParse(validInput({ aadhaar: "" })).success).toBe(true);
+      // `aadhaar` is absent from the base `validInput()` fixture — this covers "missing".
+      expect(memberInputSchema.safeParse(validInput()).success).toBe(true);
+    });
+
+    it("accepts a valid Aadhaar number when provided", () => {
+      const result = memberInputSchema.safeParse(
+        validInput({ aadhaar: "234567890124" }),
+      );
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.aadhaar).toBe("234567890124");
+      }
+    });
+
+    it("rejects an invalid Aadhaar number when provided", () => {
+      expect(
+        memberInputSchema.safeParse(validInput({ aadhaar: "123456789012" }))
+          .success,
+      ).toBe(false);
+    });
+  });
+
   it("does not include member_id in the schema shape", () => {
     expect("memberId" in memberInputSchema.shape).toBe(false);
   });

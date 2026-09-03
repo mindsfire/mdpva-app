@@ -74,6 +74,8 @@ export interface MemberDetail {
   pincode: string | null;
   dob: string | null;
   bloodGroup: string | null;
+  /** Last 4 digits only — the encrypted value has no read path here by design. */
+  aadhaarLast4: string | null;
   status: "active" | "inactive" | "suspended";
   feesPaidUpto: number | null;
   deathFundCovered: boolean;
@@ -140,6 +142,7 @@ export async function getMemberById(id: string): Promise<MemberDetail | null> {
     pincode: member.pincode,
     dob: member.dob,
     bloodGroup: member.bloodGroup,
+    aadhaarLast4: member.aadhaarLast4,
     status: member.status,
     feesPaidUpto: member.feesPaidUpto,
     deathFundCovered: member.deathFundCovered,

@@ -75,6 +75,12 @@ export function buildMemberSections(member: MemberDetail): MemberSection[] {
         { label: "Business", value: member.businessName },
         { label: "Date of birth", value: member.dob },
         { label: "Blood group", value: member.bloodGroup },
+        {
+          label: "Aadhaar",
+          // Masked, same as CSV export and the application diff — this
+          // section never has access to the encrypted value to unmask it.
+          value: member.aadhaarLast4 ? `•••• •••• ${member.aadhaarLast4}` : null,
+        },
         { label: "Fees paid upto", value: member.feesPaidUpto },
         {
           label: "Death fund",

@@ -89,6 +89,15 @@ export const members = pgTable(
     feesPaidUpto: smallint("fees_paid_upto"),
     deathFundCovered: boolean("death_fund_covered").notNull().default(false),
     photoKey: text("photo_key"),
+    /**
+     * Aadhaar, encrypted (see src/lib/crypto/pii.ts) — never stored plaintext.
+     * `aadhaarHash` is a deterministic HMAC used only for the uniqueness check
+     * below and duplicate lookups; `aadhaarLast4` lets the UI show a masked
+     * value without decrypting.
+     */
+    aadhaarEnc: text("aadhaar_enc"),
+    aadhaarHash: text("aadhaar_hash"),
+    aadhaarLast4: char("aadhaar_last4", { length: 4 }),
     notes: text("notes"),
     createdBy: uuid("created_by").references(() => users.id),
     updatedBy: uuid("updated_by").references(() => users.id),
@@ -108,6 +117,15 @@ export const members = pgTable(
     uniqueIndex("members_email_active")
       .on(sql`lower(${table.email})`)
       .where(sql`${table.deletedAt} is null and ${table.email} is not null`),
+    /**
+     * Aadhaar identifies exactly one person, unlike phone below — two active
+     * members sharing one is a data error, not a legitimate household case.
+     * Enforced on the blind index, since GCM ciphertext is non-deterministic
+     * and can't carry a unique constraint itself.
+     */
+    uniqueIndex("members_aadhaar_hash_active")
+      .on(table.aadhaarHash)
+      .where(sql`${table.deletedAt} is null and ${table.aadhaarHash} is not null`),
     /**
      * Phone is deliberately NOT unique. A father and son running one studio,
      * or two members sharing a shop landline, is normal in this trade — the
@@ -182,6 +200,11 @@ export const memberApplications = pgTable(
     pincode: char("pincode", { length: 6 }),
     dob: date("dob"),
     bloodGroup: text("blood_group"),
+
+    /** Encrypted Aadhaar — see `members.aadhaarEnc` above; same layout. */
+    aadhaarEnc: text("aadhaar_enc"),
+    aadhaarHash: text("aadhaar_hash"),
+    aadhaarLast4: char("aadhaar_last4", { length: 4 }),
 
     /** `pending/{id}.webp` in R2 until approval promotes it to the live key. */
     photoKey: text("photo_key"),
