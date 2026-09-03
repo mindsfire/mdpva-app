@@ -32,7 +32,7 @@ describe("mapUniqueViolation", () => {
     });
     expect(result).toEqual({
       field: "legacyId",
-      error: "A member with this legacy ID already exists.",
+      error: "That membership number is already in use by another member.",
     });
   });
 

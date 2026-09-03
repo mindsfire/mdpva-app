@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { members } from "@/db/schema";
 import { mapUniqueViolation } from "@/lib/db-errors";
 import { generateMemberId } from "@/lib/member-id";
+import { fullName } from "@/lib/member-name";
 import { requireRole } from "@/lib/rbac";
 import { memberInputSchema, type MemberInput } from "@/lib/validation/member";
 import { normalizePhone } from "@/lib/validation/phone";
@@ -57,6 +58,49 @@ function toValues(input: MemberInput) {
 }
 
 /**
+ * Turns a membership-number collision into a message the office can act on.
+ *
+ * The unique index stops the write either way; what an operator needs is
+ * *which* member already holds the number, so they can tell a genuine
+ * mistake from the ledger conflicts the import surfaced. Falls back to the
+ * generic constraint message if the holder cannot be found — for instance if
+ * the other member was soft-deleted between the write and this lookup.
+ */
+async function describeMembershipConflict(
+  legacyId: string | null | undefined,
+): Promise<string | null> {
+  const trimmed = legacyId?.trim();
+  if (!trimmed) return null;
+
+  const [holder] = await db
+    .select({
+      firstName: members.firstName,
+      lastName: members.lastName,
+      memberId: members.memberId,
+    })
+    .from(members)
+    .where(and(eq(members.legacyId, trimmed), isNull(members.deletedAt)))
+    .limit(1);
+
+  if (!holder) return null;
+  return `Membership No. ${trimmed} already belongs to ${fullName(holder.firstName, holder.lastName)} (${holder.memberId}).`;
+}
+
+/** Shared catch: enriches a legacyId collision, passes others through. */
+async function toActionError(
+  err: unknown,
+  legacyId: string | null | undefined,
+): Promise<MemberActionResult | null> {
+  const mapped = mapUniqueViolation(err);
+  if (!mapped) return null;
+  if (mapped.field === "legacyId") {
+    const detail = await describeMembershipConflict(legacyId);
+    return { ok: false, error: detail ?? mapped.error, field: "legacyId" };
+  }
+  return { ok: false, error: mapped.error, field: mapped.field };
+}
+
+/**
  * Editor+. Validates `input`, generates `member_id` from the
  * `members_seq` Postgres sequence, and inserts the row. Unique-index
  * violations (email/phone/legacy_id already in use) are mapped to a
@@ -88,10 +132,8 @@ export async function createMember(
     revalidatePath(DASHBOARD_PATH);
     return { ok: true, id: inserted.id, memberId: inserted.memberId };
   } catch (err) {
-    const mapped = mapUniqueViolation(err);
-    if (mapped) {
-      return { ok: false, error: mapped.error, field: mapped.field };
-    }
+    const mapped = await toActionError(err, parsed.data.legacyId);
+    if (mapped) return mapped;
     throw err;
   }
 }
@@ -130,10 +172,8 @@ export async function updateMember(
     revalidatePath(DASHBOARD_PATH);
     return { ok: true, id: updated.id, memberId: updated.memberId };
   } catch (err) {
-    const mapped = mapUniqueViolation(err);
-    if (mapped) {
-      return { ok: false, error: mapped.error, field: mapped.field };
-    }
+    const mapped = await toActionError(err, parsed.data.legacyId);
+    if (mapped) return mapped;
     throw err;
   }
 }
