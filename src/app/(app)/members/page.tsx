@@ -63,7 +63,7 @@ function toQueryParams(searchParams: SearchParams): MembersQueryParams {
     profession:
       profession === "photographer" ||
       profession === "videographer" ||
-      profession === "both" ||
+      profession === "photo_and_video" ||
       profession === "drone_operator"
         ? profession
         : undefined,

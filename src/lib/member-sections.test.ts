@@ -80,7 +80,7 @@ describe("buildMemberSections", () => {
   });
 
   it("maps profession to its display label", () => {
-    const value = flatten(member({ profession: "both" })).find(
+    const value = flatten(member({ profession: "photo_and_video" })).find(
       (f) => f.label === "Profession",
     )?.value;
     expect(value).toBe("Photo & Video");

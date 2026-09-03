@@ -130,7 +130,7 @@ export function coerceRow(
   const professionRaw = get("profession").toLowerCase();
   const profession =
     professionRaw === "" ? null
-    : professionRaw === "photo & video" || professionRaw === "photo and video" ? "both"
+    : professionRaw === "photo & video" || professionRaw === "photo and video" ? "photo_and_video"
     : professionRaw;
 
   const statusRaw = get("status").toLowerCase();
@@ -212,7 +212,7 @@ export interface ExportableMember {
   profession:
     | "photographer"
     | "videographer"
-    | "both"
+    | "photo_and_video"
     | "drone_operator"
     | null;
   businessName: string | null;

@@ -571,8 +571,8 @@ export function OnboardForm({
                 <option value="videographer">
                   {S.videographer.en} · {S.videographer.kn}
                 </option>
-                <option value="both">
-                  {S.both.en} · {S.both.kn}
+                <option value="photo_and_video">
+                  {S.photoAndVideo.en} · {S.photoAndVideo.kn}
                 </option>
                 <option value="drone_operator">
                   {S.droneOperator.en} · {S.droneOperator.kn}

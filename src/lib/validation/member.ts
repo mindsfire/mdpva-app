@@ -145,7 +145,7 @@ export const memberInputSchema = z.object({
     }),
 
   profession: z
-    .enum(["photographer", "videographer", "both", "drone_operator"])
+    .enum(["photographer", "videographer", "photo_and_video", "drone_operator"])
     .nullable()
     .default(null),
   businessName: optionalText(

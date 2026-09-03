@@ -20,7 +20,7 @@ export interface SheetValues {
     | ""
     | "photographer"
     | "videographer"
-    | "both"
+    | "photo_and_video"
     | "drone_operator";
   businessName: string;
   dob: string;
@@ -32,7 +32,7 @@ export interface SheetValues {
 const PROFESSION_LABEL: Record<string, string> = {
   photographer: `${S.photographer.en} / ${S.photographer.kn}`,
   videographer: `${S.videographer.en} / ${S.videographer.kn}`,
-  both: `${S.both.en} / ${S.both.kn}`,
+  photo_and_video: `${S.photoAndVideo.en} / ${S.photoAndVideo.kn}`,
   drone_operator: `${S.droneOperator.en} / ${S.droneOperator.kn}`,
 };
 

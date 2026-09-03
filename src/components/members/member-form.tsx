@@ -360,7 +360,7 @@ export function MemberForm({
                     <SelectContent>
                       <SelectItem value="photographer">Photographer</SelectItem>
                       <SelectItem value="videographer">Videographer</SelectItem>
-                      <SelectItem value="both">Photo &amp; Video</SelectItem>
+                      <SelectItem value="photo_and_video">Photo &amp; Video</SelectItem>
                       <SelectItem value="drone_operator">Drone Operator</SelectItem>
                     </SelectContent>
                   </Select>

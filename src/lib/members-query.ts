@@ -33,7 +33,7 @@ export interface MemberRow {
   profession:
     | "photographer"
     | "videographer"
-    | "both"
+    | "photo_and_video"
     | "drone_operator"
     | null;
   status: "active" | "inactive" | "suspended";
@@ -61,7 +61,7 @@ export interface MemberDetail {
   profession:
     | "photographer"
     | "videographer"
-    | "both"
+    | "photo_and_video"
     | "drone_operator"
     | null;
   businessName: string | null;
@@ -230,7 +230,7 @@ function buildSearchCondition(rawQuery: string): SQL | null {
   // Match what the UI actually displays, which differs from the stored
   // enum value / boolean.
   if ("photo & video".includes(lower) || "photo and video".includes(lower)) {
-    conditions.push(sql`${members.profession} = 'both'`);
+    conditions.push(sql`${members.profession} = 'photo_and_video'`);
   }
   if ("death fund".includes(lower) || lower === "covered") {
     conditions.push(sql`${members.deathFundCovered} = true`);

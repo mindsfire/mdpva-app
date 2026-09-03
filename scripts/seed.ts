@@ -61,7 +61,7 @@ async function nextMemberId(): Promise<string> {
 const PROFESSIONS = [
   "photographer",
   "videographer",
-  "both",
+  "photo_and_video",
   "drone_operator",
 ] as const;
 const STATUSES = ["active", "inactive", "suspended"] as const;
@@ -103,7 +103,7 @@ async function seedDemoMembers(adminId: string) {
         phone,
         profession,
         businessName: `${firstName} ${
-          profession === "both"
+          profession === "photo_and_video"
             ? "Studio"
             : profession === "photographer"
               ? "Photography"

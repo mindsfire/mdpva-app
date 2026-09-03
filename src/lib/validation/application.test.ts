@@ -31,11 +31,11 @@ describe("applicationInputSchema", () => {
   });
 
   describe("profession", () => {
-    it("accepts photographer, videographer, both, drone_operator", () => {
+    it("accepts photographer, videographer, photo_and_video, drone_operator", () => {
       for (const value of [
         "photographer",
         "videographer",
-        "both",
+        "photo_and_video",
         "drone_operator",
       ]) {
         const result = applicationInputSchema.safeParse(

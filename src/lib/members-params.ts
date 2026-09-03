@@ -14,7 +14,7 @@ export type MemberStatusFilter = "active" | "inactive" | "suspended";
 export type ProfessionFilter =
   | "photographer"
   | "videographer"
-  | "both"
+  | "photo_and_video"
   | "drone_operator";
 
 /**

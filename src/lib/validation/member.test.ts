@@ -101,11 +101,11 @@ describe("memberInputSchema", () => {
   });
 
   describe("profession enum", () => {
-    it("accepts photographer, videographer, both, drone_operator", () => {
+    it("accepts photographer, videographer, photo_and_video, drone_operator", () => {
       for (const value of [
         "photographer",
         "videographer",
-        "both",
+        "photo_and_video",
         "drone_operator",
       ]) {
         expect(memberInputSchema.safeParse(validInput({ profession: value })).success).toBe(true);

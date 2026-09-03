@@ -48,7 +48,7 @@ function parseParams(searchParams: URLSearchParams): MembersQueryParams {
     profession:
       profession === "photographer" ||
       profession === "videographer" ||
-      profession === "both" ||
+      profession === "photo_and_video" ||
       profession === "drone_operator"
         ? (profession as ProfessionFilter)
         : undefined,
