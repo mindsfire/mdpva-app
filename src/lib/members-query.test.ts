@@ -56,9 +56,9 @@ describe("buildMembersWhere", () => {
     expect(sql).toContain("|| ' ' ||");
   });
 
-  it("maps the displayed 'Photo & Video' label onto the 'both' enum", () => {
+  it("maps the displayed 'Photo & Video' label onto the 'photo_and_video' enum", () => {
     const sql = render({ q: "photo & video" });
-    expect(sql).toContain("'both'");
+    expect(sql).toContain("'photo_and_video'");
   });
 
   it("treats 'due' as a fees-due search", () => {
@@ -80,6 +80,13 @@ describe("buildMembersWhere", () => {
     expect(sql).toContain("profession");
   });
 
+  it("filters by the drone_operator profession", () => {
+    const condition = buildMembersWhere({ profession: "drone_operator" });
+    const query = dialect.sqlToQuery(condition);
+    expect(query.sql).toContain("profession");
+    expect(query.params).toContain("drone_operator");
+  });
+
   it("filters fees due (feesPaidUpto < current year or null) when feesDue is true", () => {
     const sql = render({ feesDue: true });
     expect(sql).toContain("fees_paid_upto");
@@ -94,7 +101,7 @@ describe("buildMembersWhere", () => {
     const sql = render({
       q: "sha",
       status: "active",
-      profession: "both",
+      profession: "photo_and_video",
       feesDue: true,
       deathFund: true,
     });

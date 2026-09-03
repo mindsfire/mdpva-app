@@ -1,0 +1,1 @@
+ALTER TYPE "public"."profession" ADD VALUE 'drone_operator';

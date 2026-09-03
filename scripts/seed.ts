@@ -58,7 +58,12 @@ async function nextMemberId(): Promise<string> {
   return generateMemberId(year, Number(rows[0].nextval));
 }
 
-const PROFESSIONS = ["photographer", "videographer", "both"] as const;
+const PROFESSIONS = [
+  "photographer",
+  "videographer",
+  "photo_and_video",
+  "drone_operator",
+] as const;
 const STATUSES = ["active", "inactive", "suspended"] as const;
 
 const DEMO_FIRST_NAMES = [
@@ -97,7 +102,15 @@ async function seedDemoMembers(adminId: string) {
         email,
         phone,
         profession,
-        businessName: `${firstName} ${profession === "both" ? "Studio" : profession === "photographer" ? "Photography" : "Films"}`,
+        businessName: `${firstName} ${
+          profession === "photo_and_video"
+            ? "Studio"
+            : profession === "photographer"
+              ? "Photography"
+              : profession === "drone_operator"
+                ? "Aerials"
+                : "Films"
+        }`,
         addressLine1: `${i + 1} MG Road`,
         area: "Central",
         city: "Mangalore",

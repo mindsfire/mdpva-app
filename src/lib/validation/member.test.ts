@@ -101,8 +101,13 @@ describe("memberInputSchema", () => {
   });
 
   describe("profession enum", () => {
-    it("accepts photographer, videographer, both", () => {
-      for (const value of ["photographer", "videographer", "both"]) {
+    it("accepts photographer, videographer, photo_and_video, drone_operator", () => {
+      for (const value of [
+        "photographer",
+        "videographer",
+        "photo_and_video",
+        "drone_operator",
+      ]) {
         expect(memberInputSchema.safeParse(validInput({ profession: value })).success).toBe(true);
       }
     });

@@ -20,7 +20,8 @@ export const userStatusEnum = pgEnum("user_status", ["active", "disabled"]);
 export const professionEnum = pgEnum("profession", [
   "photographer",
   "videographer",
-  "both",
+  "photo_and_video",
+  "drone_operator",
 ]);
 export const memberStatusEnum = pgEnum("member_status", [
   "active",

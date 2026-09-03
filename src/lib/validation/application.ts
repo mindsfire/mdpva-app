@@ -100,11 +100,24 @@ export const applicationInputSchema = z.object({
     .transform((v) => (typeof v === "string" && v !== "" ? v : null))
     .refine(
       (v) =>
-        v === null || ["photographer", "videographer", "both"].includes(v),
+        v === null ||
+        [
+          "photographer",
+          "videographer",
+          "photo_and_video",
+          "drone_operator",
+        ].includes(v),
       { message: "Choose the nature of your work" },
     )
     .refine((v) => v !== null, { message: "Choose the nature of your work" })
-    .transform((v) => v as "photographer" | "videographer" | "both"),
+    .transform(
+      (v) =>
+        v as
+          | "photographer"
+          | "videographer"
+          | "photo_and_video"
+          | "drone_operator",
+    ),
 
   businessName: optionalText(
     MAX_LENGTHS.businessName,

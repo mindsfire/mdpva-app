@@ -36,10 +36,17 @@ describe("parseMembersCsv", () => {
     expect(input.deathFundCovered).toBe(true);
   });
 
-  it("maps 'Photo & Video' label to the 'both' enum", () => {
+  it("maps 'Photo & Video' label to the 'photo_and_video' enum", () => {
     const row = VALID_ROW.replace("photographer", "Photo & Video");
     const result = parseMembersCsv(csv(row));
-    expect(result.rows[0]?.input.profession).toBe("both");
+    expect(result.rows[0]?.input.profession).toBe("photo_and_video");
+  });
+
+  it("accepts drone_operator as a profession value", () => {
+    const row = VALID_ROW.replace("photographer", "drone_operator");
+    const result = parseMembersCsv(csv(row));
+    expect(result.errors).toEqual([]);
+    expect(result.rows[0]?.input.profession).toBe("drone_operator");
   });
 
   it("reports row-level validation errors with 1-based row numbers", () => {
@@ -163,7 +170,7 @@ describe("templateCsv / membersToCsv", () => {
         lastName: "Rao",
         email: null,
         phone: "9000000001",
-        profession: "both",
+        profession: "drone_operator",
         businessName: null,
         addressLine1: "5 Temple St",
         addressLine2: null,
