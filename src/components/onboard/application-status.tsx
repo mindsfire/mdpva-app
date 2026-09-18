@@ -101,16 +101,15 @@ export function ApplicationStatus({
         <span className="font-kn mt-1.5 block">{copy.body.kn}</span>
       </p>
 
-      <Button className="mt-7 h-10 w-full" onClick={onEdit}>
-        <Bi
-          s={status === "rejected" ? S.fixAndResubmit : S.updateDetails}
-          sep="·"
-        />
-      </Button>
+      {status === "rejected" ? (
+        <Button className="mt-7 h-10 w-full" onClick={onEdit}>
+          <Bi s={S.fixAndResubmit} sep="·" />
+        </Button>
+      ) : null}
 
       <Button
         variant="outline"
-        className="mt-2.5 h-10 w-full"
+        className={cn("h-10 w-full", status === "rejected" ? "mt-2.5" : "mt-7")}
         onClick={async () => {
           await endOnboardSessionAction();
           router.push("/onboard");
