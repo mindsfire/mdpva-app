@@ -6,6 +6,7 @@
  * is allowed to learn from the outcome.
  */
 
+import { fullName } from "@/lib/member-name";
 import { normalizePhone } from "@/lib/validation/phone";
 import { sanitizeText } from "@/lib/validation/text-safety";
 
@@ -87,6 +88,6 @@ export function decideVerification(
     // Name only. Enough for "is this you?", which a member who mistyped their
     // ledger number needs before overwriting a stranger's record — and nothing
     // beyond it, so a lucky guess yields no address, email or fee status.
-    displayName: `${match.firstName} ${match.lastName}`.trim(),
+    displayName: fullName(match.firstName, match.lastName),
   };
 }
