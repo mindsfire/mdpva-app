@@ -95,6 +95,7 @@ export const STRINGS = {
   businessName: t("Studio / business name", "ವ್ಯವಹಾರದ ಹೆಸರು"),
   dob: t("Date of birth", "ಜನ್ಮ ದಿನಾಂಕ"),
   bloodGroup: t("Blood group", "ರಕ್ತದ ಗುಂಪು"),
+  bloodGroupUnknown: t("Don't know", "ಗೊತ್ತಿಲ್ಲ"),
   aadhaar: t("Aadhaar number", "ಆಧಾರ್ ಸಂಖ್ಯೆ"),
   aadhaarHint: t(
     "12 digits, as printed on your Aadhaar card. Kept private — only office staff can see it.",

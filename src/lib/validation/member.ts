@@ -28,7 +28,7 @@ export const MAX_LENGTHS = {
   city: 60,
   state: 60,
   dob: 10,
-  bloodGroup: 4,
+  bloodGroup: 10, // fits "Don't know" alongside the standard "AB+"/"AB-" codes
   notes: 2000,
   legacyId: 20,
 } as const;

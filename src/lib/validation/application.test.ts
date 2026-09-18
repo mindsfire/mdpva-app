@@ -72,6 +72,70 @@ describe("applicationInputSchema", () => {
     });
   });
 
+  describe("pincode", () => {
+    it("is required — rejects null/empty/missing", () => {
+      expect(
+        applicationInputSchema.safeParse(validInput({ pincode: null }))
+          .success,
+      ).toBe(false);
+      expect(
+        applicationInputSchema.safeParse(validInput({ pincode: "" })).success,
+      ).toBe(false);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- discarding pincode to build a rest object without it
+      const { pincode: _drop, ...rest } = validInput();
+      expect(applicationInputSchema.safeParse(rest).success).toBe(false);
+    });
+
+    it("rejects a value that isn't 6 digits", () => {
+      expect(
+        applicationInputSchema.safeParse(validInput({ pincode: "5600" }))
+          .success,
+      ).toBe(false);
+      expect(
+        applicationInputSchema.safeParse(validInput({ pincode: "560038a" }))
+          .success,
+      ).toBe(false);
+    });
+  });
+
+  describe("dob", () => {
+    it("is required — rejects null/empty/missing", () => {
+      expect(
+        applicationInputSchema.safeParse(validInput({ dob: null })).success,
+      ).toBe(false);
+      expect(
+        applicationInputSchema.safeParse(validInput({ dob: "" })).success,
+      ).toBe(false);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- discarding dob to build a rest object without it
+      const { dob: _drop, ...rest } = validInput();
+      expect(applicationInputSchema.safeParse(rest).success).toBe(false);
+    });
+  });
+
+  describe("bloodGroup", () => {
+    it("is required — rejects null/empty/missing", () => {
+      expect(
+        applicationInputSchema.safeParse(validInput({ bloodGroup: null }))
+          .success,
+      ).toBe(false);
+      expect(
+        applicationInputSchema.safeParse(validInput({ bloodGroup: "" }))
+          .success,
+      ).toBe(false);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- discarding bloodGroup to build a rest object without it
+      const { bloodGroup: _drop, ...rest } = validInput();
+      expect(applicationInputSchema.safeParse(rest).success).toBe(false);
+    });
+
+    it("accepts \"Don't know\"", () => {
+      expect(
+        applicationInputSchema.safeParse(
+          validInput({ bloodGroup: "Don't know" }),
+        ).success,
+      ).toBe(true);
+    });
+  });
+
   describe("aadhaar", () => {
     it("accepts a valid Aadhaar number, loosely formatted", () => {
       const result = applicationInputSchema.safeParse(

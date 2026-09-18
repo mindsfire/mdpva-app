@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 import { endOnboardSessionAction } from "@/app/actions/onboard";
 import { submitApplicationAction } from "@/app/actions/onboard-submit";
-import photoExample from "@/assets/onboard/photo-example.svg";
+import photoExample from "@/assets/onboard/photo-example.png";
 import { PhotoCropper } from "@/components/onboard/photo-cropper";
 import {
   Dialog,
@@ -33,6 +33,26 @@ import { cn } from "@/lib/utils";
 type Values = Omit<SheetValues, "photoUrl" | "applicationNo">;
 
 const DRAFT_KEY_PREFIX = "mdpva.onboard.draft.";
+
+/**
+ * DOM id of each field the server can name in a validation error's `field`
+ * (see `applicationInputSchema` in `onboard-submit.ts`), so a rejected
+ * submit can scroll to and focus the actual offending input rather than
+ * leaving the member to find it themselves. Aadhaar and the photo have
+ * their own dedicated handling below and aren't included here.
+ */
+const FIELD_INPUT_IDS: Partial<Record<keyof Values, string>> = {
+  firstName: "f-first",
+  lastName: "f-last",
+  phone: "f-phone",
+  addressLine1: "f-a1",
+  pincode: "f-pin",
+  city: "f-city",
+  state: "f-state",
+  profession: "f-prof",
+  dob: "f-dob",
+  bloodGroup: "f-blood",
+};
 
 /** Server error codes → member-facing copy. */
 function submitMessage(code: string): string {
@@ -152,6 +172,9 @@ export function OnboardForm({
   const [submitted, setSubmitted] = React.useState<string | null>(null);
   const [consented, setConsented] = React.useState(false);
   const [aadhaarError, setAadhaarError] = React.useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = React.useState<
+    Partial<Record<keyof Values, string>>
+  >({});
   // A returning member sees their existing application first, not a blank
   // form — otherwise they cannot tell whether the last one arrived.
   const [editing, setEditing] = React.useState(existing == null);
@@ -203,6 +226,7 @@ export function OnboardForm({
 
   function set<K extends keyof Values>(key: K, value: Values[K]) {
     setValues((v) => ({ ...v, [key]: value }));
+    setFieldErrors((f) => (f[key] ? { ...f, [key]: undefined } : f));
   }
 
   function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -226,6 +250,7 @@ export function OnboardForm({
   async function onSubmit() {
     setSubmitError(null);
     setAadhaarError(null);
+    setFieldErrors({});
 
     // Client-side enforcement of the same two rules the server holds the
     // line on (`onboard-submit.ts`) — checked here first so a member sees a
@@ -261,6 +286,12 @@ export function OnboardForm({
         setSubmitError(result.error);
         if (result.field === "aadhaar") {
           setAadhaarError(submitMessage(result.error));
+        } else if (result.field && result.field in FIELD_INPUT_IDS) {
+          const field = result.field as keyof Values;
+          setFieldErrors({ [field]: submitMessage(result.error) });
+          const el = document.getElementById(FIELD_INPUT_IDS[field]!);
+          el?.scrollIntoView({ behavior: "smooth", block: "center" });
+          el?.focus();
         }
         return;
       }
@@ -528,7 +559,13 @@ export function OnboardForm({
                 id="f-first"
                 value={values.firstName}
                 onChange={(e) => set("firstName", e.target.value)}
+                aria-invalid={fieldErrors.firstName != null}
               />
+              {fieldErrors.firstName ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.firstName}
+                </span>
+              ) : null}
             </span>
             <span className="flex flex-col gap-1.5">
               <Label htmlFor="f-last" s={S.lastName} required />
@@ -536,7 +573,13 @@ export function OnboardForm({
                 id="f-last"
                 value={values.lastName}
                 onChange={(e) => set("lastName", e.target.value)}
+                aria-invalid={fieldErrors.lastName != null}
               />
+              {fieldErrors.lastName ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.lastName}
+                </span>
+              ) : null}
             </span>
             <span className="flex flex-col gap-1.5">
               <Label htmlFor="f-phone" s={S.phone} required />
@@ -546,7 +589,13 @@ export function OnboardForm({
                 inputMode="tel"
                 value={values.phone}
                 onChange={(e) => set("phone", e.target.value)}
+                aria-invalid={fieldErrors.phone != null}
               />
+              {fieldErrors.phone ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.phone}
+                </span>
+              ) : null}
             </span>
             <span className="flex flex-col gap-1.5">
               <Label htmlFor="f-email" s={S.email} />
@@ -598,7 +647,13 @@ export function OnboardForm({
                 id="f-a1"
                 value={values.addressLine1}
                 onChange={(e) => set("addressLine1", e.target.value)}
+                aria-invalid={fieldErrors.addressLine1 != null}
               />
+              {fieldErrors.addressLine1 ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.addressLine1}
+                </span>
+              ) : null}
             </span>
             <span className="flex flex-col gap-1.5 sm:col-span-2">
               <Label htmlFor="f-a2" s={S.addressLine2} />
@@ -618,14 +673,22 @@ export function OnboardForm({
               />
             </span>
             <span className="flex flex-col gap-1.5">
-              <Label htmlFor="f-pin" s={S.pincode} />
+              <Label htmlFor="f-pin" s={S.pincode} required />
               <Input
                 id="f-pin"
                 inputMode="numeric"
                 maxLength={6}
                 value={values.pincode}
-                onChange={(e) => set("pincode", e.target.value)}
+                onChange={(e) =>
+                  set("pincode", e.target.value.replace(/\D/g, ""))
+                }
+                aria-invalid={fieldErrors.pincode != null}
               />
+              {fieldErrors.pincode ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.pincode}
+                </span>
+              ) : null}
             </span>
             <span className="flex flex-col gap-1.5">
               <Label htmlFor="f-city" s={S.city} required />
@@ -633,7 +696,13 @@ export function OnboardForm({
                 id="f-city"
                 value={values.city}
                 onChange={(e) => set("city", e.target.value)}
+                aria-invalid={fieldErrors.city != null}
               />
+              {fieldErrors.city ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.city}
+                </span>
+              ) : null}
             </span>
             <span className="flex flex-col gap-1.5">
               <Label htmlFor="f-state" s={S.state} required />
@@ -641,7 +710,13 @@ export function OnboardForm({
                 id="f-state"
                 value={values.state}
                 onChange={(e) => set("state", e.target.value)}
+                aria-invalid={fieldErrors.state != null}
               />
+              {fieldErrors.state ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.state}
+                </span>
+              ) : null}
             </span>
           </div>
         </Group>
@@ -656,7 +731,8 @@ export function OnboardForm({
                 onChange={(e) =>
                   set("profession", e.target.value as Values["profession"])
                 }
-                className="h-9 cursor-pointer rounded-lg bg-muted/50 px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                aria-invalid={fieldErrors.profession != null}
+                className="h-9 cursor-pointer rounded-lg border border-transparent bg-muted/50 px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
               >
                 <option value="">—</option>
                 <option value="photographer">
@@ -672,6 +748,11 @@ export function OnboardForm({
                   {S.droneOperator.en} · {S.droneOperator.kn}
                 </option>
               </select>
+              {fieldErrors.profession ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.profession}
+                </span>
+              ) : null}
             </span>
             <span className="flex flex-col gap-1.5">
               <Label htmlFor="f-biz" s={S.businessName} />
@@ -682,20 +763,27 @@ export function OnboardForm({
               />
             </span>
             <span className="flex flex-col gap-1.5">
-              <Label htmlFor="f-dob" s={S.dob} />
+              <Label htmlFor="f-dob" s={S.dob} required />
               <DateField
                 id="f-dob"
                 value={values.dob}
                 onChange={(iso) => set("dob", iso)}
+                aria-invalid={fieldErrors.dob != null}
               />
+              {fieldErrors.dob ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.dob}
+                </span>
+              ) : null}
             </span>
             <span className="flex flex-col gap-1.5">
-              <Label htmlFor="f-blood" s={S.bloodGroup} />
+              <Label htmlFor="f-blood" s={S.bloodGroup} required />
               <select
                 id="f-blood"
                 value={values.bloodGroup}
                 onChange={(e) => set("bloodGroup", e.target.value)}
-                className="h-9 cursor-pointer rounded-lg bg-muted/50 px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                aria-invalid={fieldErrors.bloodGroup != null}
+                className="h-9 cursor-pointer rounded-lg border border-transparent bg-muted/50 px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
               >
                 <option value="">—</option>
                 {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map((g) => (
@@ -703,7 +791,15 @@ export function OnboardForm({
                     {g}
                   </option>
                 ))}
+                <option value="Don't know">
+                  {S.bloodGroupUnknown.en} · {S.bloodGroupUnknown.kn}
+                </option>
               </select>
+              {fieldErrors.bloodGroup ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.bloodGroup}
+                </span>
+              ) : null}
             </span>
           </div>
         </Group>

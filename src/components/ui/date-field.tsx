@@ -87,6 +87,7 @@ export function DateField({
   id,
   placeholder = "DD-MM-YYYY",
   className,
+  "aria-invalid": ariaInvalid,
 }: {
   /** ISO `YYYY-MM-DD`, or "" when unset. */
   value: string;
@@ -94,6 +95,7 @@ export function DateField({
   id?: string;
   placeholder?: string;
   className?: string;
+  "aria-invalid"?: boolean;
 }) {
   const [text, setText] = React.useState(() =>
     value ? isoToDisplay(value) : "",
@@ -155,6 +157,7 @@ export function DateField({
         placeholder={placeholder}
         inputMode="numeric"
         autoComplete="off"
+        aria-invalid={ariaInvalid}
         className="pr-10"
       />
       <Popover.Root open={open} onOpenChange={setOpen}>

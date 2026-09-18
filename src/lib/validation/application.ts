@@ -89,10 +89,9 @@ export const applicationInputSchema = z.object({
   addressLine1: requiredText(MAX_LENGTHS.addressLine, "Address"),
   addressLine2: optionalText(MAX_LENGTHS.addressLine, "Address line 2"),
   area: optionalText(MAX_LENGTHS.area, "Area"),
-  pincode: optionalText(6, "Pincode").refine(
-    (v) => v === null || PINCODE_REGEX.test(v),
-    { message: "Pincode must be 6 digits" },
-  ),
+  pincode: requiredText(6, "Pincode").refine((v) => PINCODE_REGEX.test(v), {
+    message: "Pincode must be 6 digits",
+  }),
   city: requiredText(MAX_LENGTHS.city, "City"),
   state: requiredText(MAX_LENGTHS.state, "State"),
 
@@ -128,12 +127,11 @@ export const applicationInputSchema = z.object({
   }),
 
   /** ISO `YYYY-MM-DD` from the date field; the column is a `date`. */
-  dob: optionalText(10, "Date of birth").refine(
-    (v) => v === null || isPlausibleBirthDate(v),
-    { message: "Enter a valid date of birth" },
-  ),
+  dob: requiredText(10, "Date of birth").refine(isPlausibleBirthDate, {
+    message: "Enter a valid date of birth",
+  }),
 
-  bloodGroup: optionalText(MAX_LENGTHS.bloodGroup, "Blood group"),
+  bloodGroup: requiredText(MAX_LENGTHS.bloodGroup, "Blood group"),
 
   /**
    * Required on the public form. Normalized to 12 bare digits here; the
