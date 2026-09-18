@@ -226,6 +226,7 @@ export interface ExportableMember {
     | "videographer"
     | "photo_and_video"
     | "drone_operator"
+    | "other"
     | null;
   businessName: string | null;
   addressLine1: string | null;

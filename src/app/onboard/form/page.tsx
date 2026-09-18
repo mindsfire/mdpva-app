@@ -63,6 +63,7 @@ export default async function OnboardFormPage() {
                 city: application.city ?? "",
                 state: application.state ?? "",
                 profession: isoToDisplayableProfession(application.profession),
+                professionOther: application.professionOther ?? "",
                 businessName: application.businessName ?? "",
                 dob: application.dob ?? "",
                 bloodGroup: application.bloodGroup ?? "",

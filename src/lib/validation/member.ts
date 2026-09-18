@@ -29,6 +29,7 @@ export const MAX_LENGTHS = {
   state: 60,
   dob: 10,
   bloodGroup: 10, // fits "Don't know" alongside the standard "AB+"/"AB-" codes
+  professionOther: 40,
   notes: 2000,
   legacyId: 20,
 } as const;
@@ -146,9 +147,17 @@ export const memberInputSchema = z.object({
     }),
 
   profession: z
-    .enum(["photographer", "videographer", "photo_and_video", "drone_operator"])
+    .enum([
+      "photographer",
+      "videographer",
+      "photo_and_video",
+      "drone_operator",
+      "other",
+    ])
     .nullable()
     .default(null),
+  /** Set only when `profession` is `"other"`. */
+  professionOther: optionalText(MAX_LENGTHS.professionOther, "Profession"),
   businessName: optionalText(
     MAX_LENGTHS.businessName,
     "Business name",

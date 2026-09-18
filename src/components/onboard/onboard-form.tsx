@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { STRINGS as S, type Bilingual } from "@/lib/onboarding/i18n";
 import { canSubmitApplication } from "@/lib/onboarding/submit-gate";
 import { isValidAadhaar } from "@/lib/validation/aadhaar";
+import { MAX_LENGTHS } from "@/lib/validation/member";
 import { cn } from "@/lib/utils";
 
 type Values = Omit<SheetValues, "photoUrl" | "applicationNo">;
@@ -50,6 +51,7 @@ const FIELD_INPUT_IDS: Partial<Record<keyof Values, string>> = {
   city: "f-city",
   state: "f-state",
   profession: "f-prof",
+  professionOther: "f-prof-other",
   dob: "f-dob",
   bloodGroup: "f-blood",
 };
@@ -90,6 +92,7 @@ function emptyValues(membershipNo: string, prefill: Partial<Values>): Values {
     city: "Mysuru",
     state: "Karnataka",
     profession: "",
+    professionOther: "",
     businessName: "",
     dob: "",
     bloodGroup: "",
@@ -568,7 +571,7 @@ export function OnboardForm({
               ) : null}
             </span>
             <span className="flex flex-col gap-1.5">
-              <Label htmlFor="f-last" s={S.lastName} required />
+              <Label htmlFor="f-last" s={S.lastName} />
               <Input
                 id="f-last"
                 value={values.lastName}
@@ -728,9 +731,13 @@ export function OnboardForm({
               <select
                 id="f-prof"
                 value={values.profession}
-                onChange={(e) =>
-                  set("profession", e.target.value as Values["profession"])
-                }
+                onChange={(e) => {
+                  const next = e.target.value as Values["profession"];
+                  set("profession", next);
+                  // Stale text from a previous "Other" selection shouldn't
+                  // linger, hidden, once they switch to a listed profession.
+                  if (next !== "other") set("professionOther", "");
+                }}
                 aria-invalid={fieldErrors.profession != null}
                 className="h-9 cursor-pointer rounded-lg border border-transparent bg-muted/50 px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
               >
@@ -744,13 +751,39 @@ export function OnboardForm({
                 <option value="photo_and_video">
                   {S.photoAndVideo.en} · {S.photoAndVideo.kn}
                 </option>
-                <option value="drone_operator">
-                  {S.droneOperator.en} · {S.droneOperator.kn}
+                <option value="other">
+                  {S.otherProfession.en} · {S.otherProfession.kn}
                 </option>
               </select>
               {fieldErrors.profession ? (
                 <span role="alert" className="text-[11.5px] text-destructive">
                   {fieldErrors.profession}
+                </span>
+              ) : null}
+              {values.profession === "other" ? (
+                <span className="mt-1 flex flex-col gap-1.5">
+                  <Label
+                    htmlFor="f-prof-other"
+                    s={S.otherProfessionDescribe}
+                    required
+                  />
+                  <Input
+                    id="f-prof-other"
+                    maxLength={MAX_LENGTHS.professionOther}
+                    value={values.professionOther}
+                    onChange={(e) =>
+                      set("professionOther", e.target.value)
+                    }
+                    aria-invalid={fieldErrors.professionOther != null}
+                  />
+                  {fieldErrors.professionOther ? (
+                    <span
+                      role="alert"
+                      className="text-[11.5px] text-destructive"
+                    >
+                      {fieldErrors.professionOther}
+                    </span>
+                  ) : null}
                 </span>
               ) : null}
             </span>

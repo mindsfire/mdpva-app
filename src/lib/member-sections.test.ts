@@ -13,6 +13,7 @@ function member(overrides: Partial<MemberDetail> = {}): MemberDetail {
     email: "asha@example.com",
     phone: "9000000001",
     profession: "photographer",
+    professionOther: null,
     businessName: "Asha Studio",
     addressLine1: "5 Temple St",
     addressLine2: "Near the tank",
@@ -92,6 +93,20 @@ describe("buildMemberSections", () => {
       (f) => f.label === "Profession",
     )?.value;
     expect(value).toBe("Drone Operator");
+  });
+
+  it("shows the member's own text for an 'other' profession", () => {
+    const value = flatten(
+      member({ profession: "other", professionOther: "Album Framing" }),
+    ).find((f) => f.label === "Profession")?.value;
+    expect(value).toBe("Album Framing");
+  });
+
+  it("falls back to 'Other' if professionOther wasn't recorded", () => {
+    const value = flatten(
+      member({ profession: "other", professionOther: null }),
+    ).find((f) => f.label === "Profession")?.value;
+    expect(value).toBe("Other");
   });
 
   it("renders death fund cover as words, not a boolean", () => {

@@ -147,7 +147,12 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
         {
           label: "Profession",
           labelKn: S.profession.kn,
-          value: member.profession ? PROFESSION_LABELS[member.profession] : null,
+          value:
+            member.profession === "other"
+              ? (member.professionOther ?? PROFESSION_LABELS.other)
+              : member.profession
+                ? PROFESSION_LABELS[member.profession]
+                : null,
         },
         { label: "Business", labelKn: S.businessName.kn, value: member.businessName },
       ],

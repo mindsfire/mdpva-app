@@ -22,6 +22,7 @@ export const professionEnum = pgEnum("profession", [
   "videographer",
   "photo_and_video",
   "drone_operator",
+  "other",
 ]);
 export const memberStatusEnum = pgEnum("member_status", [
   "active",
@@ -76,6 +77,8 @@ export const members = pgTable(
      */
     normalizedPhone: text("normalized_phone"),
     profession: professionEnum("profession"),
+    /** Free text, set only when `profession` is `"other"`. */
+    professionOther: text("profession_other"),
     businessName: text("business_name"),
     addressLine1: text("address_line1").notNull(),
     addressLine2: text("address_line2"),
@@ -191,6 +194,8 @@ export const memberApplications = pgTable(
     email: text("email"),
     phone: text("phone"),
     profession: professionEnum("profession"),
+    /** Free text, set only when `profession` is `"other"`. */
+    professionOther: text("profession_other"),
     businessName: text("business_name"),
     addressLine1: text("address_line1"),
     addressLine2: text("address_line2"),

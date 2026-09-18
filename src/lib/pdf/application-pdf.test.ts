@@ -21,6 +21,7 @@ function member(overrides: Partial<Member> = {}): Member {
     phone: "9000000001",
     normalizedPhone: "9000000001",
     profession: "photographer",
+    professionOther: null,
     businessName: "Asha Studio",
     addressLine1: "5 Temple St",
     addressLine2: "Near the tank",

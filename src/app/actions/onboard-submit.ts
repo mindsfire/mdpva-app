@@ -57,6 +57,7 @@ export async function submitApplicationAction(
     city: formData.get("city"),
     state: formData.get("state"),
     profession: formData.get("profession"),
+    professionOther: formData.get("professionOther"),
     businessName: formData.get("businessName"),
     dob: formData.get("dob"),
     bloodGroup: formData.get("bloodGroup"),

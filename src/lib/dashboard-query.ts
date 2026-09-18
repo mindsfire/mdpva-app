@@ -27,6 +27,7 @@ export interface DashboardStats {
       | "videographer"
       | "photo_and_video"
       | "drone_operator"
+      | "other"
       | null;
     photoKey: string | null;
     updatedAt: Date;
