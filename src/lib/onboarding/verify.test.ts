@@ -48,6 +48,17 @@ describe("decideVerification", () => {
     });
   });
 
+  it("omits a null last name from displayName rather than showing 'null'", () => {
+    const result = decideVerification("417", "9845011234", [
+      member({ lastName: null }),
+    ]);
+    expect(result).toEqual({
+      ok: true,
+      memberId: "m1",
+      displayName: "Aarav",
+    });
+  });
+
   it("matches across differently written phone and ledger forms", () => {
     const result = decideVerification("MDPVA/0417", "+91 98450 11234", [
       member(),
