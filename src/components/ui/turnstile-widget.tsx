@@ -87,7 +87,18 @@ export const TurnstileWidget = React.forwardRef<
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         strategy="afterInteractive"
-        onLoad={() => setReady(true)}
+        /*
+         * `onLoad` fires once, ever — the script's actual load event. This
+         * component unmounts while the "is this you?" confirm screen is
+         * shown (it isn't rendered there) and remounts if the member backs
+         * out, but the script has already loaded by then, so `onLoad` never
+         * fires again: `ready` stayed false forever, no new widget was ever
+         * rendered, and the member's retry silently resubmitted the first
+         * widget's already-spent (single-use) token. `onReady` fires on the
+         * initial load *and* on every remount, which is what a token that
+         * must be regenerated per mount actually needs.
+         */
+        onReady={() => setReady(true)}
       />
       <div ref={holder} className={className} />
     </>
