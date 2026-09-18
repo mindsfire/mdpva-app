@@ -127,12 +127,11 @@ export const applicationInputSchema = z.object({
   }),
 
   /** ISO `YYYY-MM-DD` from the date field; the column is a `date`. */
-  dob: optionalText(10, "Date of birth").refine(
-    (v) => v === null || isPlausibleBirthDate(v),
-    { message: "Enter a valid date of birth" },
-  ),
+  dob: requiredText(10, "Date of birth").refine(isPlausibleBirthDate, {
+    message: "Enter a valid date of birth",
+  }),
 
-  bloodGroup: optionalText(MAX_LENGTHS.bloodGroup, "Blood group"),
+  bloodGroup: requiredText(MAX_LENGTHS.bloodGroup, "Blood group"),
 
   /**
    * Required on the public form. Normalized to 12 bare digits here; the

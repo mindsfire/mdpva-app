@@ -50,6 +50,8 @@ const FIELD_INPUT_IDS: Partial<Record<keyof Values, string>> = {
   city: "f-city",
   state: "f-state",
   profession: "f-prof",
+  dob: "f-dob",
+  bloodGroup: "f-blood",
 };
 
 /** Server error codes → member-facing copy. */
@@ -761,20 +763,27 @@ export function OnboardForm({
               />
             </span>
             <span className="flex flex-col gap-1.5">
-              <Label htmlFor="f-dob" s={S.dob} />
+              <Label htmlFor="f-dob" s={S.dob} required />
               <DateField
                 id="f-dob"
                 value={values.dob}
                 onChange={(iso) => set("dob", iso)}
+                aria-invalid={fieldErrors.dob != null}
               />
+              {fieldErrors.dob ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.dob}
+                </span>
+              ) : null}
             </span>
             <span className="flex flex-col gap-1.5">
-              <Label htmlFor="f-blood" s={S.bloodGroup} />
+              <Label htmlFor="f-blood" s={S.bloodGroup} required />
               <select
                 id="f-blood"
                 value={values.bloodGroup}
                 onChange={(e) => set("bloodGroup", e.target.value)}
-                className="h-9 cursor-pointer rounded-lg bg-muted/50 px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                aria-invalid={fieldErrors.bloodGroup != null}
+                className="h-9 cursor-pointer rounded-lg border border-transparent bg-muted/50 px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
               >
                 <option value="">—</option>
                 {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map((g) => (
@@ -786,6 +795,11 @@ export function OnboardForm({
                   {S.bloodGroupUnknown.en} · {S.bloodGroupUnknown.kn}
                 </option>
               </select>
+              {fieldErrors.bloodGroup ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.bloodGroup}
+                </span>
+              ) : null}
             </span>
           </div>
         </Group>
