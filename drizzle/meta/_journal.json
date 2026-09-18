@@ -50,6 +50,13 @@
       "when": 1788430606474,
       "tag": "0006_shallow_calypso",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789746277153,
+      "tag": "0007_ancient_darkhawk",
+      "breakpoints": true
     }
   ]
 }

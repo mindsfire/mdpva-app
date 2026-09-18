@@ -23,7 +23,10 @@ export interface SheetValues {
     | "photographer"
     | "videographer"
     | "photo_and_video"
-    | "drone_operator";
+    | "drone_operator"
+    | "other";
+  /** Set only when `profession` is `"other"`. */
+  professionOther: string;
   businessName: string;
   dob: string;
   bloodGroup: string;
@@ -242,7 +245,11 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
       <Band en={S.profession.en} kn={S.profession.kn} />
       <div>
         <Row num="8." label="Nature of work">
-          <Val>{PROFESSION_LABEL[values.profession] ?? ""}</Val>
+          <Val>
+            {values.profession === "other"
+              ? values.professionOther
+              : (PROFESSION_LABEL[values.profession] ?? "")}
+          </Val>
         </Row>
         <Row num="9." label="Studio / business">
           <Val>{values.businessName}</Val>

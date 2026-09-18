@@ -50,6 +50,7 @@ function applicationToMemberValues(app: typeof memberApplications.$inferSelect) 
     phone: keepIfBlank(app.phone),
     ...(app.phone ? { normalizedPhone: normalizePhone(app.phone) } : {}),
     profession: keepIfBlank(app.profession),
+    professionOther: keepIfBlank(app.professionOther),
     businessName: keepIfBlank(app.businessName),
     addressLine1: app.addressLine1 ?? undefined,
     addressLine2: keepIfBlank(app.addressLine2),

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
 
@@ -28,7 +28,11 @@ import {
 import { cn } from "@/lib/utils";
 import { fullName } from "@/lib/member-name";
 import type { MemberDetail } from "@/lib/members-query";
-import { memberInputSchema, type MemberInput } from "@/lib/validation/member";
+import {
+  MAX_LENGTHS,
+  memberInputSchema,
+  type MemberInput,
+} from "@/lib/validation/member";
 import { maskAadhaar } from "@/lib/validation/aadhaar";
 import { PhotoUploader } from "@/components/members/photo-uploader";
 
@@ -61,6 +65,7 @@ function toDefaultValues(member?: MemberDetail | null): MemberFormValues {
     email: member?.email ?? null,
     phone: member?.phone ?? null,
     profession: member?.profession ?? null,
+    professionOther: member?.professionOther ?? null,
     businessName: member?.businessName ?? null,
     addressLine1: member?.addressLine1 ?? "",
     addressLine2: member?.addressLine2 ?? null,
@@ -101,6 +106,7 @@ export function MemberForm({
     resolver: zodResolver(memberInputSchema),
     defaultValues: toDefaultValues(member),
   });
+  const profession = useWatch({ control: form.control, name: "profession" });
 
   async function runDuplicateCheck(field: "email" | "phone" | "legacyId") {
     const values = form.getValues();
@@ -393,12 +399,32 @@ export function MemberForm({
                       <SelectItem value="videographer">Videographer</SelectItem>
                       <SelectItem value="photo_and_video">Photo &amp; Video</SelectItem>
                       <SelectItem value="drone_operator">Drone Operator</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            {profession === "other" ? (
+              <FormField
+                control={form.control}
+                name="professionOther"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Profession (other)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        maxLength={MAX_LENGTHS.professionOther}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
             <FormField
               control={form.control}
               name="businessName"

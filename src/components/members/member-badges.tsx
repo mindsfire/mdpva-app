@@ -55,11 +55,19 @@ export function DeathFundBadge({ covered }: { covered: boolean }) {
 
 export function ProfessionLabel({
   profession,
+  professionOther,
 }: {
   profession: MemberRow["profession"];
+  professionOther?: MemberRow["professionOther"];
 }) {
   if (!profession) return <span className="text-muted-foreground">—</span>;
-  const labels: Record<NonNullable<MemberRow["profession"]>, string> = {
+  if (profession === "other") {
+    return <span>{professionOther || "Other"}</span>;
+  }
+  const labels: Record<
+    Exclude<NonNullable<MemberRow["profession"]>, "other">,
+    string
+  > = {
     photographer: "Photographer",
     videographer: "Videographer",
     photo_and_video: "Photo & Video",

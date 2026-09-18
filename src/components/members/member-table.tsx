@@ -194,7 +194,10 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
               {row.phone ?? "—"}
             </TableCell>
             <TableCell>
-              <ProfessionLabel profession={row.profession} />
+              <ProfessionLabel
+                profession={row.profession}
+                professionOther={row.professionOther}
+              />
             </TableCell>
             <TableCell>
               <StatusBadge status={row.status} />

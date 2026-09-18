@@ -19,6 +19,7 @@ export const PROFESSION_LABELS: Record<
   videographer: "Videographer",
   photo_and_video: "Photo & Video",
   drone_operator: "Drone Operator",
+  other: "Other",
 };
 
 /** Stable, unambiguous day format — avoids 07/08 being read either way round. */
@@ -68,9 +69,12 @@ export function buildMemberSections(member: MemberDetail): MemberSection[] {
       fields: [
         {
           label: "Profession",
-          value: member.profession
-            ? PROFESSION_LABELS[member.profession]
-            : null,
+          value:
+            member.profession === "other"
+              ? (member.professionOther ?? PROFESSION_LABELS.other)
+              : member.profession
+                ? PROFESSION_LABELS[member.profession]
+                : null,
         },
         { label: "Business", value: member.businessName },
         { label: "Date of birth", value: member.dob },

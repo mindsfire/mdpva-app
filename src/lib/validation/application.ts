@@ -54,6 +54,26 @@ function personName(label: string) {
     });
 }
 
+/**
+ * A name part that may legitimately be absent — see `optionalPersonName` in
+ * `member.ts`, which this mirrors. Kannada names frequently have no
+ * separable surname.
+ */
+function optionalPersonName(label: string) {
+  return z
+    .unknown()
+    .transform((v) => {
+      const cleaned = sanitizeName(typeof v === "string" ? v : "");
+      return cleaned.length > 0 ? cleaned : null;
+    })
+    .refine((v) => v === null || graphemeLength(v) <= MAX_LENGTHS.name, {
+      message: `${label} must be ${MAX_LENGTHS.name} characters or fewer`,
+    })
+    .refine((v) => v === null || isValidPersonName(v), {
+      message: `${label} may only contain letters, spaces and . ' -`,
+    });
+}
+
 function requiredText(max: number, label: string) {
   return z
     .unknown()
@@ -70,7 +90,7 @@ const MAX_AGE = 100;
 
 export const applicationInputSchema = z.object({
   firstName: personName("First name"),
-  lastName: personName("Last name"),
+  lastName: optionalPersonName("Last name"),
 
   phone: z
     .unknown()
@@ -101,23 +121,19 @@ export const applicationInputSchema = z.object({
     .refine(
       (v) =>
         v === null ||
-        [
-          "photographer",
-          "videographer",
-          "photo_and_video",
-          "drone_operator",
-        ].includes(v),
+        ["photographer", "videographer", "photo_and_video", "other"].includes(
+          v,
+        ),
       { message: "Choose the nature of your work" },
     )
     .refine((v) => v !== null, { message: "Choose the nature of your work" })
     .transform(
       (v) =>
-        v as
-          | "photographer"
-          | "videographer"
-          | "photo_and_video"
-          | "drone_operator",
+        v as "photographer" | "videographer" | "photo_and_video" | "other",
     ),
+
+  /** Set only when `profession` is `"other"` — enforced below. */
+  professionOther: optionalText(MAX_LENGTHS.professionOther, "Profession"),
 
   businessName: optionalText(
     MAX_LENGTHS.businessName,
@@ -146,7 +162,16 @@ export const applicationInputSchema = z.object({
     .refine((v) => v === null || isValidAadhaar(v), {
       message: "Enter a valid 12-digit Aadhaar number",
     }),
-});
+})
+  .refine((v) => v.profession !== "other" || v.professionOther !== null, {
+    message: "Please describe your profession",
+    path: ["professionOther"],
+  })
+  .transform((v) => ({
+    ...v,
+    // Never stored except alongside the profession it describes.
+    professionOther: v.profession === "other" ? v.professionOther : null,
+  }));
 
 function isPlausibleBirthDate(iso: string): boolean {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);

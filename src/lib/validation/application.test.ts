@@ -11,6 +11,7 @@ function validInput(overrides: Partial<Record<string, unknown>> = {}) {
     // placeholder junk (see `normalizePhone`), which is the intended behaviour.
     phone: "9845011234",
     profession: "photographer",
+    professionOther: "",
     businessName: "Asha Studios",
     addressLine1: "12 MG Road",
     addressLine2: "",
@@ -32,13 +33,27 @@ describe("applicationInputSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  describe("lastName", () => {
+    it("is optional — accepts null/empty, unlike first name", () => {
+      for (const override of [
+        { lastName: null },
+        { lastName: "" },
+      ] as const) {
+        const result = applicationInputSchema.safeParse(
+          validInput(override),
+        );
+        expect(result.success).toBe(true);
+        if (result.success) expect(result.data.lastName).toBeNull();
+      }
+    });
+  });
+
   describe("profession", () => {
-    it("accepts photographer, videographer, photo_and_video, drone_operator", () => {
+    it("accepts photographer, videographer, photo_and_video", () => {
       for (const value of [
         "photographer",
         "videographer",
         "photo_and_video",
-        "drone_operator",
       ]) {
         const result = applicationInputSchema.safeParse(
           validInput({ profession: value }),
@@ -48,6 +63,13 @@ describe("applicationInputSchema", () => {
           expect(result.data.profession).toBe(value);
         }
       }
+    });
+
+    it("rejects drone_operator — removed from the public form", () => {
+      const result = applicationInputSchema.safeParse(
+        validInput({ profession: "drone_operator" }),
+      );
+      expect(result.success).toBe(false);
     });
 
     it("rejects an invalid profession value", () => {
@@ -69,6 +91,48 @@ describe("applicationInputSchema", () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- discarding profession to build a rest object without it
       const { profession: _drop, ...rest } = validInput();
       expect(applicationInputSchema.safeParse(rest).success).toBe(false);
+    });
+
+    describe("other", () => {
+      it("accepts 'other' with a description", () => {
+        const result = applicationInputSchema.safeParse(
+          validInput({ profession: "other", professionOther: "Framing" }),
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.professionOther).toBe("Framing");
+        }
+      });
+
+      it("rejects 'other' without a description", () => {
+        const result = applicationInputSchema.safeParse(
+          validInput({ profession: "other", professionOther: "" }),
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("rejects a description over the character limit", () => {
+        const result = applicationInputSchema.safeParse(
+          validInput({
+            profession: "other",
+            professionOther: "x".repeat(41),
+          }),
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it("discards a description left over from a different profession", () => {
+        const result = applicationInputSchema.safeParse(
+          validInput({
+            profession: "photographer",
+            professionOther: "Framing",
+          }),
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.professionOther).toBeNull();
+        }
+      });
     });
   });
 

@@ -59,7 +59,10 @@ export function MemberCard({ row }: { row: MemberRow }) {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
             <span>{row.phone ?? "—"}</span>
             <span aria-hidden="true">·</span>
-            <ProfessionLabel profession={row.profession} />
+            <ProfessionLabel
+              profession={row.profession}
+              professionOther={row.professionOther}
+            />
           </div>
           <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
             <StatusBadge status={row.status} />

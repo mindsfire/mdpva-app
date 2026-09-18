@@ -35,7 +35,10 @@ export interface MemberRow {
     | "videographer"
     | "photo_and_video"
     | "drone_operator"
+    | "other"
     | null;
+  /** Set only when `profession` is `"other"`. */
+  professionOther: string | null;
   status: "active" | "inactive" | "suspended";
   feesPaidUpto: number | null;
   deathFundCovered: boolean;
@@ -64,7 +67,10 @@ export interface MemberDetail {
     | "videographer"
     | "photo_and_video"
     | "drone_operator"
+    | "other"
     | null;
+  /** Set only when `profession` is `"other"`. */
+  professionOther: string | null;
   businessName: string | null;
   addressLine1: string;
   addressLine2: string | null;
@@ -133,6 +139,7 @@ export async function getMemberById(id: string): Promise<MemberDetail | null> {
     email: member.email,
     phone: member.phone,
     profession: member.profession,
+    professionOther: member.professionOther,
     businessName: member.businessName,
     addressLine1: member.addressLine1,
     addressLine2: member.addressLine2,
@@ -329,6 +336,7 @@ export async function searchMembers(
       lastName: members.lastName,
       phone: members.phone,
       profession: members.profession,
+      professionOther: members.professionOther,
       status: members.status,
       feesPaidUpto: members.feesPaidUpto,
       deathFundCovered: members.deathFundCovered,
