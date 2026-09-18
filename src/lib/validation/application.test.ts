@@ -72,6 +72,32 @@ describe("applicationInputSchema", () => {
     });
   });
 
+  describe("pincode", () => {
+    it("is required — rejects null/empty/missing", () => {
+      expect(
+        applicationInputSchema.safeParse(validInput({ pincode: null }))
+          .success,
+      ).toBe(false);
+      expect(
+        applicationInputSchema.safeParse(validInput({ pincode: "" })).success,
+      ).toBe(false);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- discarding pincode to build a rest object without it
+      const { pincode: _drop, ...rest } = validInput();
+      expect(applicationInputSchema.safeParse(rest).success).toBe(false);
+    });
+
+    it("rejects a value that isn't 6 digits", () => {
+      expect(
+        applicationInputSchema.safeParse(validInput({ pincode: "5600" }))
+          .success,
+      ).toBe(false);
+      expect(
+        applicationInputSchema.safeParse(validInput({ pincode: "560038a" }))
+          .success,
+      ).toBe(false);
+    });
+  });
+
   describe("aadhaar", () => {
     it("accepts a valid Aadhaar number, loosely formatted", () => {
       const result = applicationInputSchema.safeParse(

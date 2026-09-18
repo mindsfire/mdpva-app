@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 import { endOnboardSessionAction } from "@/app/actions/onboard";
 import { submitApplicationAction } from "@/app/actions/onboard-submit";
-import photoExample from "@/assets/onboard/photo-example.svg";
+import photoExample from "@/assets/onboard/photo-example.png";
 import { PhotoCropper } from "@/components/onboard/photo-cropper";
 import {
   Dialog,
@@ -618,13 +618,15 @@ export function OnboardForm({
               />
             </span>
             <span className="flex flex-col gap-1.5">
-              <Label htmlFor="f-pin" s={S.pincode} />
+              <Label htmlFor="f-pin" s={S.pincode} required />
               <Input
                 id="f-pin"
                 inputMode="numeric"
                 maxLength={6}
                 value={values.pincode}
-                onChange={(e) => set("pincode", e.target.value)}
+                onChange={(e) =>
+                  set("pincode", e.target.value.replace(/\D/g, ""))
+                }
               />
             </span>
             <span className="flex flex-col gap-1.5">
@@ -703,6 +705,9 @@ export function OnboardForm({
                     {g}
                   </option>
                 ))}
+                <option value="Don't know">
+                  {S.bloodGroupUnknown.en} · {S.bloodGroupUnknown.kn}
+                </option>
               </select>
             </span>
           </div>

@@ -89,10 +89,9 @@ export const applicationInputSchema = z.object({
   addressLine1: requiredText(MAX_LENGTHS.addressLine, "Address"),
   addressLine2: optionalText(MAX_LENGTHS.addressLine, "Address line 2"),
   area: optionalText(MAX_LENGTHS.area, "Area"),
-  pincode: optionalText(6, "Pincode").refine(
-    (v) => v === null || PINCODE_REGEX.test(v),
-    { message: "Pincode must be 6 digits" },
-  ),
+  pincode: requiredText(6, "Pincode").refine((v) => PINCODE_REGEX.test(v), {
+    message: "Pincode must be 6 digits",
+  }),
   city: requiredText(MAX_LENGTHS.city, "City"),
   state: requiredText(MAX_LENGTHS.state, "State"),
 
