@@ -215,6 +215,60 @@ export async function rejectApplication(
   return { ok: true };
 }
 
+/**
+ * Admin only. Reopens an approved or rejected application for resubmission.
+ *
+ * `canResubmit` (`src/lib/onboarding/resubmit.ts`) treats "rejected" as the
+ * only status that unlocks the onboarding form again — there is no separate
+ * "reopened" status — so this reuses that exact mechanism: it re-labels the
+ * application "rejected" with the admin's reason, same as a normal reject,
+ * just without the `pending`-only guard.
+ *
+ * Deliberately leaves `members` untouched: an approved application already
+ * wrote its values there, and the current directory record stays exactly as
+ * it is until the member resubmits and an admin approves the new one. No R2
+ * object is touched either — an approved application's photo was already
+ * promoted to the member's live key (not this row's to delete), and a
+ * rejected one's pending photo was already cleaned up the first time it was
+ * rejected.
+ */
+export async function reopenApplicationForResubmit(
+  applicationId: string,
+  reason: string,
+): Promise<ReviewResult> {
+  const sessionUser = await requireRole("admin");
+
+  const cleanReason = sanitizeText(reason).slice(0, 500);
+  if (cleanReason.length === 0) {
+    return { ok: false, error: "Please give a reason so the member knows what to fix." };
+  }
+
+  const [claimed] = await db
+    .update(memberApplications)
+    .set({
+      status: "rejected",
+      rejectionReason: cleanReason,
+      reviewedBy: sessionUser.id,
+      reviewedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(memberApplications.id, applicationId),
+        inArray(memberApplications.status, ["approved", "rejected"]),
+      ),
+    )
+    .returning({ id: memberApplications.id });
+
+  if (!claimed) {
+    return { ok: false, error: "This application can't be reopened right now." };
+  }
+
+  revalidatePath(QUEUE_PATH);
+  revalidatePath(`${QUEUE_PATH}/${applicationId}`);
+  return { ok: true };
+}
+
 export interface BulkApproveResult {
   ok: boolean;
   approved: number;

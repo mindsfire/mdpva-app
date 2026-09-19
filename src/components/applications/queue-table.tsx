@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { bulkApproveApplications } from "@/app/actions/applications";
 import type { QueueRow } from "@/app/actions/applications";
+import { ReopenForResubmitAction } from "@/components/applications/reopen-action";
 import { Button } from "@/components/ui/button";
 import { maskAadhaar } from "@/lib/validation/aadhaar";
 import { photoUrl } from "@/lib/photo-url";
@@ -188,6 +189,13 @@ export function QueueTable({
                       >
                         <DownloadIcon />
                       </Button>
+                    ) : null}
+                    {row.status === "approved" || row.status === "rejected" ? (
+                      <ReopenForResubmitAction
+                        applicationId={row.id}
+                        applicationNo={row.applicationNo}
+                        iconOnly
+                      />
                     ) : null}
                   </div>
                 </TableCell>
