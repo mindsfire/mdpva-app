@@ -29,5 +29,12 @@ export default async function EditMemberPage({
     `/members/${id}`,
   );
 
-  return <MemberFormPage mode="edit" member={member} backHref={backHref} />;
+  return (
+    <MemberFormPage
+      mode="edit"
+      member={member}
+      role={sessionUser.role}
+      backHref={backHref}
+    />
+  );
 }

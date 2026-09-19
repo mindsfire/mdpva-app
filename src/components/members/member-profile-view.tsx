@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { DownloadIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { hasRole, type Role } from "@/lib/rbac";
@@ -48,6 +49,10 @@ export function MemberProfileView({
 }) {
   const canEdit = hasRole(role, "editor");
   const canDelete = hasRole(role, "admin");
+  // Available for every member, not just ones with an approved application —
+  // the route always has a member row to render. Admin-gated because the
+  // underlying route is (matching the applications review page's button).
+  const canDownload = hasRole(role, "admin");
 
   return (
     <div className="@container flex flex-col gap-6">
@@ -141,6 +146,19 @@ export function MemberProfileView({
           </div>
         ))}
       </div>
+
+      {canDownload ? (
+        <div className="flex justify-end border-t border-mdpva-border pt-4 dark:border-border">
+          <Button
+            variant="outline"
+            size="sm"
+            render={<a href={`/api/members/${member.id}/pdf`} />}
+          >
+            <DownloadIcon />
+            Download application
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
