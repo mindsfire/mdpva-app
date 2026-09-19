@@ -4,11 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/pdf/application-pdf", () => ({
   getApplicationForPdf: vi.fn(),
-  buildApplicationPdfSections: vi.fn(() => []),
-  renderApplicationPdf: vi.fn(async () => Buffer.from("%PDF-fake")),
-}));
-vi.mock("@/lib/pdf/photo-for-pdf", () => ({
-  fetchMemberPhotoForPdf: vi.fn(async () => null),
+  renderApplicationPdfForRecord: vi.fn(async (application: { applicationNo: string }) => ({
+    buffer: Buffer.from("%PDF-fake"),
+    applicationNo: application.applicationNo,
+  })),
 }));
 
 import { auth } from "@/auth";

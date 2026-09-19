@@ -4,11 +4,47 @@ import sharp from "sharp";
 import {
   buildApplicationPdfSections,
   renderApplicationPdf,
+  renderApplicationPdfForRecord,
   type ApplicationPdfData,
 } from "./application-pdf";
-import type { members } from "@/db/schema";
+import type { memberApplications, members } from "@/db/schema";
 
 type Member = typeof members.$inferSelect;
+type Application = typeof memberApplications.$inferSelect;
+
+function application(overrides: Partial<Application> = {}): Application {
+  return {
+    id: "33333333-3333-3333-3333-333333333333",
+    applicationNo: "APP-7K4M2X",
+    memberId: "11111111-1111-1111-1111-111111111111",
+    status: "approved",
+    firstName: null,
+    lastName: null,
+    email: null,
+    phone: null,
+    profession: null,
+    professionOther: null,
+    businessName: null,
+    addressLine1: null,
+    addressLine2: null,
+    area: null,
+    city: null,
+    state: null,
+    pincode: null,
+    dob: null,
+    bloodGroup: null,
+    aadhaarEnc: null,
+    aadhaarHash: null,
+    aadhaarLast4: null,
+    photoKey: null,
+    rejectionReason: null,
+    reviewedBy: null,
+    reviewedAt: new Date("2026-07-31T10:00:00Z"),
+    createdAt: new Date("2026-07-01T10:00:00Z"),
+    updatedAt: new Date("2026-07-31T10:00:00Z"),
+    ...overrides,
+  };
+}
 
 function member(overrides: Partial<Member> = {}): Member {
   return {
@@ -151,6 +187,31 @@ describe("renderApplicationPdf", () => {
       photo: { buffer: png, format: "png" },
     });
     expect(buffer.length).toBeGreaterThan(0);
+    expect(buffer.subarray(0, 4).toString("latin1")).toBe("%PDF");
+  });
+});
+
+describe("renderApplicationPdfForRecord", () => {
+  it("renders with the application's number and reviewedAt when approved", async () => {
+    const { buffer, applicationNo } = await renderApplicationPdfForRecord(
+      application({ status: "approved" }),
+      member(),
+    );
+    expect(applicationNo).toBe("APP-7K4M2X");
+    expect(buffer.subarray(0, 4).toString("latin1")).toBe("%PDF");
+  });
+
+  it("still surfaces the application number for a rejected application", async () => {
+    const { applicationNo } = await renderApplicationPdfForRecord(
+      application({ status: "rejected", reviewedAt: new Date("2026-06-01T10:00:00Z") }),
+      member(),
+    );
+    expect(applicationNo).toBe("APP-7K4M2X");
+  });
+
+  it("renders with a null application number for a member with no application on file", async () => {
+    const { buffer, applicationNo } = await renderApplicationPdfForRecord(null, member());
+    expect(applicationNo).toBeNull();
     expect(buffer.subarray(0, 4).toString("latin1")).toBe("%PDF");
   });
 });

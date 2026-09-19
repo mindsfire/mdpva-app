@@ -11,13 +11,13 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db";
 import { memberApplications, members } from "@/db/schema";
 import { PROFESSION_LABELS } from "@/lib/member-sections";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
-import type { PdfPhoto } from "@/lib/pdf/photo-for-pdf";
+import { fetchMemberPhotoForPdf, type PdfPhoto } from "@/lib/pdf/photo-for-pdf";
 import { maskAadhaar } from "@/lib/validation/aadhaar";
 
 type Member = typeof members.$inferSelect;
@@ -75,6 +75,43 @@ export async function getApplicationForPdf(
   if (!member) return null;
 
   return { application, member };
+}
+
+/**
+ * Backs the "Download application" button on the member drawer/detail/edit
+ * pages, where the caller has a member id, not an application id — and,
+ * unlike `getApplicationForPdf`, works for every member, not only ones with
+ * an approved application: a member's current record is always downloadable
+ * from the member side, since `buildApplicationPdfSections` only ever reads
+ * off the `members` row, never the application's own (partial, possibly
+ * stale) fields.
+ *
+ * `application` is `null` for a member who never submitted one at all — the
+ * common case for anyone imported straight from the paper ledger. The
+ * template renders an em-dash for the application number in that case. When
+ * one exists, the *latest* is used regardless of status, so a rejected or
+ * still-pending submission's reference number shows rather than nothing;
+ * `reviewedAt` is only surfaced when that latest application is approved
+ * (see `renderApplicationPdfForRecord`).
+ */
+export async function getMemberForPdf(
+  memberId: string,
+): Promise<{ application: Application | null; member: Member } | null> {
+  const [member] = await db
+    .select()
+    .from(members)
+    .where(and(eq(members.id, memberId), isNull(members.deletedAt)))
+    .limit(1);
+  if (!member) return null;
+
+  const [application] = await db
+    .select()
+    .from(memberApplications)
+    .where(eq(memberApplications.memberId, memberId))
+    .orderBy(desc(memberApplications.createdAt))
+    .limit(1);
+
+  return { application: application ?? null, member };
 }
 
 export interface PdfField {
@@ -191,7 +228,7 @@ const RULE = "#cfcdc4";
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 28,
     fontSize: 10,
     fontFamily: "Times-Roman",
     color: BODY,
@@ -235,10 +272,10 @@ const styles = StyleSheet.create({
     color: MUTED,
     marginTop: 2,
   },
-  ruleThick: { marginTop: 10, borderTopWidth: 2, borderTopColor: INK },
-  ruleThin: { marginTop: 1.5, borderTopWidth: 0.75, borderTopColor: RULE },
+  ruleThick: { marginTop: 8, borderTopWidth: 2, borderTopColor: INK },
+  ruleThin: { marginTop: 1, borderTopWidth: 0.75, borderTopColor: RULE },
 
-  titleBlock: { marginTop: 12, alignItems: "center" },
+  titleBlock: { marginTop: 8, alignItems: "center" },
   titleEn: {
     fontFamily: "Helvetica-Bold",
     fontSize: 11,
@@ -252,14 +289,14 @@ const styles = StyleSheet.create({
     fontSize: 9,
     textAlign: "center",
     color: BODY,
-    marginTop: 3,
+    marginTop: 2,
   },
 
   // Applicant block — photo + identity summary
   applicant: {
     flexDirection: "row",
-    marginTop: 20,
-    marginBottom: 8,
+    marginTop: 12,
+    marginBottom: 4,
     alignItems: "flex-start",
   },
   photo: {
@@ -283,20 +320,20 @@ const styles = StyleSheet.create({
   applicantName: {
     fontFamily: "Times-Bold",
     fontSize: 16,
-    marginBottom: 6,
+    marginBottom: 4,
     color: INK,
   },
-  applicantMeta: { fontSize: 9, color: MUTED, marginBottom: 2 },
+  applicantMeta: { fontSize: 9, color: MUTED, marginBottom: 1 },
 
   // Sections
-  section: { marginTop: 14 },
+  section: { marginTop: 6 },
   bandRow: {
     flexDirection: "row",
     alignItems: "baseline",
     borderBottomWidth: 0.75,
     borderBottomColor: RULE,
-    paddingBottom: 4,
-    marginBottom: 6,
+    paddingBottom: 3,
+    marginBottom: 3,
   },
   bandEn: {
     fontFamily: "Helvetica-Bold",
@@ -315,7 +352,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 0.5,
     borderBottomColor: BORDER,
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   labelCell: { width: 150, flexDirection: "row", flexWrap: "wrap" },
   labelEn: { color: MUTED },
@@ -325,7 +362,7 @@ const styles = StyleSheet.create({
   // Footer — "for office use" band, filled in rather than blank (this is a
   // completed record, not an intake form waiting on a signature).
   footer: {
-    marginTop: 18,
+    marginTop: 10,
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
@@ -333,7 +370,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.75,
     borderColor: RULE,
     backgroundColor: "#f7f6f2",
-    paddingVertical: 9,
+    paddingVertical: 6,
     paddingHorizontal: 12,
   },
   footerLabel: {
@@ -371,7 +408,9 @@ function Row({ field }: { field: PdfField }) {
 }
 
 export interface ApplicationPdfData {
-  applicationNo: string;
+  /** `null` when the member has no application on file — the template
+   * renders an em-dash rather than the string "null". */
+  applicationNo: string | null;
   legacyId: string | null;
   memberId: string;
   memberName: string;
@@ -382,10 +421,11 @@ export interface ApplicationPdfData {
 
 export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
   const { applicationNo, legacyId, memberId, memberName, reviewedAt, sections, photo } = data;
+  const applicationNoDisplay = applicationNo ?? "—";
 
   return (
     <Document
-      title={`${applicationNo} — ${memberName}`}
+      title={`${applicationNoDisplay} — ${memberName}`}
       author="MDPVA"
       subject="Approved membership record"
     >
@@ -423,7 +463,7 @@ export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
           )}
           <View style={styles.applicantText}>
             <Text style={styles.applicantName}>{memberName}</Text>
-            <Text style={styles.applicantMeta}>Application {applicationNo}</Text>
+            <Text style={styles.applicantMeta}>Application {applicationNoDisplay}</Text>
             <Text style={styles.applicantMeta}>Membership no. {legacyId ?? "—"}</Text>
             <Text style={styles.applicantMeta}>Member ID {memberId}</Text>
           </View>
@@ -441,7 +481,7 @@ export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
         <View style={styles.footer} wrap={false}>
           <Text style={styles.footerLabel}>{S.officeUse.en}</Text>
           <Text style={styles.footerItem}>
-            Application no. <Text style={styles.footerValue}>{applicationNo}</Text>
+            Application no. <Text style={styles.footerValue}>{applicationNoDisplay}</Text>
           </Text>
           <Text style={styles.footerItem}>
             Approved{" "}
@@ -457,4 +497,38 @@ export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
 
 export async function renderApplicationPdf(data: ApplicationPdfData): Promise<Buffer> {
   return renderToBuffer(<ApplicationPdfDocument data={data} />);
+}
+
+/**
+ * Builds the downloadable PDF buffer for an `{application, member}` pair —
+ * the part shared by the two download routes (`/api/applications/[id]/pdf`
+ * and `/api/members/[id]/pdf`), which differ only in how they look that
+ * pair up. `application` is `null` for a member with no application on file
+ * at all (see `getMemberForPdf`); the returned `applicationNo` is then also
+ * `null`, and the filename falls back to the member's own id.
+ *
+ * `reviewedAt` only ever shows for an *approved* application — a rejected or
+ * still-pending one's `reviewedAt`/`null` would otherwise read as "approved
+ * on this date" or "not yet reviewed" for a submission that was in fact
+ * rejected.
+ */
+export async function renderApplicationPdfForRecord(
+  application: Application | null,
+  member: Member,
+): Promise<{ buffer: Buffer; applicationNo: string | null }> {
+  const photo = await fetchMemberPhotoForPdf(member.photoKey);
+  const sections = buildApplicationPdfSections(member);
+  const memberName = [member.firstName, member.lastName].filter(Boolean).join(" ");
+
+  const buffer = await renderApplicationPdf({
+    applicationNo: application?.applicationNo ?? null,
+    legacyId: member.legacyId,
+    memberId: member.memberId,
+    memberName,
+    reviewedAt: application?.status === "approved" ? application.reviewedAt : null,
+    sections,
+    photo,
+  });
+
+  return { buffer, applicationNo: application?.applicationNo ?? null };
 }

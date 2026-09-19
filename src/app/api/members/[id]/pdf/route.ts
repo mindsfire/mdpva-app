@@ -3,18 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { isUuid } from "@/lib/members-query";
 import {
-  getApplicationForPdf,
+  getMemberForPdf,
   renderApplicationPdfForRecord,
 } from "@/lib/pdf/application-pdf";
 import { hasRole } from "@/lib/rbac";
 
 /**
- * Streams a printable PDF of an approved application's current member data.
+ * Same document as `/api/applications/[id]/pdf`, keyed by member id instead
+ * of application id — backs the "Download application" button on the
+ * member drawer/detail/edit pages, which only have a member id at hand.
  *
- * Every failure mode — unauthorized, malformed id, unknown application, or
- * not approved — returns the same bare 404, matching the convention in
- * `export/members/route.ts` and `photos/[...key]/route.ts`: never reveal
- * via a distinct 401/403 that a route (or a specific application) exists.
+ * Unlike the sibling route, this one is not gated on application status:
+ * every member's current record is downloadable here, approved application
+ * or not (a ledger-imported member with no application at all gets a PDF
+ * with an em-dash where the application number would go). The
+ * approved-only gate stays on the applications review page's download
+ * button, which is downloading a specific application, not a member.
  */
 export async function GET(
   _request: NextRequest,
@@ -30,8 +34,8 @@ export async function GET(
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const data = await getApplicationForPdf(id);
-  if (!data || data.application.status !== "approved") {
+  const data = await getMemberForPdf(id);
+  if (!data) {
     return new NextResponse("Not found", { status: 404 });
   }
 
@@ -42,10 +46,11 @@ export async function GET(
   );
 
   const stamp = new Date().toISOString().slice(0, 10);
+  const filenameRef = applicationNo ?? member.memberId;
   return new NextResponse(Buffer.from(buffer), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="mdpva-application-${applicationNo}-${stamp}.pdf"`,
+      "Content-Disposition": `attachment; filename="mdpva-application-${filenameRef}-${stamp}.pdf"`,
       "Cache-Control": "no-store",
     },
   });

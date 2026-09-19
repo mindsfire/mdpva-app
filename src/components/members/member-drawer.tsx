@@ -51,7 +51,13 @@ export function MemberDrawer({
   return (
     <div
       ref={panelRef}
-      className="sticky top-14 h-[calc(100vh-4.5rem)] w-(--member-drawer-width) shrink-0"
+      // z-30: the bulk-selection toolbar (`selection.tsx`) is a page-level
+      // `sticky bottom-4 z-20` bar, a sibling of this panel rather than
+      // scoped to the table column. Without an explicit z-index here this
+      // panel stacks at `auto`, so that bar's `z-20` painted on top of it —
+      // covering the bottom of the drawer (e.g. the download button below)
+      // whenever any rows were selected. Kept under the app header's z-40.
+      className="sticky top-14 z-30 h-[calc(100vh-4.5rem)] w-(--member-drawer-width) shrink-0"
       role="region"
       aria-label="Member details"
       aria-busy={isPending}

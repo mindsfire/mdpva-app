@@ -20,5 +20,7 @@ export default async function NewMemberPage({
     "/members",
   );
 
-  return <MemberFormPage mode="create" backHref={backHref} />;
+  return (
+    <MemberFormPage mode="create" role={sessionUser.role} backHref={backHref} />
+  );
 }
