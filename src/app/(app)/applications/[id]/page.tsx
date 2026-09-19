@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { DownloadIcon } from "lucide-react";
 
 import { getApplicationForReview } from "@/app/actions/applications";
+import { ReopenForResubmitAction } from "@/components/applications/reopen-action";
 import { ReviewActions } from "@/components/applications/review-actions";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,12 @@ export default async function ReviewApplicationPage({
                 <DownloadIcon />
                 Download application
               </Button>
+            ) : null}
+            {app.status === "approved" || app.status === "rejected" ? (
+              <ReopenForResubmitAction
+                applicationId={app.id}
+                applicationNo={app.applicationNo}
+              />
             ) : null}
           </div>
         )}
