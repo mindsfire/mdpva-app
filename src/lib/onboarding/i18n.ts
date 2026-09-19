@@ -155,13 +155,13 @@ export const STRINGS = {
   // Returning-member status
   statusPendingTitle: t("Awaiting review", "ಪರಿಶೀಲನೆಗೆ ಬಾಕಿ ಇದೆ"),
   statusPendingBody: t(
-    "Your details have reached the MDPVA office and are waiting to be checked. There is nothing more you need to do — but you can update them if something is wrong.",
-    "ನಿಮ್ಮ ವಿವರಗಳು ಸಂಘದ ಕಚೇರಿಯನ್ನು ತಲುಪಿವೆ ಮತ್ತು ಪರಿಶೀಲನೆಗೆ ಕಾಯುತ್ತಿವೆ. ನೀವು ಬೇರೇನೂ ಮಾಡಬೇಕಿಲ್ಲ.",
+    "Your details have reached the MDPVA office and are waiting to be checked. There is nothing more you need to do. If something needs correcting before then, please contact the office directly — this page can't make changes while a review is pending.",
+    "ನಿಮ್ಮ ವಿವರಗಳು ಸಂಘದ ಕಚೇರಿಯನ್ನು ತಲುಪಿವೆ ಮತ್ತು ಪರಿಶೀಲನೆಗೆ ಕಾಯುತ್ತಿವೆ. ನೀವು ಬೇರೇನೂ ಮಾಡಬೇಕಿಲ್ಲ. ಏನಾದರೂ ಸರಿಪಡಿಸಬೇಕಿದ್ದರೆ, ದಯವಿಟ್ಟು ಕಚೇರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ.",
   ),
   statusApprovedTitle: t("Details approved", "ವಿವರಗಳು ಅನುಮೋದನೆಯಾಗಿವೆ"),
   statusApprovedBody: t(
-    "Your details are now in the member directory. You can update them any time — changes go back to the office for approval.",
-    "ನಿಮ್ಮ ವಿವರಗಳು ಈಗ ಸದಸ್ಯರ ಪಟ್ಟಿಯಲ್ಲಿವೆ. ಯಾವಾಗ ಬೇಕಾದರೂ ಬದಲಾಯಿಸಬಹುದು.",
+    "Your details are now in the member directory. If something needs to change, please contact the MDPVA office — this page can no longer be used to submit changes.",
+    "ನಿಮ್ಮ ವಿವರಗಳು ಈಗ ಸದಸ್ಯರ ಪಟ್ಟಿಯಲ್ಲಿವೆ. ಏನಾದರೂ ಬದಲಾಯಿಸಬೇಕಿದ್ದರೆ, ದಯವಿಟ್ಟು ಸಂಘದ ಕಚೇರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ.",
   ),
   statusRejectedTitle: t("Needs correction", "ತಿದ್ದುಪಡಿ ಅಗತ್ಯವಿದೆ"),
   statusRejectedBody: t(
@@ -169,7 +169,6 @@ export const STRINGS = {
     "ಕಚೇರಿಯು ನಿಮ್ಮ ವಿವರಗಳನ್ನು ಸ್ವೀಕರಿಸಲಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ತಿದ್ದಿ ಮತ್ತೆ ಕಳುಹಿಸಿ.",
   ),
   reasonGiven: t("Reason", "ಕಾರಣ"),
-  updateDetails: t("Update my details", "ನನ್ನ ವಿವರಗಳನ್ನು ಬದಲಾಯಿಸಿ"),
   fixAndResubmit: t("Correct and send again", "ತಿದ್ದಿ ಮತ್ತೆ ಕಳುಹಿಸಿ"),
   editingNotice: t(
     "You already have an application on file. Sending this will replace it.",

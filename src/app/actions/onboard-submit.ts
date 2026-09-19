@@ -10,6 +10,8 @@ import { isUniqueViolationOn } from "@/lib/db-errors";
 import {
   generateApplicationNo,
 } from "@/lib/onboarding/application-no";
+import { getLatestApplicationForMember } from "@/lib/onboarding/member-application";
+import { canResubmit } from "@/lib/onboarding/resubmit";
 import { readOnboardSession } from "@/lib/onboarding/session";
 import { r2, R2_BUCKET, pendingPhotoKeyFor } from "@/lib/r2";
 import {
@@ -27,15 +29,17 @@ export type SubmitResult =
 const NO_ATTEMPTS = 5;
 
 /**
- * Submits (or resubmits) the member's details for review.
+ * Submits the member's details for review — a first submission, or fixing a
+ * rejected one. See `canResubmit`: pending and approved are locked, so this
+ * can only ever produce at most one open (pending) application per member.
  *
  * Writes only to `member_applications` — never to `members`. That gap is the
  * load-bearing control for a form gated on facts a member knows rather than a
  * password: even a successful impersonation cannot alter the directory.
  *
- * Resubmission supersedes any prior pending application rather than queueing a
- * second, so an admin never reviews stale values and a member never appears
- * twice in the queue.
+ * A resubmission supersedes the rejected application it's fixing rather than
+ * queueing a second row, so an admin never reviews stale values and a member
+ * never appears twice in the queue.
  */
 export async function submitApplicationAction(
   formData: FormData,
@@ -43,6 +47,22 @@ export async function submitApplicationAction(
   const session = await readOnboardSession();
   if (!session) {
     return { ok: false, error: "session_expired" };
+  }
+
+  // Locked unless the last (non-superseded) application was rejected — see
+  // `canResubmit`. Checked before anything else so a blocked member isn't
+  // told their aadhaar or a field looks fine, only to be refused anyway.
+  const latestApplication = await getLatestApplicationForMember(
+    session.memberId,
+  );
+  if (latestApplication && !canResubmit(latestApplication.status)) {
+    return {
+      ok: false,
+      error:
+        latestApplication.status === "pending"
+          ? "already_pending"
+          : "already_approved",
+    };
   }
 
   const parsed = applicationInputSchema.safeParse({
@@ -102,23 +122,13 @@ export async function submitApplicationAction(
     return { ok: false, error: "aadhaar_taken", field: "aadhaar" };
   }
 
-  // Photo is required on a first submission; on a resubmission the member may
-  // keep the one already under review rather than re-picking it.
+  // Photo is required on a first submission; fixing a rejected application,
+  // the member may keep the one already on file rather than re-picking it.
   const file = formData.get("photo");
   const hasNewPhoto = file instanceof File && file.size > 0;
+  const existingPhotoKey = latestApplication?.photoKey ?? null;
 
-  const [existing] = await db
-    .select({ id: memberApplications.id, photoKey: memberApplications.photoKey })
-    .from(memberApplications)
-    .where(
-      and(
-        eq(memberApplications.memberId, session.memberId),
-        eq(memberApplications.status, "pending"),
-      ),
-    )
-    .limit(1);
-
-  if (!hasNewPhoto && !existing?.photoKey) {
+  if (!hasNewPhoto && !existingPhotoKey) {
     return { ok: false, error: "photo_required", field: "photo" };
   }
 
@@ -141,13 +151,14 @@ export async function submitApplicationAction(
     }
   }
 
-  // Supersede any prior pending application. Done before the insert because
-  // `member_applications_one_pending` permits only one at a time.
-  if (existing) {
+  // Supersede the rejected application being fixed. `latestApplication` can
+  // only be null or rejected here — pending and approved already returned
+  // above.
+  if (latestApplication) {
     await db
       .update(memberApplications)
       .set({ status: "superseded", updatedAt: new Date() })
-      .where(eq(memberApplications.id, existing.id));
+      .where(eq(memberApplications.id, latestApplication.id));
   }
 
   let inserted: { id: string; applicationNo: string } | undefined;
@@ -163,7 +174,7 @@ export async function submitApplicationAction(
           ...applicationValues,
           ...aadhaarFields,
           // Carried over when the member kept their existing photo.
-          photoKey: hasNewPhoto ? null : (existing?.photoKey ?? null),
+          photoKey: hasNewPhoto ? null : existingPhotoKey,
         })
         .returning({
           id: memberApplications.id,
@@ -198,12 +209,12 @@ export async function submitApplicationAction(
       .where(eq(memberApplications.id, inserted.id));
 
     // The superseded row's photo is now unreferenced.
-    if (existing?.photoKey && existing.photoKey !== key) {
+    if (existingPhotoKey && existingPhotoKey !== key) {
       await r2
         .send(
           new DeleteObjectCommand({
             Bucket: R2_BUCKET,
-            Key: existing.photoKey,
+            Key: existingPhotoKey,
           }),
         )
         .catch(() => {

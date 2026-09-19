@@ -71,6 +71,10 @@ function submitMessage(code: string): string {
       return "That image could not be read. Please try a different photo.";
     case "aadhaar_taken":
       return "That Aadhaar number is already on file for another member. Please check and try again, or contact the MDPVA office.";
+    case "already_pending":
+      return "Your details are already awaiting review by the MDPVA office. You can't submit again until that review is done.";
+    case "already_approved":
+      return "Your details have already been approved. If something needs to change, please contact the MDPVA office.";
     case "submit_failed":
       return "Something went wrong saving your details. Please try again.";
     default:
