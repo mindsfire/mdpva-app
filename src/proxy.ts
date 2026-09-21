@@ -62,6 +62,10 @@ export const config = {
     // by the browser from the login page itself, before any session exists —
     // without these exclusions those requests get redirected to /login and the
     // favicon silently never loads.
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|sitemap.xml|robots.txt).*)",
+    // api/loadtest is fail-closed on its own (404s without LOADTEST_KEY,
+    // never set outside a loadtest Preview) — excluded here rather than
+    // added to PUBLIC_PATHS above so it's obviously separate from the app's
+    // real admin-auth surface.
+    "/((?!api/auth|api/loadtest|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|sitemap.xml|robots.txt).*)",
   ],
 };
