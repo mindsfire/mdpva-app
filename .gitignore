@@ -46,3 +46,6 @@ next-env.d.ts
 
 # local-only member PII (legacy ledger source data) — never commit
 .local/
+
+# loadtest session cookies — signed capability tokens, never commit
+scripts/loadtest/sessions.json
