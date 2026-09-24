@@ -82,6 +82,9 @@ export async function submitApplicationAction(
     dob: formData.get("dob"),
     bloodGroup: formData.get("bloodGroup"),
     aadhaar: formData.get("aadhaar"),
+    nomineeName: formData.get("nomineeName"),
+    nomineeRelationship: formData.get("nomineeRelationship"),
+    nomineePhone: formData.get("nomineePhone"),
   });
 
   if (!parsed.success) {

@@ -36,6 +36,9 @@ function application(overrides: Partial<Application> = {}): Application {
     aadhaarEnc: null,
     aadhaarHash: null,
     aadhaarLast4: null,
+    nomineeName: null,
+    nomineeRelationship: null,
+    nomineePhone: null,
     photoKey: null,
     rejectionReason: null,
     reviewedBy: null,
@@ -70,6 +73,9 @@ function member(overrides: Partial<Member> = {}): Member {
     aadhaarEnc: null,
     aadhaarHash: null,
     aadhaarLast4: "1234",
+    nomineeName: "Lakshmi Rao",
+    nomineeRelationship: "Spouse",
+    nomineePhone: "9845022345",
     status: "active",
     feesPaidUpto: 2026,
     deathFundCovered: true,
@@ -152,6 +158,16 @@ describe("buildApplicationPdfSections", () => {
     expect(empty).toEqual(full);
   });
 
+  it("shows the nominee on one line, skipping missing parts", () => {
+    const nominee = (overrides: Partial<Member>) =>
+      flatten(member(overrides)).find((f) => f.label === "Nominee")?.value;
+    expect(nominee({})).toBe("Lakshmi Rao (Spouse) · 9845022345");
+    expect(nominee({ nomineePhone: null })).toBe("Lakshmi Rao (Spouse)");
+    expect(
+      nominee({ nomineeName: null, nomineeRelationship: null, nomineePhone: null }),
+    ).toBeNull();
+  });
+
   it("surfaces empty values as null for the template to render as an em-dash", () => {
     const fields = flatten(member({ notes: null, email: null }));
     expect(fields.find((f) => f.label === "Notes")?.value).toBeNull();
@@ -213,5 +229,28 @@ describe("renderApplicationPdfForRecord", () => {
     const { buffer, applicationNo } = await renderApplicationPdfForRecord(null, member());
     expect(applicationNo).toBeNull();
     expect(buffer.subarray(0, 4).toString("latin1")).toBe("%PDF");
+  });
+
+  // The layout is designed to fit one page (#37). Every field is filled here —
+  // including a long address and notes — so a new section that pushes it onto
+  // a second page fails here rather than in the office's printer.
+  it("fits on a single page with every field filled", async () => {
+    const buffer = await renderApplicationPdf({
+      applicationNo: "APP-7K4M2X",
+      legacyId: "42",
+      memberId: "MDPVA-2026-0001",
+      memberName: "Asha Rao",
+      reviewedAt: new Date("2026-07-31T10:00:00Z"),
+      sections: buildApplicationPdfSections(
+        member({
+          addressLine1: "No. 1234, 5th Cross, 2nd Main Road, Near Old Bus Stand",
+          addressLine2: "Behind Sri Chamundeshwari Temple, Opposite Govt School",
+          notes: "Imported from the paper ledger. ".repeat(6).trim(),
+        }),
+      ),
+      photo: null,
+    });
+    const pages = buffer.toString("latin1").match(/\/Type\s*\/Page(?!s)/g) ?? [];
+    expect(pages).toHaveLength(1);
   });
 });

@@ -57,6 +57,13 @@
       "when": 1789746277153,
       "tag": "0007_ancient_darkhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790267265173,
+      "tag": "0008_member_nominee",
+      "breakpoints": true
     }
   ]
 }

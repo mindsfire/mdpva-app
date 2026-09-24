@@ -46,7 +46,7 @@ describe("diffApplication", () => {
 
   it("covers every diff field even when both sides are empty", () => {
     const diffs = diffApplication({}, {});
-    expect(diffs).toHaveLength(15);
+    expect(diffs).toHaveLength(18);
     expect(diffs.every((d) => d.kind === "same")).toBe(true);
   });
 

@@ -205,6 +205,13 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
           label: "Death fund",
           value: member.deathFundCovered ? "Covered" : "Not covered",
         },
+        {
+          // One row, not a section of its own: the layout is sized to fit one
+          // A4 page (#37) and a separate three-row section pushed it onto two.
+          label: "Nominee",
+          labelKn: S.sectionNominee.kn,
+          value: formatNominee(member),
+        },
       ],
     },
     {
@@ -212,6 +219,20 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
       fields: [{ label: "Notes", value: member.notes }],
     },
   ];
+}
+
+/** "Lakshmi Rao (Spouse) · 9845022345", dropping whichever parts are missing. */
+export function formatNominee(
+  member: Pick<Member, "nomineeName" | "nomineeRelationship" | "nomineePhone">,
+): string | null {
+  const who = [
+    member.nomineeName,
+    member.nomineeRelationship ? `(${member.nomineeRelationship})` : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const parts = [who, member.nomineePhone].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : null;
 }
 
 const dateFmt = new Intl.DateTimeFormat("en-IN", {
@@ -228,7 +249,9 @@ const RULE = "#cfcdc4";
 
 const styles = StyleSheet.create({
   page: {
-    padding: 28,
+    // 24, not 28: the page was exactly full, and the nominee row (plus
+    // headroom for long wrapped values) needed the space.
+    padding: 24,
     fontSize: 10,
     fontFamily: "Times-Roman",
     color: BODY,
@@ -326,7 +349,7 @@ const styles = StyleSheet.create({
   applicantMeta: { fontSize: 9, color: MUTED, marginBottom: 1 },
 
   // Sections
-  section: { marginTop: 6 },
+  section: { marginTop: 4 },
   bandRow: {
     flexDirection: "row",
     alignItems: "baseline",
@@ -352,7 +375,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 0.5,
     borderBottomColor: BORDER,
-    paddingVertical: 2,
+    paddingVertical: 1.5,
   },
   labelCell: { width: 150, flexDirection: "row", flexWrap: "wrap" },
   labelEn: { color: MUTED },

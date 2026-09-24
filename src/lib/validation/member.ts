@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isNomineeRelationship } from "@/lib/nominee";
+
 import { isValidAadhaar, normalizeAadhaar } from "./aadhaar";
 import { normalizePhone } from "./phone";
 import {
@@ -202,6 +204,29 @@ export const memberInputSchema = z.object({
     .transform((v) => normalizeAadhaar(v))
     .refine((v) => v === null || isValidAadhaar(v), {
       message: "Enter a valid 12-digit Aadhaar number",
+    }),
+
+  /**
+   * Optional here, required on the public form: no legacy member has a
+   * nominee on file, and requiring one would block every admin edit until it
+   * was filled in. When present, each is held to the public form's rules.
+   */
+  nomineeName: optionalPersonName("Nominee name"),
+  nomineeRelationship: z
+    .string()
+    .optional()
+    .nullable()
+    .transform(trimOrNull)
+    .refine((v) => v === null || isNomineeRelationship(v), {
+      message: "Choose the nominee's relationship",
+    }),
+  nomineePhone: z
+    .string()
+    .optional()
+    .nullable()
+    .transform(trimOrNull)
+    .refine((v) => v === null || normalizePhone(v) !== null, {
+      message: "Enter a valid 10-digit mobile number",
     }),
 });
 

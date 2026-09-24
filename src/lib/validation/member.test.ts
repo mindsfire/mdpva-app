@@ -222,6 +222,45 @@ describe("memberInputSchema", () => {
     });
   });
 
+  describe("nominee", () => {
+    // Admin edits must still save for the ~1,300 ledger members who have no
+    // nominee on file — only the public form requires one.
+    it("is optional, and blanks normalise to null", () => {
+      const result = memberInputSchema.safeParse(
+        validInput({ nomineeName: "", nomineeRelationship: "", nomineePhone: "" }),
+      );
+      expect(result.success).toBe(true);
+      expect(result.data).toMatchObject({
+        nomineeName: null,
+        nomineeRelationship: null,
+        nomineePhone: null,
+      });
+      expect(memberInputSchema.safeParse(validInput()).success).toBe(true);
+    });
+
+    it("validates each value when present", () => {
+      for (const bad of [
+        { nomineeRelationship: "Friend" },
+        { nomineePhone: "12345" },
+        { nomineeName: "<script>" },
+      ]) {
+        expect(
+          memberInputSchema.safeParse(validInput(bad)).success,
+          JSON.stringify(bad),
+        ).toBe(false);
+      }
+      expect(
+        memberInputSchema.safeParse(
+          validInput({
+            nomineeName: "Lakshmi Rao",
+            nomineeRelationship: "Mother",
+            nomineePhone: "9845022345",
+          }),
+        ).success,
+      ).toBe(true);
+    });
+  });
+
   it("does not include member_id in the schema shape", () => {
     expect("memberId" in memberInputSchema.shape).toBe(false);
   });

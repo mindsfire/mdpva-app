@@ -93,6 +93,14 @@ export function buildMemberSections(member: MemberDetail): MemberSection[] {
       ],
     },
     {
+      title: "Nominee",
+      fields: [
+        { label: "Nominee name", value: member.nomineeName },
+        { label: "Relationship", value: member.nomineeRelationship },
+        { label: "Nominee phone", value: member.nomineePhone },
+      ],
+    },
+    {
       title: "Notes",
       fields: [{ label: "Notes", value: member.notes }],
     },

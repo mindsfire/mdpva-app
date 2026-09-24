@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { fullName } from "@/lib/member-name";
+import { NOMINEE_RELATIONSHIPS } from "@/lib/nominee";
 import type { MemberDetail } from "@/lib/members-query";
 import {
   MAX_LENGTHS,
@@ -80,6 +81,9 @@ function toDefaultValues(member?: MemberDetail | null): MemberFormValues {
     deathFundCovered: member?.deathFundCovered ?? false,
     notes: member?.notes ?? null,
     legacyId: member?.legacyId ?? null,
+    nomineeName: member?.nomineeName ?? null,
+    nomineeRelationship: member?.nomineeRelationship ?? null,
+    nomineePhone: member?.nomineePhone ?? null,
     // Never prefilled, even on edit — the stored value is encrypted and this
     // form has no decryption path. Blank on submit means "leave it as is"
     // (see `aadhaarFields` in the server action); the placeholder below shows
@@ -482,6 +486,71 @@ export function MemberForm({
                       <SelectItem value="suspended">Suspended</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </Section>
+
+          <Section title="Nominee">
+            <FormField
+              control={form.control}
+              name="nomineeName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nominee name</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      maxLength={MAX_LENGTHS.name}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="nomineeRelationship"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Relationship</FormLabel>
+                  <Select
+                    value={field.value ?? undefined}
+                    onValueChange={(value) => field.onChange(value)}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select relationship" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {NOMINEE_RELATIONSHIPS.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="nomineePhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nominee phone</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      type="tel"
+                      inputMode="tel"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

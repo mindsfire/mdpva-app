@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isNomineeRelationship, type NomineeRelationship } from "@/lib/nominee";
+
 import { isValidAadhaar, normalizeAadhaar } from "./aadhaar";
 import { normalizePhone } from "./phone";
 import {
@@ -161,6 +163,23 @@ export const applicationInputSchema = z.object({
     .refine((v) => v !== null, { message: "Aadhaar number is required" })
     .refine((v) => v === null || isValidAadhaar(v), {
       message: "Enter a valid 12-digit Aadhaar number",
+    }),
+
+  /** All three required on the public form — see `members.nomineeName`. */
+  nomineeName: personName("Nominee name"),
+  nomineeRelationship: z
+    .unknown()
+    .transform((v) => (typeof v === "string" && v !== "" ? v : null))
+    .refine((v) => v !== null && isNomineeRelationship(v), {
+      message: "Choose the nominee's relationship",
+    })
+    .transform((v) => v as NomineeRelationship),
+  nomineePhone: z
+    .unknown()
+    .transform(trimOrNull)
+    .refine((v) => v !== null, { message: "Nominee phone number is required" })
+    .refine((v) => v === null || normalizePhone(v) !== null, {
+      message: "Enter a valid 10-digit mobile number",
     }),
 })
   .refine((v) => v.profession !== "other" || v.professionOther !== null, {

@@ -79,6 +79,7 @@ export const STRINGS = {
   sectionNameContact: t("Name & contact", "ಹೆಸರು ಮತ್ತು ಸಂಪರ್ಕ"),
   sectionAddress: t("Address", "ವಿಳಾಸ"),
   sectionWork: t("Work & personal", "ವೃತ್ತಿ ಮತ್ತು ವೈಯಕ್ತಿಕ"),
+  sectionNominee: t("Nominee", "ನಾಮನಿರ್ದೇಶಿತರು"),
 
   // Fields
   firstName: t("First name", "ಮೊದಲ ಹೆಸರು"),
@@ -97,6 +98,9 @@ export const STRINGS = {
   bloodGroup: t("Blood group", "ರಕ್ತದ ಗುಂಪು"),
   bloodGroupUnknown: t("Don't know", "ಗೊತ್ತಿಲ್ಲ"),
   aadhaar: t("Aadhaar number", "ಆಧಾರ್ ಸಂಖ್ಯೆ"),
+  nomineeName: t("Nominee name", "ನಾಮನಿರ್ದೇಶಿತರ ಹೆಸರು"),
+  nomineeRelationship: t("Relationship to you", "ನಿಮ್ಮೊಂದಿಗೆ ಸಂಬಂಧ"),
+  nomineePhone: t("Nominee phone", "ನಾಮನಿರ್ದೇಶಿತರ ದೂರವಾಣಿ"),
   aadhaarHint: t(
     "12 digits, as printed on your Aadhaar card. Kept private — only office staff can see it.",
     "ನಿಮ್ಮ ಆಧಾರ್ ಕಾರ್ಡ್‌ನಲ್ಲಿ ಮುದ್ರಿತವಾದ 12 ಅಂಕೆಗಳು. ಇದು ಗೌಪ್ಯವಾಗಿ ಇರಿಸಲಾಗುತ್ತದೆ.",

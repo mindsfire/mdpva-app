@@ -23,6 +23,9 @@ function validInput(overrides: Partial<Record<string, unknown>> = {}) {
     bloodGroup: "O+",
     // Verhoeff-valid test number — see aadhaar.test.ts for how it was derived.
     aadhaar: "234567890124",
+    nomineeName: "Lakshmi Rao",
+    nomineeRelationship: "Spouse",
+    nomineePhone: "9845022345",
     ...overrides,
   };
 }
@@ -247,6 +250,47 @@ describe("applicationInputSchema", () => {
         validInput({ aadhaar: "234567890125" }),
       );
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe("nominee", () => {
+    it("requires name, relationship and phone", () => {
+      for (const field of [
+        "nomineeName",
+        "nomineeRelationship",
+        "nomineePhone",
+      ]) {
+        for (const blank of [null, "", "   "]) {
+          const result = applicationInputSchema.safeParse(
+            validInput({ [field]: blank }),
+          );
+          expect(result.success, `${field}=${JSON.stringify(blank)}`).toBe(
+            false,
+          );
+          expect(result.error?.issues[0]?.path[0]).toBe(field);
+        }
+      }
+    });
+
+    it("accepts only the listed relationships", () => {
+      expect(
+        applicationInputSchema.safeParse(
+          validInput({ nomineeRelationship: "Friend" }),
+        ).success,
+      ).toBe(false);
+      expect(
+        applicationInputSchema.safeParse(
+          validInput({ nomineeRelationship: "Daughter" }),
+        ).success,
+      ).toBe(true);
+    });
+
+    it("holds the nominee phone to the mobile-number rule", () => {
+      const result = applicationInputSchema.safeParse(
+        validInput({ nomineePhone: "12345" }),
+      );
+      expect(result.success).toBe(false);
+      expect(result.error?.issues[0]?.path[0]).toBe("nomineePhone");
     });
   });
 });

@@ -101,6 +101,14 @@ export const members = pgTable(
     aadhaarEnc: text("aadhaar_enc"),
     aadhaarHash: text("aadhaar_hash"),
     aadhaarLast4: char("aadhaar_last4", { length: 4 }),
+    /**
+     * Who receives the member's benefits (e.g. the death fund). Nullable: the
+     * legacy ledger never recorded one, so it's required only on the public
+     * form. `nomineeRelationship` is one of `NOMINEE_RELATIONSHIPS`.
+     */
+    nomineeName: text("nominee_name"),
+    nomineeRelationship: text("nominee_relationship"),
+    nomineePhone: text("nominee_phone"),
     notes: text("notes"),
     createdBy: uuid("created_by").references(() => users.id),
     updatedBy: uuid("updated_by").references(() => users.id),
@@ -210,6 +218,11 @@ export const memberApplications = pgTable(
     aadhaarEnc: text("aadhaar_enc"),
     aadhaarHash: text("aadhaar_hash"),
     aadhaarLast4: char("aadhaar_last4", { length: 4 }),
+
+    /** See `members.nomineeName` above. */
+    nomineeName: text("nominee_name"),
+    nomineeRelationship: text("nominee_relationship"),
+    nomineePhone: text("nominee_phone"),
 
     /** `pending/{id}.webp` in R2 until approval promotes it to the live key. */
     photoKey: text("photo_key"),

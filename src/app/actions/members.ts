@@ -55,6 +55,9 @@ function toValues(input: MemberInput) {
     deathFundCovered: input.deathFundCovered,
     notes: input.notes,
     legacyId: input.legacyId,
+    nomineeName: input.nomineeName,
+    nomineeRelationship: input.nomineeRelationship,
+    nomineePhone: input.nomineePhone,
   };
 }
 
