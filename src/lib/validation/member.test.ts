@@ -238,6 +238,13 @@ describe("memberInputSchema", () => {
       expect(memberInputSchema.safeParse(validInput()).success).toBe(true);
     });
 
+    it("stores the nominee phone as bare 10 digits", () => {
+      const result = memberInputSchema.safeParse(
+        validInput({ nomineePhone: "+91 98450 22345" }),
+      );
+      expect(result.data?.nomineePhone).toBe("9845022345");
+    });
+
     it("validates each value when present", () => {
       for (const bad of [
         { nomineeRelationship: "Friend" },

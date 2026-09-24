@@ -900,6 +900,7 @@ export function OnboardForm({
                 id="f-nominee-phone"
                 type="tel"
                 inputMode="tel"
+                maxLength={16}
                 value={values.nomineePhone}
                 onChange={(e) => set("nomineePhone", e.target.value)}
                 aria-invalid={fieldErrors.nomineePhone != null}

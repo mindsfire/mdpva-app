@@ -227,7 +227,9 @@ export const memberInputSchema = z.object({
     .transform(trimOrNull)
     .refine((v) => v === null || normalizePhone(v) !== null, {
       message: "Enter a valid 10-digit mobile number",
-    }),
+    })
+    // Bare 10 digits — see `nomineePhone` in application.ts.
+    .transform((v) => (v === null ? null : normalizePhone(v))),
 });
 
 export type MemberInput = z.infer<typeof memberInputSchema>;

@@ -549,6 +549,7 @@ export function MemberForm({
                       value={field.value ?? ""}
                       type="tel"
                       inputMode="tel"
+                      maxLength={16}
                     />
                   </FormControl>
                   <FormMessage />

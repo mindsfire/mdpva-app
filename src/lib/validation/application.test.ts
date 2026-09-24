@@ -285,6 +285,16 @@ describe("applicationInputSchema", () => {
       ).toBe(true);
     });
 
+    it("stores the nominee phone as bare 10 digits, never the raw text", () => {
+      for (const raw of ["+91 98450 22345", "098450-22345", "98450<b>22345 x"]) {
+        const result = applicationInputSchema.safeParse(
+          validInput({ nomineePhone: raw }),
+        );
+        expect(result.success, raw).toBe(true);
+        expect(result.data?.nomineePhone).toBe("9845022345");
+      }
+    });
+
     it("holds the nominee phone to the mobile-number rule", () => {
       const result = applicationInputSchema.safeParse(
         validInput({ nomineePhone: "12345" }),

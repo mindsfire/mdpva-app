@@ -180,7 +180,11 @@ export const applicationInputSchema = z.object({
     .refine((v) => v !== null, { message: "Nominee phone number is required" })
     .refine((v) => v === null || normalizePhone(v) !== null, {
       message: "Enter a valid 10-digit mobile number",
-    }),
+    })
+    // Stored as the bare 10 digits. Validation only checks that 10 valid
+    // digits can be *extracted*, so keeping the raw text would store anything
+    // wrapped around them ("98450<b>22345", or 5,000 characters of padding).
+    .transform((v) => normalizePhone(v)),
 })
   .refine((v) => v.profession !== "other" || v.professionOther !== null, {
     message: "Please describe your profession",
