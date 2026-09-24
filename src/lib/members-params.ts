@@ -18,9 +18,9 @@ export type ProfessionFilter =
   | "drone_operator";
 
 /**
- * `name` / `name_desc` sort on the displayed full name (the default),
- * `membership` / `membership_desc` on the membership number, and `newest` on
- * created_at desc. The membership pair is driven by the sortable column
+ * `name` / `name_desc` sort on the displayed full name, `membership` /
+ * `membership_desc` on the membership number (ascending is the default), and
+ * `newest` on created_at desc. The membership pair is driven by the sortable column
  * header in the table as well as the sort menu.
  */
 export type MembersSort =
@@ -37,6 +37,13 @@ export const MEMBERS_SORTS: readonly MembersSort[] = [
   "membership_desc",
   "newest",
 ] as const;
+
+/**
+ * Applied when there is no `?sort=`. The query, the sort menu and the column
+ * headers all read this one value, so the menu and the header arrow always
+ * agree with the order the rows actually come back in.
+ */
+export const DEFAULT_SORT: MembersSort = "membership";
 
 /** Narrows an untrusted `?sort=` value. */
 export function parseSort(value: string | undefined): MembersSort | undefined {
