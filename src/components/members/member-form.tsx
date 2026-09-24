@@ -245,6 +245,9 @@ export function MemberForm({
                     <Input
                       {...field}
                       value={field.value ?? ""}
+                      type="tel"
+                      inputMode="tel"
+                      maxLength={16}
                       onBlur={() => {
                         field.onBlur();
                         void runDuplicateCheck("phone");

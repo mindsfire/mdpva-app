@@ -604,6 +604,7 @@ export function OnboardForm({
                 id="f-phone"
                 type="tel"
                 inputMode="tel"
+                maxLength={16}
                 value={values.phone}
                 onChange={(e) => set("phone", e.target.value)}
                 aria-invalid={fieldErrors.phone != null}

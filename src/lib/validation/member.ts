@@ -134,10 +134,13 @@ export const memberInputSchema = z.object({
     }),
 
   /**
-   * Stored as the member wrote it; `normalizePhone` is what every comparison
-   * uses. Rejected outright when it can't be a real Indian mobile number —
+   * Rejected outright when it can't be a real Indian mobile number —
    * onboarding verification matches on this field, so junk here would let the
-   * wrong person claim a record.
+   * wrong person claim a record. Stored as the bare 10 digits: validation only
+   * checks that 10 valid digits can be *extracted*, so keeping the raw text
+   * would store anything wrapped around them ("98450<b>11234 hello").
+   * Ledger rows imported before this still hold their raw format; every
+   * comparison goes through `normalized_phone`, so both kinds match.
    */
   phone: z
     .string()
@@ -146,7 +149,8 @@ export const memberInputSchema = z.object({
     .transform(trimOrNull)
     .refine((v) => v === null || normalizePhone(v) !== null, {
       message: "Enter a valid 10-digit mobile number",
-    }),
+    })
+    .transform((v) => (v === null ? null : normalizePhone(v))),
 
   profession: z
     .enum([

@@ -253,6 +253,14 @@ describe("applicationInputSchema", () => {
     });
   });
 
+  it("stores the member phone as bare 10 digits, never the raw text", () => {
+    for (const raw of ["+91 98450 11234", "098450-11234", "98450<b>11234 hello"]) {
+      const result = applicationInputSchema.safeParse(validInput({ phone: raw }));
+      expect(result.success, raw).toBe(true);
+      expect(result.data?.phone).toBe("9845011234");
+    }
+  });
+
   describe("nominee", () => {
     it("requires name, relationship and phone", () => {
       for (const field of [

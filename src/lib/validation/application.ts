@@ -100,7 +100,9 @@ export const applicationInputSchema = z.object({
     .refine((v) => v !== null, { message: "Phone number is required" })
     .refine((v) => v === null || normalizePhone(v) !== null, {
       message: "Enter a valid 10-digit mobile number",
-    }),
+    })
+    // Bare 10 digits — see `phone` in member.ts.
+    .transform((v) => normalizePhone(v)),
 
   email: optionalText(MAX_LENGTHS.email, "Email")
     .transform((v) => (v === null ? null : v.toLowerCase()))

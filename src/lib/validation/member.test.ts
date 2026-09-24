@@ -222,6 +222,16 @@ describe("memberInputSchema", () => {
     });
   });
 
+  it("stores the phone as bare 10 digits, never the raw text", () => {
+    for (const raw of ["+91 98450 11234", "98450<b>11234 hello"]) {
+      const result = memberInputSchema.safeParse(validInput({ phone: raw }));
+      expect(result.success, raw).toBe(true);
+      expect(result.data?.phone).toBe("9845011234");
+    }
+    // Still optional for admins.
+    expect(memberInputSchema.safeParse(validInput({ phone: "" })).data?.phone).toBeNull();
+  });
+
   describe("nominee", () => {
     // Admin edits must still save for the ~1,300 ledger members who have no
     // nominee on file — only the public form requires one.

@@ -274,7 +274,9 @@ export async function checkDuplicates(
   await requireRole("viewer");
 
   const trimmedEmail = email?.trim();
-  const trimmedPhone = phone?.trim();
+  // Matched on `normalized_phone`, so "+91 98450 11234" finds a member stored
+  // as "9845011234" — including ledger rows still holding their raw format.
+  const trimmedPhone = normalizePhone(phone) ?? undefined;
   const trimmedLegacyId = legacyId?.trim();
 
   if (!trimmedEmail && !trimmedPhone && !trimmedLegacyId) {
@@ -286,7 +288,7 @@ export async function checkDuplicates(
     clauses.push(sql`lower(${members.email}) = lower(${trimmedEmail})`);
   }
   if (trimmedPhone) {
-    clauses.push(eq(members.phone, trimmedPhone));
+    clauses.push(eq(members.normalizedPhone, trimmedPhone));
   }
   if (trimmedLegacyId) {
     clauses.push(eq(members.legacyId, trimmedLegacyId));
@@ -299,7 +301,7 @@ export async function checkDuplicates(
       lastName: members.lastName,
       memberId: members.memberId,
       email: members.email,
-      phone: members.phone,
+      normalizedPhone: members.normalizedPhone,
       legacyId: members.legacyId,
     })
     .from(members)
@@ -319,7 +321,7 @@ export async function checkDuplicates(
     matchedOn:
       trimmedEmail && row.email?.toLowerCase() === trimmedEmail.toLowerCase()
         ? "email"
-        : trimmedPhone && row.phone === trimmedPhone
+        : trimmedPhone && row.normalizedPhone === trimmedPhone
           ? "phone"
           : "legacyId",
   }));
