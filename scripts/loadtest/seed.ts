@@ -4,9 +4,10 @@
  * Turnstile-gated verify step (which cannot be scripted — that's the point
  * of the captcha).
  *
- * Point DATABASE_URL (.env.local) at a disposable Neon branch before running
- * this. It never touches the verify/rate-limit path and only ever writes
- * rows tagged with TAG, so --clean is exact.
+ * Reads .env.loadtest.local (kept separate from .env.local so this never
+ * silently repoints `next dev` at the disposable branch). It never touches
+ * the verify/rate-limit path and only ever writes rows tagged with TAG, so
+ * --clean is exact.
  *
  *   npx tsx scripts/loadtest/seed.ts --count 200
  *   npx tsx scripts/loadtest/seed.ts --clean
@@ -18,7 +19,7 @@ import { config } from "dotenv";
 import { eq, sql } from "drizzle-orm";
 import { SignJWT } from "jose";
 
-config({ path: ".env.local" });
+config({ path: ".env.loadtest.local" });
 
 import { db } from "@/db";
 import { members, memberApplications } from "@/db/schema";
@@ -62,7 +63,7 @@ function fakeAadhaar(i: number): string {
     [2, 7, 9, 3, 8, 0, 6, 4, 1, 5], [7, 0, 4, 6, 9, 1, 3, 2, 5, 8],
   ];
   const first = String(2 + (i % 8)); // 2-9
-  const rest = String(100000000 + i * 37).slice(-10); // 10 more digits
+  const rest = String(1000000000 + i * 37).slice(-10); // 10 more digits
   const body = first + rest; // 11 digits, checksum appended next
   let c = 0;
   const reversed = body.split("").reverse();
@@ -138,12 +139,26 @@ async function seed(count: number) {
   console.log(`Sample cookie header: ${ONBOARD_COOKIE}=${sessions[0]!.cookie}`);
 }
 
-const args = process.argv.slice(2);
-if (args.includes("--clean")) {
-  await clean();
-} else {
+async function main() {
+  // env.ts loads .env.local unconditionally and dotenv never overrides an
+  // already-set var, so this only shows .env.loadtest.local's host if that
+  // file's vars were exported into the shell *before* this process started
+  // (e.g. `set -a && source .env.loadtest.local && set +a`) — printed every
+  // run so a silent fallback to the wrong branch (as happened once) is
+  // impossible to miss.
+  console.log(`Target DB host: ${new URL(process.env.DATABASE_URL!).hostname}`);
+
+  const args = process.argv.slice(2);
+  if (args.includes("--clean")) return clean();
+
   const idx = args.indexOf("--count");
   const count = idx >= 0 ? Number(args[idx + 1]) : 200;
-  await seed(count);
+  return seed(count);
 }
-process.exit(0);
+
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

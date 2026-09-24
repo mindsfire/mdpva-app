@@ -11,13 +11,17 @@
  * Cleanup after: npx tsx scripts/loadtest/seed.ts --clean
  */
 import http from "k6/http";
-import { check, sleep } from "k6";
+import { check } from "k6";
 import { SharedArray } from "k6/data";
 
 const BASE_URL = __ENV.BASE_URL || "http://localhost:3000";
 const LOADTEST_KEY = __ENV.LOADTEST_KEY;
+const VERCEL_BYPASS = __ENV.VERCEL_BYPASS;
 if (!LOADTEST_KEY) {
   throw new Error("Set -e LOADTEST_KEY=<value of LOADTEST_KEY on the preview deployment>");
+}
+if (!VERCEL_BYPASS) {
+  throw new Error("Set -e VERCEL_BYPASS=<Protection Bypass for Automation secret> — without it every request 302s to Vercel's SSO wall");
 }
 
 // SharedArray loads sessions.json once and shares it read-only across VUs.
@@ -30,13 +34,14 @@ const photo = open("./fixture.webp", "b");
 export const options = {
   scenarios: {
     event_burst: {
-      executor: "ramping-vus",
-      startVUs: 0,
-      stages: [
-        { duration: "15s", target: 150 }, // ramp to peak concurrency
-        { duration: "45s", target: 150 }, // hold — simulates the event window
-        { duration: "10s", target: 0 },   // ramp down
-      ],
+      // Each real member submits exactly once — per-vu-iterations models
+      // that directly, instead of ramping-vus looping the same session
+      // repeatedly and hitting the app's real one-application-per-member
+      // rule on every iteration after the first.
+      executor: "per-vu-iterations",
+      vus: 150,
+      iterations: 1,
+      maxDuration: "60s",
     },
   },
   thresholds: {
@@ -53,7 +58,7 @@ export default function () {
 
   const payload = {
     firstName: "LoadTest",
-    lastName: `User${__VU}`,
+    lastName: "Tester",
     phone: `9${String(700000000 + __VU).slice(0, 9)}`,
     email: `loadtest${__VU}@example.com`,
     addressLine1: `${__VU} Test Road`,
@@ -74,6 +79,7 @@ export default function () {
   const res = http.post(`${BASE_URL}/api/loadtest/submit`, payload, {
     headers: {
       "x-loadtest-key": LOADTEST_KEY,
+      "x-vercel-protection-bypass": VERCEL_BYPASS,
       Cookie: `mdpva_onboard=${s.cookie}`,
     },
   });
@@ -88,6 +94,4 @@ export default function () {
       }
     },
   });
-
-  sleep(1);
 }
