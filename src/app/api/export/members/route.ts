@@ -97,6 +97,9 @@ export async function GET(request: NextRequest) {
       deathFundCovered: members.deathFundCovered,
       notes: members.notes,
       aadhaarLast4: members.aadhaarLast4,
+      nomineeName: members.nomineeName,
+      nomineeRelationship: members.nomineeRelationship,
+      nomineePhone: members.nomineePhone,
     })
     .from(members)
     .where(buildMembersWhere(params))

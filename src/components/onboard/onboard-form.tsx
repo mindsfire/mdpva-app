@@ -25,6 +25,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { DateField, isoToDisplay } from "@/components/ui/date-field";
 import { Input } from "@/components/ui/input";
+import {
+  NOMINEE_RELATIONSHIPS,
+  NOMINEE_RELATIONSHIP_LABELS_KN,
+} from "@/lib/nominee";
 import { STRINGS as S, type Bilingual } from "@/lib/onboarding/i18n";
 import { canSubmitApplication } from "@/lib/onboarding/submit-gate";
 import { isValidAadhaar } from "@/lib/validation/aadhaar";
@@ -54,6 +58,9 @@ const FIELD_INPUT_IDS: Partial<Record<keyof Values, string>> = {
   professionOther: "f-prof-other",
   dob: "f-dob",
   bloodGroup: "f-blood",
+  nomineeName: "f-nominee-name",
+  nomineeRelationship: "f-nominee-rel",
+  nomineePhone: "f-nominee-phone",
 };
 
 /** Server error codes → member-facing copy. */
@@ -101,6 +108,9 @@ function emptyValues(membershipNo: string, prefill: Partial<Values>): Values {
     dob: "",
     bloodGroup: "",
     aadhaar: "",
+    nomineeName: "",
+    nomineeRelationship: "",
+    nomineePhone: "",
     ...prefill,
   };
 }
@@ -594,6 +604,7 @@ export function OnboardForm({
                 id="f-phone"
                 type="tel"
                 inputMode="tel"
+                maxLength={16}
                 value={values.phone}
                 onChange={(e) => set("phone", e.target.value)}
                 aria-invalid={fieldErrors.phone != null}
@@ -835,6 +846,69 @@ export function OnboardForm({
               {fieldErrors.bloodGroup ? (
                 <span role="alert" className="text-[11.5px] text-destructive">
                   {fieldErrors.bloodGroup}
+                </span>
+              ) : null}
+            </span>
+          </div>
+        </Group>
+
+        <Group s={S.sectionNominee}>
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+            <span className="flex flex-col gap-1.5">
+              <Label htmlFor="f-nominee-name" s={S.nomineeName} required />
+              <Input
+                id="f-nominee-name"
+                maxLength={MAX_LENGTHS.name}
+                value={values.nomineeName}
+                onChange={(e) => set("nomineeName", e.target.value)}
+                aria-invalid={fieldErrors.nomineeName != null}
+              />
+              {fieldErrors.nomineeName ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.nomineeName}
+                </span>
+              ) : null}
+            </span>
+            <span className="flex flex-col gap-1.5">
+              <Label
+                htmlFor="f-nominee-rel"
+                s={S.nomineeRelationship}
+                required
+              />
+              <select
+                id="f-nominee-rel"
+                value={values.nomineeRelationship}
+                onChange={(e) => set("nomineeRelationship", e.target.value)}
+                aria-invalid={fieldErrors.nomineeRelationship != null}
+                className="h-9 cursor-pointer rounded-lg border border-transparent bg-muted/50 px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
+              >
+                <option value="">—</option>
+                {NOMINEE_RELATIONSHIPS.map((r) => (
+                  <option key={r} value={r}>
+                    {r} · {NOMINEE_RELATIONSHIP_LABELS_KN[r]}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.nomineeRelationship ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.nomineeRelationship}
+                </span>
+              ) : null}
+            </span>
+            <span className="flex flex-col gap-1.5">
+              <Label htmlFor="f-nominee-phone" s={S.nomineePhone} required />
+              <Input
+                id="f-nominee-phone"
+                type="tel"
+                inputMode="tel"
+                maxLength={16}
+                value={values.nomineePhone}
+                onChange={(e) => set("nomineePhone", e.target.value)}
+                aria-invalid={fieldErrors.nomineePhone != null}
+              />
+              {fieldErrors.nomineePhone ? (
+                <span role="alert" className="text-[11.5px] text-destructive">
+                  {fieldErrors.nomineePhone}
                 </span>
               ) : null}
             </span>

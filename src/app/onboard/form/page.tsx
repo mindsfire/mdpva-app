@@ -67,6 +67,9 @@ export default async function OnboardFormPage() {
                 businessName: application.businessName ?? "",
                 dob: application.dob ?? "",
                 bloodGroup: application.bloodGroup ?? "",
+                nomineeName: application.nomineeName ?? "",
+                nomineeRelationship: application.nomineeRelationship ?? "",
+                nomineePhone: application.nomineePhone ?? "",
               },
             }
           : null

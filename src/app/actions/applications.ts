@@ -63,6 +63,9 @@ function applicationToMemberValues(app: typeof memberApplications.$inferSelect) 
     aadhaarEnc: keepIfBlank(app.aadhaarEnc),
     aadhaarHash: keepIfBlank(app.aadhaarHash),
     aadhaarLast4: keepIfBlank(app.aadhaarLast4),
+    nomineeName: keepIfBlank(app.nomineeName),
+    nomineeRelationship: keepIfBlank(app.nomineeRelationship),
+    nomineePhone: keepIfBlank(app.nomineePhone),
   };
 }
 

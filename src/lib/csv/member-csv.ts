@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 
+import { NOMINEE_RELATIONSHIPS } from "@/lib/nominee";
 import { memberInputSchema, type MemberInput } from "@/lib/validation/member";
 import { escapeCsvCell } from "@/lib/validation/text-safety";
 
@@ -28,6 +29,9 @@ export const CSV_HEADERS = [
   "death_fund_covered",
   "notes",
   "aadhaar_last4",
+  "nominee_name",
+  "nominee_relationship",
+  "nominee_phone",
 ] as const;
 
 export type CsvHeader = (typeof CSV_HEADERS)[number];
@@ -75,6 +79,9 @@ export const EXPORT_FIELDS = [
    * has no decryption path, by design.
    */
   { key: "aadhaar_last4", label: "Aadhaar (last 4)" },
+  { key: "nominee_name", label: "Nominee name" },
+  { key: "nominee_relationship", label: "Nominee relationship" },
+  { key: "nominee_phone", label: "Nominee phone" },
 ] as const;
 
 export type ExportFieldKey = (typeof EXPORT_FIELDS)[number]["key"];
@@ -145,6 +152,12 @@ export function coerceRow(
     : professionRaw === "photo & video" || professionRaw === "photo and video" ? "photo_and_video"
     : professionRaw;
 
+  // Stored capitalised ("Spouse"); accept any casing a spreadsheet produces.
+  const relationshipRaw = get("nominee_relationship").toLowerCase();
+  const nomineeRelationship =
+    NOMINEE_RELATIONSHIPS.find((r) => r.toLowerCase() === relationshipRaw) ??
+    get("nominee_relationship");
+
   const statusRaw = get("status").toLowerCase();
   const feesRaw = get("fees_paid_upto");
   const deathRaw = get("death_fund_covered").toLowerCase();
@@ -166,6 +179,9 @@ export function coerceRow(
     dob: get("dob"),
     bloodGroup: get("blood_group"),
     notes: get("notes"),
+    nomineeName: get("nominee_name"),
+    nomineeRelationship,
+    nomineePhone: get("nominee_phone"),
     status: statusRaw === "" ? "active" : statusRaw,
     feesPaidUpto:
       feesRaw === "" ? null
@@ -242,6 +258,9 @@ export interface ExportableMember {
   deathFundCovered: boolean;
   notes: string | null;
   aadhaarLast4: string | null;
+  nomineeName: string | null;
+  nomineeRelationship: string | null;
+  nomineePhone: string | null;
 }
 
 /**
@@ -278,6 +297,9 @@ export function membersToCsv(
     // Masked, same as every other place Aadhaar is displayed — never the
     // full number, which this module never even has access to.
     aadhaar_last4: m.aadhaarLast4 ? `•••• •••• ${m.aadhaarLast4}` : "",
+    nominee_name: m.nomineeName ?? "",
+    nominee_relationship: m.nomineeRelationship ?? "",
+    nominee_phone: m.nomineePhone ?? "",
   }));
 
   // `Papa.unparse` quotes and escapes for CSV *parsing*, but does nothing about
@@ -325,6 +347,9 @@ export function templateCsv(): string {
     death_fund_covered: "yes",
     notes: "",
     aadhaar_last4: "",
+    nominee_name: "Lakshmi",
+    nominee_relationship: "Spouse",
+    nominee_phone: "9845022345",
   };
   return Papa.unparse([example], { columns: [...CSV_HEADERS], newline: "\n" });
 }

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isNomineeRelationship } from "@/lib/nominee";
+
 import { isValidAadhaar, normalizeAadhaar } from "./aadhaar";
 import { normalizePhone } from "./phone";
 import {
@@ -132,10 +134,13 @@ export const memberInputSchema = z.object({
     }),
 
   /**
-   * Stored as the member wrote it; `normalizePhone` is what every comparison
-   * uses. Rejected outright when it can't be a real Indian mobile number —
+   * Rejected outright when it can't be a real Indian mobile number —
    * onboarding verification matches on this field, so junk here would let the
-   * wrong person claim a record.
+   * wrong person claim a record. Stored as the bare 10 digits: validation only
+   * checks that 10 valid digits can be *extracted*, so keeping the raw text
+   * would store anything wrapped around them ("98450<b>11234 hello").
+   * Ledger rows imported before this still hold their raw format; every
+   * comparison goes through `normalized_phone`, so both kinds match.
    */
   phone: z
     .string()
@@ -144,7 +149,8 @@ export const memberInputSchema = z.object({
     .transform(trimOrNull)
     .refine((v) => v === null || normalizePhone(v) !== null, {
       message: "Enter a valid 10-digit mobile number",
-    }),
+    })
+    .transform((v) => (v === null ? null : normalizePhone(v))),
 
   profession: z
     .enum([
@@ -203,6 +209,31 @@ export const memberInputSchema = z.object({
     .refine((v) => v === null || isValidAadhaar(v), {
       message: "Enter a valid 12-digit Aadhaar number",
     }),
+
+  /**
+   * Optional here, required on the public form: no legacy member has a
+   * nominee on file, and requiring one would block every admin edit until it
+   * was filled in. When present, each is held to the public form's rules.
+   */
+  nomineeName: optionalPersonName("Nominee name"),
+  nomineeRelationship: z
+    .string()
+    .optional()
+    .nullable()
+    .transform(trimOrNull)
+    .refine((v) => v === null || isNomineeRelationship(v), {
+      message: "Choose the nominee's relationship",
+    }),
+  nomineePhone: z
+    .string()
+    .optional()
+    .nullable()
+    .transform(trimOrNull)
+    .refine((v) => v === null || normalizePhone(v) !== null, {
+      message: "Enter a valid 10-digit mobile number",
+    })
+    // Bare 10 digits — see `nomineePhone` in application.ts.
+    .transform((v) => (v === null ? null : normalizePhone(v))),
 });
 
 export type MemberInput = z.infer<typeof memberInputSchema>;

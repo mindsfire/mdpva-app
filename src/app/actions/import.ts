@@ -115,12 +115,18 @@ async function findDuplicates(
   const legacyIds = [...seen.legacyId.keys()];
   const conditions: SQL[] = [];
   if (emails.length) conditions.push(inArray(sql`lower(${members.email})`, emails));
-  if (phones.length) conditions.push(inArray(members.phone, phones));
+  // `input.phone` is already normalised by `memberInputSchema`; compare it to
+  // `normalized_phone` so ledger rows stored in their raw format still match.
+  if (phones.length) conditions.push(inArray(members.normalizedPhone, phones));
   if (legacyIds.length) conditions.push(inArray(members.legacyId, legacyIds));
   if (conditions.length === 0) return duplicates;
 
   const existing = await db
-    .select({ email: members.email, phone: members.phone, legacyId: members.legacyId })
+    .select({
+      email: members.email,
+      phone: members.normalizedPhone,
+      legacyId: members.legacyId,
+    })
     .from(members)
     .where(and(isNull(members.deletedAt), or(...conditions)));
 

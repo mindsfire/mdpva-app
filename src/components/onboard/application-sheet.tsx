@@ -30,6 +30,9 @@ export interface SheetValues {
   businessName: string;
   dob: string;
   bloodGroup: string;
+  nomineeName: string;
+  nomineeRelationship: string;
+  nomineePhone: string;
   photoUrl: string | null;
   applicationNo?: string;
 }
@@ -262,6 +265,23 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
           <span className="flex flex-1 items-baseline gap-2">
             <span className="shrink-0 text-[#45443e]">Blood group</span>
             <Val>{values.bloodGroup}</Val>
+          </span>
+        </Row>
+      </div>
+
+      <Band en={S.sectionNominee.en} kn={S.sectionNominee.kn} />
+      <div>
+        <Row num="11." label="Nominee name">
+          <Val>{values.nomineeName}</Val>
+        </Row>
+        <Row num="12.">
+          <span className="flex flex-1 items-baseline gap-2">
+            <span className="shrink-0 text-[#45443e]">Relationship</span>
+            <Val>{values.nomineeRelationship}</Val>
+          </span>
+          <span className="flex flex-1 items-baseline gap-2">
+            <span className="shrink-0 text-[#45443e]">Phone</span>
+            <Val numeric>{values.nomineePhone}</Val>
           </span>
         </Row>
       </div>

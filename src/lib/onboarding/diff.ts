@@ -31,6 +31,9 @@ export const DIFF_FIELDS = [
    * either side ever rendering the full number.
    */
   "aadhaarLast4",
+  "nomineeName",
+  "nomineeRelationship",
+  "nomineePhone",
 ] as const;
 
 export type DiffField = (typeof DIFF_FIELDS)[number];
@@ -51,6 +54,9 @@ export const FIELD_LABELS: Record<DiffField, string> = {
   dob: "Date of birth",
   bloodGroup: "Blood group",
   aadhaarLast4: "Aadhaar (last 4)",
+  nomineeName: "Nominee name",
+  nomineeRelationship: "Nominee relationship",
+  nomineePhone: "Nominee phone",
 };
 
 /**

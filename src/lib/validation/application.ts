@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isNomineeRelationship, type NomineeRelationship } from "@/lib/nominee";
+
 import { isValidAadhaar, normalizeAadhaar } from "./aadhaar";
 import { normalizePhone } from "./phone";
 import {
@@ -98,7 +100,9 @@ export const applicationInputSchema = z.object({
     .refine((v) => v !== null, { message: "Phone number is required" })
     .refine((v) => v === null || normalizePhone(v) !== null, {
       message: "Enter a valid 10-digit mobile number",
-    }),
+    })
+    // Bare 10 digits — see `phone` in member.ts.
+    .transform((v) => normalizePhone(v)),
 
   email: optionalText(MAX_LENGTHS.email, "Email")
     .transform((v) => (v === null ? null : v.toLowerCase()))
@@ -162,6 +166,27 @@ export const applicationInputSchema = z.object({
     .refine((v) => v === null || isValidAadhaar(v), {
       message: "Enter a valid 12-digit Aadhaar number",
     }),
+
+  /** All three required on the public form — see `members.nomineeName`. */
+  nomineeName: personName("Nominee name"),
+  nomineeRelationship: z
+    .unknown()
+    .transform((v) => (typeof v === "string" && v !== "" ? v : null))
+    .refine((v) => v !== null && isNomineeRelationship(v), {
+      message: "Choose the nominee's relationship",
+    })
+    .transform((v) => v as NomineeRelationship),
+  nomineePhone: z
+    .unknown()
+    .transform(trimOrNull)
+    .refine((v) => v !== null, { message: "Nominee phone number is required" })
+    .refine((v) => v === null || normalizePhone(v) !== null, {
+      message: "Enter a valid 10-digit mobile number",
+    })
+    // Stored as the bare 10 digits. Validation only checks that 10 valid
+    // digits can be *extracted*, so keeping the raw text would store anything
+    // wrapped around them ("98450<b>22345", or 5,000 characters of padding).
+    .transform((v) => normalizePhone(v)),
 })
   .refine((v) => v.profession !== "other" || v.professionOther !== null, {
     message: "Please describe your profession",

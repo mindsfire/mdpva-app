@@ -222,6 +222,62 @@ describe("memberInputSchema", () => {
     });
   });
 
+  it("stores the phone as bare 10 digits, never the raw text", () => {
+    for (const raw of ["+91 98450 11234", "98450<b>11234 hello"]) {
+      const result = memberInputSchema.safeParse(validInput({ phone: raw }));
+      expect(result.success, raw).toBe(true);
+      expect(result.data?.phone).toBe("9845011234");
+    }
+    // Still optional for admins.
+    expect(memberInputSchema.safeParse(validInput({ phone: "" })).data?.phone).toBeNull();
+  });
+
+  describe("nominee", () => {
+    // Admin edits must still save for the ~1,300 ledger members who have no
+    // nominee on file — only the public form requires one.
+    it("is optional, and blanks normalise to null", () => {
+      const result = memberInputSchema.safeParse(
+        validInput({ nomineeName: "", nomineeRelationship: "", nomineePhone: "" }),
+      );
+      expect(result.success).toBe(true);
+      expect(result.data).toMatchObject({
+        nomineeName: null,
+        nomineeRelationship: null,
+        nomineePhone: null,
+      });
+      expect(memberInputSchema.safeParse(validInput()).success).toBe(true);
+    });
+
+    it("stores the nominee phone as bare 10 digits", () => {
+      const result = memberInputSchema.safeParse(
+        validInput({ nomineePhone: "+91 98450 22345" }),
+      );
+      expect(result.data?.nomineePhone).toBe("9845022345");
+    });
+
+    it("validates each value when present", () => {
+      for (const bad of [
+        { nomineeRelationship: "Friend" },
+        { nomineePhone: "12345" },
+        { nomineeName: "<script>" },
+      ]) {
+        expect(
+          memberInputSchema.safeParse(validInput(bad)).success,
+          JSON.stringify(bad),
+        ).toBe(false);
+      }
+      expect(
+        memberInputSchema.safeParse(
+          validInput({
+            nomineeName: "Lakshmi Rao",
+            nomineeRelationship: "Mother",
+            nomineePhone: "9845022345",
+          }),
+        ).success,
+      ).toBe(true);
+    });
+  });
+
   it("does not include member_id in the schema shape", () => {
     expect("memberId" in memberInputSchema.shape).toBe(false);
   });

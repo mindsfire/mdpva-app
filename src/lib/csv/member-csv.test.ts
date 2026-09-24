@@ -185,6 +185,9 @@ describe("templateCsv / membersToCsv", () => {
         deathFundCovered: false,
       notes: null,
       aadhaarLast4: null,
+      nomineeName: "Lakshmi Rao",
+      nomineeRelationship: "Spouse",
+      nomineePhone: "9845022345",
       },
     ]);
     // legacy_id leads the default export (the recognised membership number);
@@ -194,6 +197,9 @@ describe("templateCsv / membersToCsv", () => {
     expect(reparsed.errors).toEqual([]);
     expect(reparsed.rows[0]?.input.firstName).toBe("Asha");
     expect(reparsed.rows[0]?.input.legacyId).toBe("77");
+    expect(reparsed.rows[0]?.input.nomineeName).toBe("Lakshmi Rao");
+    expect(reparsed.rows[0]?.input.nomineeRelationship).toBe("Spouse");
+    expect(reparsed.rows[0]?.input.nomineePhone).toBe("9845022345");
     expect(reparsed.unknownHeaders).toEqual([]);
   });
 });
@@ -265,6 +271,9 @@ describe("membersToCsv column selection", () => {
     deathFundCovered: true,
     notes: null,
     aadhaarLast4: null,
+    nomineeName: null,
+    nomineeRelationship: null,
+    nomineePhone: null,
   };
 
   it("emits only the requested columns, in canonical order", () => {
