@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { members, users } from "@/db/schema";
 import {
   DEFAULT_PER_PAGE,
+  DEFAULT_SORT,
   type MembersSort,
   type MemberStatusFilter,
   type PerPage,
@@ -166,8 +167,6 @@ export async function getMemberById(id: string): Promise<MemberDetail | null> {
     updatedByName,
   };
 }
-
-const DEFAULT_SORT: MembersSort = "name";
 
 /**
  * Name sorting uses the whole displayed name, not `last_name` alone: that

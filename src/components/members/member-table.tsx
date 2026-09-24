@@ -24,7 +24,11 @@ import {
 import { useMembersSelection } from "./selection";
 import { useMemberDrawerNav } from "@/components/members/member-drawer-nav";
 import { useDirectoryTransition } from "@/components/members/directory-transition";
-import type { MembersSort } from "@/lib/members-params";
+import {
+  DEFAULT_SORT,
+  parseSort,
+  type MembersSort,
+} from "@/lib/members-params";
 import { cn } from "@/lib/utils";
 
 export function MemberTable({ rows }: { rows: MemberRow[] }) {
@@ -238,7 +242,7 @@ function SortableHead({
   const searchParams = useSearchParams();
   const { navigate } = useDirectoryTransition();
 
-  const current = searchParams.get("sort");
+  const current = parseSort(searchParams.get("sort") ?? undefined) ?? DEFAULT_SORT;
   const isAsc = current === ascValue;
   const isDesc = current === descValue;
   // First click sorts ascending; clicking the active column flips it.

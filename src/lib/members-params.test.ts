@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MEMBERS_SORTS, parseSort } from "@/lib/members-params";
+import { DEFAULT_SORT, MEMBERS_SORTS, parseSort } from "@/lib/members-params";
 
 describe("parseSort", () => {
   it("accepts every supported sort", () => {
@@ -22,5 +22,13 @@ describe("parseSort", () => {
     expect(parseSort("name; drop table members")).toBeUndefined();
     expect(parseSort("")).toBeUndefined();
     expect(parseSort(undefined)).toBeUndefined();
+  });
+});
+
+describe("DEFAULT_SORT", () => {
+  // The office works through the directory by membership number, so an
+  // unsorted visit to /members must open on No. 1, not on names.
+  it("is membership number, ascending", () => {
+    expect(DEFAULT_SORT).toBe("membership");
   });
 });

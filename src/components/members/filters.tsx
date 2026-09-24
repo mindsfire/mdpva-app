@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DEFAULT_SORT } from "@/lib/members-params";
 import { cn } from "@/lib/utils";
 
 interface FilterOption {
@@ -108,7 +109,7 @@ export function MemberFilters() {
   );
   const activeSort =
     SORT_OPTIONS.find((o) => o.value === searchParams.get("sort")) ??
-    SORT_OPTIONS[0];
+    SORT_OPTIONS.find((o) => o.value === DEFAULT_SORT)!;
 
   function clearAll() {
     const params = new URLSearchParams(searchParams.toString());
