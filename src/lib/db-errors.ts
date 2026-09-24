@@ -11,7 +11,10 @@ const CONSTRAINT_MESSAGES: Record<string, { field?: string; error: string }> = {
   },
   members_legacy_id_active: {
     field: "legacyId",
-    error: "A member with this legacy ID already exists.",
+    // Fallback only: `members.ts` replaces this with a message naming the
+    // member who holds the number, which is what the office needs in order
+    // to resolve it. This wording is used if that lookup finds nothing.
+    error: "That membership number is already in use by another member.",
   },
   members_aadhaar_hash_active: {
     field: "aadhaar",
