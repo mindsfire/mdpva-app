@@ -64,6 +64,13 @@
       "when": 1790267265173,
       "tag": "0008_member_nominee",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790439587507,
+      "tag": "0009_clear_dead_application_photo_keys",
+      "breakpoints": true
     }
   ]
 }
