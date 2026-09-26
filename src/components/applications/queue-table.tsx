@@ -174,12 +174,12 @@ export function QueueTable({
                       <span
                         className="flex h-12 w-[37px] items-center justify-center rounded-sm border border-dashed border-border text-center text-[9px] leading-tight text-muted-foreground"
                         title={
-                          photo.kind === "discarded"
-                            ? "Photo discarded on rejection"
+                          photo.kind === "unavailable"
+                            ? "Photo removed when this application was rejected"
                             : undefined
                         }
                       >
-                        {photo.kind === "discarded" ? "discarded" : "none"}
+                        {photo.kind === "unavailable" ? "removed" : "none"}
                       </span>
                     );
                   })()}

@@ -43,17 +43,19 @@ describe("applicationPhoto", () => {
     ).toEqual({ kind: "none" });
   });
 
-  it("shows the discarded placeholder for rejected/superseded applications", () => {
-    expect(applicationPhoto({ status: "rejected", photoKey: null }, member)).toEqual({
-      kind: "discarded",
-    });
-    // Legacy rows still pointing at the deleted pending object.
+  it("shows the submitted photo for rejected/superseded applications", () => {
     expect(
       applicationPhoto({ status: "rejected", photoKey: "app/pending/a.webp" }, member),
-    ).toEqual({ kind: "discarded" });
+    ).toEqual({ kind: "photo", src: "/api/photos/app/pending/a.webp" });
     expect(
       applicationPhoto({ status: "superseded", photoKey: "app/pending/a.webp" }, member),
-    ).toEqual({ kind: "discarded" });
+    ).toEqual({ kind: "photo", src: "/api/photos/app/pending/a.webp" });
+  });
+
+  it("shows unavailable for a rejected application whose photo was removed", () => {
+    expect(applicationPhoto({ status: "rejected", photoKey: null }, member)).toEqual({
+      kind: "unavailable",
+    });
   });
 
   it("keeps showing the live photo for an approved application reopened as rejected", () => {
