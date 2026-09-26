@@ -8,16 +8,9 @@ import { ReviewActions } from "@/components/applications/review-actions";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { countChanges, diffApplication } from "@/lib/onboarding/diff";
+import { formatDateTimeIST } from "@/lib/format-date";
 import { photoUrl } from "@/lib/photo-url";
 import { cn } from "@/lib/utils";
-
-const dateFmt = new Intl.DateTimeFormat("en-IN", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-});
 
 const KIND_STYLES: Record<string, string> = {
   added: "text-emerald-700 dark:text-emerald-400",
@@ -56,7 +49,7 @@ export default async function ReviewApplicationPage({
             {app.applicationNo}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Submitted {dateFmt.format(app.createdAt)} · ledger no.{" "}
+            Submitted {formatDateTimeIST(app.createdAt)} · ledger no.{" "}
             {member.legacyId ?? "—"} · {member.memberId}
           </p>
         </div>
@@ -66,7 +59,7 @@ export default async function ReviewApplicationPage({
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-muted px-3 py-1 text-sm capitalize text-muted-foreground">
               {app.status}
-              {app.reviewedAt ? ` · ${dateFmt.format(app.reviewedAt)}` : ""}
+              {app.reviewedAt ? ` · ${formatDateTimeIST(app.reviewedAt)}` : ""}
             </span>
             {app.status === "approved" ? (
               <Button

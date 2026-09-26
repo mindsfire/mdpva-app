@@ -15,6 +15,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db";
 import { memberApplications, members } from "@/db/schema";
+import { formatDateIST } from "@/lib/format-date";
 import { PROFESSION_LABELS } from "@/lib/member-sections";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
 import { fetchMemberPhotoForPdf, type PdfPhoto } from "@/lib/pdf/photo-for-pdf";
@@ -234,12 +235,6 @@ export function formatNominee(
   const parts = [who, member.nomineePhone].filter(Boolean);
   return parts.length > 0 ? parts.join(" · ") : null;
 }
-
-const dateFmt = new Intl.DateTimeFormat("en-IN", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-});
 
 const INK = "#161513";
 const BODY = "#45443e";
@@ -509,7 +504,7 @@ export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
           <Text style={styles.footerItem}>
             Approved{" "}
             <Text style={styles.footerValue}>
-              {reviewedAt ? dateFmt.format(reviewedAt) : "—"}
+              {reviewedAt ? formatDateIST(reviewedAt) : "—"}
             </Text>
           </Text>
         </View>
