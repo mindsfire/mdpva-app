@@ -6,14 +6,9 @@ import { useRouter } from "next/navigation";
 
 import { endOnboardSessionAction } from "@/app/actions/onboard";
 import { Button } from "@/components/ui/button";
+import { formatDateTimeIST } from "@/lib/format-date";
 import { STRINGS as S } from "@/lib/onboarding/i18n";
 import { cn } from "@/lib/utils";
-
-const dateFmt = new Intl.DateTimeFormat("en-IN", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-});
 
 export interface StatusProps {
   applicationNo: string;
@@ -82,8 +77,8 @@ export function ApplicationStatus({
           {applicationNo}
         </p>
         <p className="mt-2 text-xs text-muted-foreground">
-          Submitted {dateFmt.format(submittedAt)}
-          {reviewedAt ? ` · reviewed ${dateFmt.format(reviewedAt)}` : ""}
+          Submitted {formatDateTimeIST(submittedAt)}
+          {reviewedAt ? ` · reviewed ${formatDateTimeIST(reviewedAt)}` : ""}
         </p>
       </div>
 
