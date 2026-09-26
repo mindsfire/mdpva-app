@@ -13,7 +13,7 @@ import {
 import { getLatestApplicationForMember } from "@/lib/onboarding/member-application";
 import { canResubmit } from "@/lib/onboarding/resubmit";
 import { readOnboardSession } from "@/lib/onboarding/session";
-import { r2, R2_BUCKET, pendingPhotoKeyFor } from "@/lib/r2";
+import { isPendingPhotoKey, r2, R2_BUCKET, pendingPhotoKeyFor } from "@/lib/r2";
 import {
   MAX_UPLOAD_BYTES,
   processPassportPhoto,
@@ -212,7 +212,13 @@ export async function submitApplicationAction(
       .where(eq(memberApplications.id, inserted.id));
 
     // The superseded row's photo is now unreferenced.
-    if (existingPhotoKey && existingPhotoKey !== key) {
+    // Only ever a pending upload: an application reopened after approval
+    // points at the member's live photo, which must survive a resubmit.
+    if (
+      existingPhotoKey &&
+      existingPhotoKey !== key &&
+      isPendingPhotoKey(existingPhotoKey)
+    ) {
       await r2
         .send(
           new DeleteObjectCommand({
