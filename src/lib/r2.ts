@@ -41,6 +41,4 @@ export function pendingPhotoKeyFor(applicationId: string): string {
 }
 
 /** True for keys under the pending prefix; used to gate serving to admins. */
-export function isPendingPhotoKey(key: string): boolean {
-  return key.startsWith("app/pending/");
-}
+export { isPendingPhotoKey } from "@/lib/application-photo";

@@ -8,6 +8,7 @@ import { ReviewActions } from "@/components/applications/review-actions";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { countChanges, diffApplication } from "@/lib/onboarding/diff";
+import { applicationPhoto } from "@/lib/application-photo";
 import { photoUrl } from "@/lib/photo-url";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +40,7 @@ export default async function ReviewApplicationPage({
   const diffs = diffApplication(member, app);
   const changes = countChanges(diffs);
   const isPending = app.status === "pending";
+  const submittedPhoto = applicationPhoto(app, member);
 
   return (
     <div className="flex flex-col gap-5">
@@ -101,14 +103,21 @@ export default async function ReviewApplicationPage({
             <p className="mb-2 text-[10.5px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
               Submitted photo
             </p>
-            {app.photoKey ? (
+            {submittedPhoto.kind === "photo" ? (
               // eslint-disable-next-line @next/next/no-img-element -- auth-gated stream from R2
               <img
-                src={photoUrl(app.photoKey) ?? undefined}
+                src={submittedPhoto.src}
                 alt="Submitted photograph"
                 className="w-full max-w-[240px] rounded-lg border border-mdpva-border object-cover dark:border-border"
                 style={{ aspectRatio: "7 / 9" }}
               />
+            ) : submittedPhoto.kind === "discarded" ? (
+              <div
+                className="flex w-full max-w-[240px] items-center justify-center rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground"
+                style={{ aspectRatio: "7 / 9" }}
+              >
+                Photo discarded on rejection.
+              </div>
             ) : (
               <p className="text-sm text-muted-foreground">No photo submitted.</p>
             )}
