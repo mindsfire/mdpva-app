@@ -18,6 +18,7 @@ import {
   initials,
   StatusBadge,
 } from "@/components/members/member-badges";
+import { PhotoImg } from "@/components/photo-img";
 
 function Detail({
   label,
@@ -178,18 +179,20 @@ function MemberPortrait({
 }) {
   const name = fullName(firstName);
   const src = photoUrl(photoKey, updatedAt);
+  const placeholder = (
+    <div className="flex size-full items-center justify-center bg-mdpva-gold/20 font-serif text-2xl text-mdpva-accent dark:text-mdpva-gold">
+      {initials(firstName)}
+    </div>
+  );
 
   return (
     <div className="hidden aspect-[7/9] w-32 shrink-0 overflow-hidden rounded-lg ring-1 ring-mdpva-gold/60 sm:block @2xl:w-40">
       {src ? (
         // Served by our own /api/photos route, which already resizes and
         // caches, so next/image would add a second optimisation pass.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={name} className="size-full object-cover" />
+        <PhotoImg src={src} alt={name} className="size-full object-cover" fallback={placeholder} />
       ) : (
-        <div className="flex size-full items-center justify-center bg-mdpva-gold/20 font-serif text-2xl text-mdpva-accent dark:text-mdpva-gold">
-          {initials(firstName)}
-        </div>
+        placeholder
       )}
     </div>
   );

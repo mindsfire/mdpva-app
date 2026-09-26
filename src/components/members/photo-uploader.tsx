@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { uploadMemberPhoto, removeMemberPhoto } from "@/app/actions/photo";
 import { Button } from "@/components/ui/button";
 import { photoUrl } from "@/lib/photo-url";
+import { PhotoImg } from "@/components/photo-img";
 
 /**
  * Photos are keyed by member id (`app/members/<id>.webp`), so upload is
@@ -94,8 +95,12 @@ export function PhotoUploader({
         {previewUrl ? (
           // Freshly uploaded/removed state needs an immediate, cache-busted
           // repaint that a Next <Image> would fight; a plain <img> is correct here.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={previewUrl} alt="Member photo" className="size-full object-cover" />
+          <PhotoImg
+            src={previewUrl}
+            alt="Member photo"
+            className="size-full object-cover"
+            fallback={<ImageIcon className="size-6 text-muted-foreground" aria-hidden="true" />}
+          />
         ) : (
           <ImageIcon className="size-6 text-muted-foreground" aria-hidden="true" />
         )}

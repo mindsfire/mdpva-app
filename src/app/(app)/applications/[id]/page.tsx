@@ -12,6 +12,7 @@ import { applicationPhoto } from "@/lib/application-photo";
 import { formatDateTimeIST } from "@/lib/format-date";
 import { photoUrl } from "@/lib/photo-url";
 import { cn } from "@/lib/utils";
+import { PhotoImg } from "@/components/photo-img";
 
 const KIND_STYLES: Record<string, string> = {
   added: "text-emerald-700 dark:text-emerald-400",
@@ -97,12 +98,19 @@ export default async function ReviewApplicationPage({
               Submitted photo
             </p>
             {submittedPhoto.kind === "photo" ? (
-              // eslint-disable-next-line @next/next/no-img-element -- auth-gated stream from R2
-              <img
+              <PhotoImg
                 src={submittedPhoto.src}
                 alt="Submitted photograph"
                 className="w-full max-w-[240px] rounded-lg border border-mdpva-border object-cover dark:border-border"
                 style={{ aspectRatio: "7 / 9" }}
+                fallback={
+                  <div
+                    className="flex w-full max-w-[240px] items-center justify-center rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground"
+                    style={{ aspectRatio: "7 / 9" }}
+                  >
+                    Photo file is missing — ask the member to upload it again.
+                  </div>
+                }
               />
             ) : submittedPhoto.kind === "unavailable" ? (
               <div
@@ -121,12 +129,19 @@ export default async function ReviewApplicationPage({
               <p className="mb-2 text-[10.5px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                 Current photo
               </p>
-              {/* eslint-disable-next-line @next/next/no-img-element -- auth-gated stream from R2 */}
-              <img
+              <PhotoImg
                 src={photoUrl(member.photoKey, member.updatedAt) ?? undefined}
                 alt="Current photograph"
                 className="w-full max-w-[140px] rounded-lg border border-mdpva-border object-cover opacity-80 dark:border-border"
                 style={{ aspectRatio: "7 / 9" }}
+                fallback={
+                  <div
+                    className="flex w-full max-w-[140px] items-center justify-center rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground"
+                    style={{ aspectRatio: "7 / 9" }}
+                  >
+                    Photo file is missing.
+                  </div>
+                }
               />
             </div>
           ) : null}
