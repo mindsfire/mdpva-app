@@ -216,5 +216,5 @@ export const STRINGS = {
   deathFund: t("Death fund", "ಮರಣ ನಿಧಿ"),
   deathFundCovered: t("Covered", "ಒಳಗೊಂಡಿದೆ"),
   deathFundNotCovered: t("Not covered", "ಒಳಗೊಂಡಿಲ್ಲ"),
-  remarks: t("Remarks", "ಷರಾ"),
+  remarks: t("Remarks", "ಟಿಪ್ಪಣಿಗಳು"),
 } as const;
