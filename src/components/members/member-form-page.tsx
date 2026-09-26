@@ -47,7 +47,7 @@ export function MemberFormPage({
                 { label: "Dashboard", href: "/" },
                 { label: "Members", href: "/members" },
                 {
-                  label: fullName(member?.firstName, member?.lastName),
+                  label: fullName(member?.firstName),
                   href: `/members/${member?.id}`,
                 },
                 { label: "Edit" },
@@ -65,7 +65,7 @@ export function MemberFormPage({
               the form does not answer. */}
           {mode === "create" ? null : (
             <p className="mt-1 text-sm text-muted-foreground">
-              {fullName(member?.firstName, member?.lastName)}
+              {fullName(member?.firstName)}
             </p>
           )}
         </div>

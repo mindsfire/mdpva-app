@@ -61,10 +61,11 @@ export const members = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     memberId: text("member_id").notNull(),
     legacyId: text("legacy_id"),
+    /** The member's single full name (see `fullName()`). */
     firstName: text("first_name").notNull(),
     /**
-     * Nullable: many Kannada names have no separable surname, and a third of
-     * the legacy ledger is recorded as a single name. See `optionalPersonName`.
+     * @deprecated Legacy. Folded into `first_name` by 0009_full_name and
+     * always NULL since; kept one release for rollback. Do not read or write.
      */
     lastName: text("last_name"),
     email: text("email"),
@@ -197,7 +198,9 @@ export const memberApplications = pgTable(
       .references(() => members.id),
     status: applicationStatusEnum("status").notNull().default("pending"),
 
+    /** Full name (see `fullName()`). */
     firstName: text("first_name"),
+    /** @deprecated Legacy, always NULL since 0009_full_name. Do not use. */
     lastName: text("last_name"),
     email: text("email"),
     phone: text("phone"),

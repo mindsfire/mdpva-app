@@ -15,6 +15,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db";
 import { memberApplications, members } from "@/db/schema";
+import { fullName } from "@/lib/member-name";
 import { PROFESSION_LABELS } from "@/lib/member-sections";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
 import { fetchMemberPhotoForPdf, type PdfPhoto } from "@/lib/pdf/photo-for-pdf";
@@ -146,8 +147,7 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
     {
       title: "Identity",
       fields: [
-        { label: "First name", labelKn: S.firstName.kn, value: member.firstName },
-        { label: "Last name", labelKn: S.lastName.kn, value: member.lastName },
+        { label: "Full name", labelKn: S.fullName.kn, value: fullName(member.firstName) || null },
         { label: "Date of birth", labelKn: S.dob.kn, value: member.dob },
         { label: "Blood group", labelKn: S.bloodGroup.kn, value: member.bloodGroup },
         {
@@ -541,7 +541,7 @@ export async function renderApplicationPdfForRecord(
 ): Promise<{ buffer: Buffer; applicationNo: string | null }> {
   const photo = await fetchMemberPhotoForPdf(member.photoKey);
   const sections = buildApplicationPdfSections(member);
-  const memberName = [member.firstName, member.lastName].filter(Boolean).join(" ");
+  const memberName = fullName(member.firstName);
 
   const buffer = await renderApplicationPdf({
     applicationNo: application?.applicationNo ?? null,

@@ -21,7 +21,7 @@ function csv(...rows: string[]): string {
 const VALID_ROW =
   // Phone is deliberately not 9876543210 — that descending run is rejected as
   // ledger placeholder junk (see `normalizePhone`).
-  "Ramesh,Kumar,ramesh@example.com,9845011234,OLD/1,photographer,Studio,12 MG Road,,Lakshmipuram,Mysuru,Karnataka,570004,1975-06-15,B+,active,2026,yes,";
+  "Ramesh Kumar,ramesh@example.com,9845011234,OLD/1,photographer,Studio,12 MG Road,,Lakshmipuram,Mysuru,Karnataka,570004,1975-06-15,B+,active,2026,yes,";
 
 describe("parseMembersCsv", () => {
   it("parses a valid row into MemberInput", () => {
@@ -29,7 +29,7 @@ describe("parseMembersCsv", () => {
     expect(result.errors).toEqual([]);
     expect(result.rows).toHaveLength(1);
     const input = result.rows[0].input;
-    expect(input.firstName).toBe("Ramesh");
+    expect(input.firstName).toBe("Ramesh Kumar");
     expect(input.legacyId).toBe("OLD/1");
     expect(input.profession).toBe("photographer");
     expect(input.feesPaidUpto).toBe(2026);
@@ -51,7 +51,7 @@ describe("parseMembersCsv", () => {
 
   it("reports row-level validation errors with 1-based row numbers", () => {
     const bad =
-      ",Kumar,not-an-email,,,photographer,,12 MG Road,,,Mysuru,Karnataka,12345,,,active,,no,";
+      ",not-an-email,,,photographer,,12 MG Road,,,Mysuru,Karnataka,12345,,,active,,no,";
     const result = parseMembersCsv(csv(VALID_ROW, bad));
     expect(result.rows).toHaveLength(1);
     const rows = result.errors.map((e) => e.row);
@@ -64,15 +64,34 @@ describe("parseMembersCsv", () => {
 
   it("flags missing required headers and unknown headers", () => {
     const result = parseMembersCsv("first_name,surname\nRamesh,Kumar");
-    expect(result.missingHeaders).toContain("last_name");
+    expect(result.missingHeaders).toContain("address_line1");
+    expect(result.missingHeaders).not.toContain("last_name");
     expect(result.unknownHeaders).toContain("surname");
+  });
+
+  // Back-compat: files exported before the single full-name change still
+  // carry a last_name column. It is merged into the full name, not flagged.
+  it("merges a legacy last_name column into the full name", () => {
+    const header = ["first_name", "last_name", ...CSV_HEADERS.slice(1)].join(",");
+    const row = VALID_ROW.replace("Ramesh Kumar,", "Ramesh,Kumar,");
+    const result = parseMembersCsv(`${header}\n${row}`);
+    expect(result.errors).toEqual([]);
+    expect(result.unknownHeaders).toEqual([]);
+    expect(result.rows[0]?.input.firstName).toBe("Ramesh Kumar");
+  });
+
+  it("keeps a single-word name when the legacy last_name is empty", () => {
+    const header = ["first_name", "last_name", ...CSV_HEADERS.slice(1)].join(",");
+    const row = VALID_ROW.replace("Ramesh Kumar,", "Shivakumar,,");
+    const result = parseMembersCsv(`${header}\n${row}`);
+    expect(result.rows[0]?.input.firstName).toBe("Shivakumar");
   });
 
   it("normalizes header spacing/case ('First Name' -> first_name)", () => {
     const header = CSV_HEADERS.join(",").replace("first_name", "First Name");
     const result = parseMembersCsv([header, VALID_ROW].join("\n"));
     expect(result.errors).toEqual([]);
-    expect(result.rows[0]?.input.firstName).toBe("Ramesh");
+    expect(result.rows[0]?.input.firstName).toBe("Ramesh Kumar");
   });
 
   it("rejects invalid death_fund_covered values instead of guessing", () => {
@@ -120,8 +139,8 @@ describe("coerceRow column coverage", () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.data).toMatchObject({
-      firstName: "Asha",
-      lastName: "Rao",
+      // Legacy last_name column folded into the single full name.
+      firstName: "Asha Rao",
       email: "asha@example.com",
       phone: "9000000001",
       legacyId: "42",
@@ -166,8 +185,7 @@ describe("templateCsv / membersToCsv", () => {
     const out = membersToCsv([
       {
         legacyId: "77",
-        firstName: "Asha",
-        lastName: "Rao",
+        firstName: "Asha Rao",
         email: null,
         phone: "9000000001",
         profession: "drone_operator",
@@ -195,7 +213,7 @@ describe("templateCsv / membersToCsv", () => {
     expect(out.split("\n")[0]).toBe(ALL_EXPORT_FIELDS.join(","));
     const reparsed = parseMembersCsv(out);
     expect(reparsed.errors).toEqual([]);
-    expect(reparsed.rows[0]?.input.firstName).toBe("Asha");
+    expect(reparsed.rows[0]?.input.firstName).toBe("Asha Rao");
     expect(reparsed.rows[0]?.input.legacyId).toBe("77");
     expect(reparsed.rows[0]?.input.nomineeName).toBe("Lakshmi Rao");
     expect(reparsed.rows[0]?.input.nomineeRelationship).toBe("Spouse");
@@ -241,7 +259,6 @@ describe("EXPORT_FIELDS", () => {
     // Mirrors parseMembersCsv's missingHeaders list.
     expect(IMPORT_REQUIRED_FIELDS).toEqual([
       "first_name",
-      "last_name",
       "address_line1",
       "city",
       "state",
@@ -253,7 +270,6 @@ describe("membersToCsv column selection", () => {
   const MEMBER: ExportableMember = {
     legacyId: "42",
     firstName: "Asha",
-    lastName: null,
     email: "asha@example.com",
     phone: "9000000001",
     profession: "photographer",

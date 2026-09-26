@@ -10,6 +10,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { memberApplications, members } from "@/db/schema";
 import { isUniqueViolationOn } from "@/lib/db-errors";
+import { fullName } from "@/lib/member-name";
 import { requireRole } from "@/lib/rbac";
 import { r2, R2_BUCKET, photoKeyFor } from "@/lib/r2";
 import { normalizePhone } from "@/lib/validation/phone";
@@ -45,7 +46,6 @@ function applicationToMemberValues(app: typeof memberApplications.$inferSelect) 
 
   return {
     firstName: app.firstName ?? undefined,
-    lastName: app.lastName ?? undefined,
     email: keepIfBlank(app.email),
     phone: keepIfBlank(app.phone),
     ...(app.phone ? { normalizedPhone: normalizePhone(app.phone) } : {}),
@@ -329,7 +329,6 @@ export async function listApplications(
       status: memberApplications.status,
       memberId: memberApplications.memberId,
       firstName: memberApplications.firstName,
-      lastName: memberApplications.lastName,
       photoKey: memberApplications.photoKey,
       aadhaarLast4: memberApplications.aadhaarLast4,
       createdAt: memberApplications.createdAt,
@@ -358,7 +357,7 @@ export async function listApplications(
     memberId: r.memberId,
     legacyId: r.legacyId,
     memberIdCode: r.memberIdCode,
-    submittedName: `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || "—",
+    submittedName: fullName(r.firstName) || "—",
     photoKey: r.photoKey,
     aadhaarLast4: r.aadhaarLast4,
     memberUpdatedAt: r.memberUpdatedAt,

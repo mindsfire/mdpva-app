@@ -25,7 +25,7 @@ export default async function MemberProfilePage({
         items={[
           { label: "Dashboard", href: "/" },
           { label: "Members", href: "/members" },
-          { label: fullName(member.firstName, member.lastName) },
+          { label: fullName(member.firstName) },
         ]}
       />
       <div className="rounded-lg border border-mdpva-border bg-card p-4 sm:p-5 dark:border-border">

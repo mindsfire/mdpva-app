@@ -127,7 +127,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
             tabIndex={0}
             role="row"
             aria-roledescription="Activatable row: press Enter to view member details"
-            aria-label={`View details for ${fullName(row.firstName, row.lastName)}`}
+            aria-label={`View details for ${fullName(row.firstName)}`}
             onClick={(event) => {
               event.currentTarget.focus();
               open(row.id);
@@ -163,7 +163,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                 <Checkbox
                   checked={selection.isSelected(row.id)}
                   onCheckedChange={() => selection.toggle(row.id)}
-                  aria-label={`Select ${fullName(row.firstName, row.lastName)}`}
+                  aria-label={`Select ${fullName(row.firstName)}`}
                 />
               </TableCell>
             ) : null}
@@ -184,13 +184,12 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
               <div className="flex items-center gap-2.5">
                 <MemberAvatar
                   firstName={row.firstName}
-                  lastName={row.lastName}
                   photoKey={row.photoKey}
                   updatedAt={row.updatedAt}
                   className="size-8"
                 />
                 <span className="font-medium text-foreground">
-                  {fullName(row.firstName, row.lastName)}
+                  {fullName(row.firstName)}
                 </span>
               </div>
             </TableCell>

@@ -29,7 +29,6 @@ export interface MemberRow {
   memberId: string;
   legacyId: string | null;
   firstName: string;
-  lastName: string | null;
   phone: string | null;
   profession:
     | "photographer"
@@ -60,7 +59,6 @@ export interface MemberDetail {
   memberId: string;
   legacyId: string | null;
   firstName: string;
-  lastName: string | null;
   email: string | null;
   phone: string | null;
   profession:
@@ -139,7 +137,6 @@ export async function getMemberById(id: string): Promise<MemberDetail | null> {
     memberId: member.memberId,
     legacyId: member.legacyId,
     firstName: member.firstName,
-    lastName: member.lastName,
     email: member.email,
     phone: member.phone,
     profession: member.profession,
@@ -169,9 +166,11 @@ export async function getMemberById(id: string): Promise<MemberDetail | null> {
 }
 
 /**
- * Name sorting uses the whole displayed name, not `last_name` alone: that
- * column is null for every member without a separable surname, which would
- * otherwise sort a third of the directory into one block at the end.
+ * Name sorting uses the full name. Members now hold a single full name in
+ * `first_name` and `last_name` is always NULL (kept one release for rollback,
+ * see drizzle/0009_full_name.sql); the expression still mirrors
+ * `members_name_lower_idx` so the index keeps serving the sort until the
+ * column and index are dropped together.
  */
 const NAME_SORT_KEY = sql`lower(trim(${members.firstName} || ' ' || coalesce(${members.lastName}, '')))`;
 
@@ -217,12 +216,9 @@ function buildSearchCondition(rawQuery: string): SQL | null {
 
   const conditions: SQL[] = [
     ilike(members.firstName, term),
-    ilike(members.lastName, term),
-    // Match against the full name so "Kavya Bhat" finds the member that
-    // neither first_name nor last_name alone would.
-    // `coalesce` matches the members_name_lower_idx expression: last_name is
-    // nullable, and `'x' || NULL` is NULL, which would exclude every
-    // single-name member from full-name search.
+    // Same expression as members_name_lower_idx. `last_name` is always NULL
+    // since the full-name migration; the `coalesce` keeps rows matching until
+    // the legacy column is dropped.
     sql`trim(${members.firstName} || ' ' || coalesce(${members.lastName}, '')) ilike ${term}`,
     ilike(members.email, term),
     ilike(members.phone, term),
@@ -338,7 +334,6 @@ export async function searchMembers(
       memberId: members.memberId,
       legacyId: members.legacyId,
       firstName: members.firstName,
-      lastName: members.lastName,
       phone: members.phone,
       profession: members.profession,
       professionOther: members.professionOther,

@@ -29,7 +29,7 @@ export function MemberCard({ row }: { row: MemberRow }) {
           <Checkbox
             checked={selection.isSelected(row.id)}
             onCheckedChange={() => selection.toggle(row.id)}
-            aria-label={`Select ${fullName(row.firstName, row.lastName)}`}
+            aria-label={`Select ${fullName(row.firstName)}`}
           />
         </label>
       ) : null}
@@ -39,7 +39,6 @@ export function MemberCard({ row }: { row: MemberRow }) {
       >
         <MemberAvatar
           firstName={row.firstName}
-          lastName={row.lastName}
           photoKey={row.photoKey}
           updatedAt={row.updatedAt}
           size="lg"
@@ -48,7 +47,7 @@ export function MemberCard({ row }: { row: MemberRow }) {
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex items-baseline justify-between gap-2">
             <span className="truncate font-serif text-base font-medium text-foreground">
-              {fullName(row.firstName, row.lastName)}
+              {fullName(row.firstName)}
             </span>
             {/* Legacy ledger number, not the generated member ID — the same
               identifier the table leads with. */}
