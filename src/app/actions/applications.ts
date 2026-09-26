@@ -11,7 +11,7 @@ import { db } from "@/db";
 import { memberApplications, members } from "@/db/schema";
 import { isUniqueViolationOn } from "@/lib/db-errors";
 import { requireRole } from "@/lib/rbac";
-import { r2, R2_BUCKET, photoKeyFor } from "@/lib/r2";
+import { isPendingPhotoKey, r2, R2_BUCKET, photoKeyFor } from "@/lib/r2";
 import { normalizePhone } from "@/lib/validation/phone";
 import { sanitizeText } from "@/lib/validation/text-safety";
 
@@ -108,8 +108,11 @@ export async function approveApplication(
 
   // Photo first: if this fails we'd rather the member row keep its old photo
   // than point at a key that was never written.
+  // Only a pending upload needs promoting. An application reopened after
+  // approval can carry the member's live key itself; copying that onto
+  // itself and then deleting the "source" would destroy the live photo.
   let livePhotoKey: string | undefined;
-  if (claimed.photoKey) {
+  if (claimed.photoKey && isPendingPhotoKey(claimed.photoKey)) {
     livePhotoKey = photoKeyFor(claimed.memberId);
     await r2.send(
       new CopyObjectCommand({
@@ -185,11 +188,23 @@ export async function rejectApplication(
     return { ok: false, error: "Please give a reason so the member can fix it." };
   }
 
+  // RETURNING yields post-update values, and the update below clears the
+  // key, so read it first. A pending application's key can't change under
+  // us: resubmission is locked until it's rejected.
+  const [current] = await db
+    .select({ photoKey: memberApplications.photoKey })
+    .from(memberApplications)
+    .where(eq(memberApplications.id, applicationId));
+
   const [claimed] = await db
     .update(memberApplications)
     .set({
       status: "rejected",
       rejectionReason: cleanReason,
+      // The pending photo is deleted just below. Clearing the key in the
+      // same write keeps the row from pointing at a dead object; the queue
+      // and detail page show a "discarded" placeholder instead.
+      photoKey: null,
       reviewedBy: sessionUser.id,
       reviewedAt: new Date(),
       updatedAt: new Date(),
@@ -200,17 +215,16 @@ export async function rejectApplication(
         eq(memberApplications.status, "pending"),
       ),
     )
-    .returning({ id: memberApplications.id, photoKey: memberApplications.photoKey });
+    .returning({ id: memberApplications.id });
 
   if (!claimed) {
     return { ok: false, error: "This application has already been reviewed." };
   }
 
-  if (claimed.photoKey) {
+  const discardedKey = current?.photoKey;
+  if (discardedKey && isPendingPhotoKey(discardedKey)) {
     await r2
-      .send(
-        new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: claimed.photoKey }),
-      )
+      .send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: discardedKey }))
       .catch(() => {});
   }
 
@@ -311,6 +325,8 @@ export interface QueueRow {
   memberIdCode: string;
   submittedName: string;
   photoKey: string | null;
+  /** The member's live photo; shown for approved rows (see `applicationPhoto`). */
+  memberPhotoKey: string | null;
   aadhaarLast4: string | null;
   memberUpdatedAt: Date;
   createdAt: Date;
@@ -336,6 +352,7 @@ export async function listApplications(
       legacyId: members.legacyId,
       memberIdCode: members.memberId,
       memberUpdatedAt: members.updatedAt,
+      memberPhotoKey: members.photoKey,
     })
     .from(memberApplications)
     .innerJoin(members, eq(members.id, memberApplications.memberId))
@@ -362,6 +379,7 @@ export async function listApplications(
     photoKey: r.photoKey,
     aadhaarLast4: r.aadhaarLast4,
     memberUpdatedAt: r.memberUpdatedAt,
+    memberPhotoKey: r.memberPhotoKey,
     createdAt: r.createdAt,
   }));
 }
