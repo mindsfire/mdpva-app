@@ -11,6 +11,7 @@ import { ReopenForResubmitAction } from "@/components/applications/reopen-action
 import { Button } from "@/components/ui/button";
 import { maskAadhaar } from "@/lib/validation/aadhaar";
 import { photoUrl } from "@/lib/photo-url";
+import { formatDateTimeIST } from "@/lib/format-date";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -30,12 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-
-const dateFmt = new Intl.DateTimeFormat("en-IN", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-});
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-mdpva-gold/25 text-mdpva-accent dark:text-mdpva-gold",
@@ -207,7 +202,7 @@ export function QueueTable({
                   {row.aadhaarLast4 ? maskAadhaar(row.aadhaarLast4) : "—"}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {dateFmt.format(row.createdAt)}
+                  {formatDateTimeIST(row.createdAt)}
                 </TableCell>
                 <TableCell>
                   <span
