@@ -81,7 +81,7 @@ function submitMessage(code: string): string {
     case "already_pending":
       return "Your details are already awaiting review by the MDPVA office. You can't submit again until that review is done.";
     case "already_approved":
-      return "Your details have already been approved. If something needs to change, please contact the MDPVA office.";
+      return "Your details have already been approved. If anything needs to change, the MDPVA office will contact you.";
     case "submit_failed":
       return "Something went wrong saving your details. Please try again.";
     default:
@@ -197,6 +197,10 @@ export function OnboardForm({
   const [editing, setEditing] = React.useState(existing == null);
   const fileRef = React.useRef<HTMLInputElement>(null);
   const photoSectionRef = React.useRef<HTMLDivElement>(null);
+  const professionOtherRef = React.useRef<HTMLInputElement>(null);
+  // Bumped each time "Other" is freshly selected so the attached input's
+  // mount animation replays even if the member picks "Other" again later.
+  const [otherHighlightKey, setOtherHighlightKey] = React.useState(0);
 
   const hasPhoto = photoBlob != null || Boolean(existing?.photoKey);
 
@@ -749,9 +753,25 @@ export function OnboardForm({
                 onChange={(e) => {
                   const next = e.target.value as Values["profession"];
                   set("profession", next);
-                  // Stale text from a previous "Other" selection shouldn't
-                  // linger, hidden, once they switch to a listed profession.
-                  if (next !== "other") set("professionOther", "");
+                  if (next !== "other") {
+                    // Stale text from a previous "Other" selection shouldn't
+                    // linger, hidden, once they switch to a listed profession.
+                    set("professionOther", "");
+                  } else {
+                    // Selecting "Other" reveals the free-text field right
+                    // below on a native select whose dropdown can otherwise
+                    // cover it, especially on a phone. Bring it into view and
+                    // focus it once the browser has finished closing the
+                    // dropdown and laying out the new input.
+                    setOtherHighlightKey((k) => k + 1);
+                    requestAnimationFrame(() => {
+                      professionOtherRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      });
+                      professionOtherRef.current?.focus();
+                    });
+                  }
                 }}
                 aria-invalid={fieldErrors.profession != null}
                 className="h-9 cursor-pointer rounded-lg border border-transparent bg-muted/50 px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20"
@@ -776,20 +796,36 @@ export function OnboardForm({
                 </span>
               ) : null}
               {values.profession === "other" ? (
-                <span className="mt-1 flex flex-col gap-1.5">
+                <p className="-mb-1 flex items-center gap-1 text-[11px] font-medium text-primary">
+                  {S.otherProfessionHelper.en}{" "}
+                  <span className="font-kn">{S.otherProfessionHelper.kn}</span>
+                </p>
+              ) : null}
+              {values.profession === "other" ? (
+                // Rendered as a visual continuation of the select above it —
+                // flush top edge, shared accent border, tinted background —
+                // so it reads as "the rest of that field" rather than an
+                // unrelated box that appeared on the page.
+                <span
+                  key={otherHighlightKey}
+                  className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-300 -mt-px flex flex-col gap-1.5 rounded-b-lg border border-t-0 border-primary/50 bg-primary/[0.06] p-2.5 pt-2 ring-1 ring-primary/20"
+                >
                   <Label
                     htmlFor="f-prof-other"
                     s={S.otherProfessionDescribe}
                     required
                   />
                   <Input
+                    ref={professionOtherRef}
                     id="f-prof-other"
                     maxLength={MAX_LENGTHS.professionOther}
                     value={values.professionOther}
                     onChange={(e) =>
                       set("professionOther", e.target.value)
                     }
+                    placeholder={`${S.otherProfessionPlaceholder.en} / ${S.otherProfessionPlaceholder.kn}`}
                     aria-invalid={fieldErrors.professionOther != null}
+                    className="border-primary/60 bg-background focus-visible:border-primary"
                   />
                   {fieldErrors.professionOther ? (
                     <span

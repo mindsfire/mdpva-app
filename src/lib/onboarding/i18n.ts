@@ -115,6 +115,14 @@ export const STRINGS = {
     "Please describe your profession",
     "ದಯವಿಟ್ಟು ನಿಮ್ಮ ವೃತ್ತಿಯನ್ನು ವಿವರಿಸಿ",
   ),
+  otherProfessionPlaceholder: t(
+    "Type your profession here",
+    "ನಿಮ್ಮ ವೃತ್ತಿಯನ್ನು ಇಲ್ಲಿ ಬರೆಯಿರಿ",
+  ),
+  otherProfessionHelper: t(
+    "↓ Please type your profession below",
+    "↓ ದಯವಿಟ್ಟು ನಿಮ್ಮ ವೃತ್ತಿಯನ್ನು ಕೆಳಗೆ ಬರೆಯಿರಿ",
+  ),
 
   optional: t("Optional", "ಐಚ್ಛಿಕ"),
   choosePhoto: t("Choose photo", "ಭಾವಚಿತ್ರ ಆಯ್ಕೆಮಾಡಿ"),
@@ -163,9 +171,11 @@ export const STRINGS = {
     "ನಿಮ್ಮ ವಿವರಗಳು ಸಂಘದ ಕಚೇರಿಯನ್ನು ತಲುಪಿವೆ ಮತ್ತು ಪರಿಶೀಲನೆಗೆ ಕಾಯುತ್ತಿವೆ. ನೀವು ಬೇರೇನೂ ಮಾಡಬೇಕಿಲ್ಲ. ಏನಾದರೂ ಸರಿಪಡಿಸಬೇಕಿದ್ದರೆ, ದಯವಿಟ್ಟು ಕಚೇರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ.",
   ),
   statusApprovedTitle: t("Details approved", "ವಿವರಗಳು ಅನುಮೋದನೆಯಾಗಿವೆ"),
+  // ⚠️ Kannada below is a proposed translation and needs office confirmation
+  // before it ships (see docs/plans/2026-09-26-mdpva-fixes-batch.md, item 8).
   statusApprovedBody: t(
-    "Your details are now in the member directory. If something needs to change, please contact the MDPVA office — this page can no longer be used to submit changes.",
-    "ನಿಮ್ಮ ವಿವರಗಳು ಈಗ ಸದಸ್ಯರ ಪಟ್ಟಿಯಲ್ಲಿವೆ. ಏನಾದರೂ ಬದಲಾಯಿಸಬೇಕಿದ್ದರೆ, ದಯವಿಟ್ಟು ಸಂಘದ ಕಚೇರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ.",
+    "Your details are now in the member directory. If anything needs to change, the MDPVA office will contact you. This page can no longer be used to submit changes.",
+    "ನಿಮ್ಮ ವಿವರಗಳು ಈಗ ಸದಸ್ಯರ ಪಟ್ಟಿಯಲ್ಲಿವೆ. ಏನಾದರೂ ಬದಲಾವಣೆ ಅಗತ್ಯವಿದ್ದರೆ, ಸಂಘದ ಕಚೇರಿಯವರು ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸುತ್ತಾರೆ.",
   ),
   statusRejectedTitle: t("Needs correction", "ತಿದ್ದುಪಡಿ ಅಗತ್ಯವಿದೆ"),
   statusRejectedBody: t(
