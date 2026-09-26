@@ -196,4 +196,16 @@ export const STRINGS = {
   signature: t("Signature", "ಸಹಿ"),
   date: t("Date", "ದಿನಾಂಕ"),
   officeUse: t("For office use", "ಕಚೇರಿ ಬಳಕೆಗೆ"),
+
+  // Office-only fields — admin's downloadable application PDF. Same
+  // "never invent Kannada copy" rule as the rest of this file: these are
+  // reviewed strings, not a translation done here.
+  sectionIdentity: t("Identity", "ಗುರುತು"),
+  sectionContact: t("Contact", "ಸಂಪರ್ಕ"),
+  sectionMembership: t("Membership", "ಸದಸ್ಯತ್ವ"),
+  status: t("Status", "ಸ್ಥಿತಿ"),
+  deathFund: t("Death fund", "ಮರಣ ನಿಧಿ"),
+  deathFundCovered: t("Covered", "ಒಳಗೊಂಡಿದೆ"),
+  deathFundNotCovered: t("Not covered", "ಒಳಗೊಂಡಿಲ್ಲ"),
+  remarks: t("Remarks", "ಷರಾ"),
 } as const;

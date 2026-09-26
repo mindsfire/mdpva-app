@@ -117,11 +117,14 @@ export async function getMemberForPdf(
 export interface PdfField {
   label: string;
   /** Only set where an official, already-reviewed translation exists in
-   * `STRINGS` — office-only fields (status, fees, notes, …) have none, and
-   * this module never invents Kannada copy of its own. */
+   * `STRINGS` — this module never invents Kannada copy of its own. */
   labelKn?: string;
   /** `null` means "recorded as empty" — the template renders an em-dash. */
   value: string | number | null;
+  /** Bilingual counterpart to `value`, same reviewed-only rule as `labelKn`.
+   * Only used where the value itself is a fixed, translatable word (e.g.
+   * "Covered"), never for freeform member-entered text. */
+  valueKn?: string;
 }
 
 export interface PdfSection {
@@ -145,6 +148,7 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
   return [
     {
       title: "Identity",
+      titleKn: S.sectionIdentity.kn,
       fields: [
         { label: "First name", labelKn: S.firstName.kn, value: member.firstName },
         { label: "Last name", labelKn: S.lastName.kn, value: member.lastName },
@@ -161,6 +165,7 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
     },
     {
       title: "Contact",
+      titleKn: S.sectionContact.kn,
       fields: [
         { label: "Email", labelKn: S.email.kn, value: member.email },
         { label: "Phone", labelKn: S.phone.kn, value: member.phone },
@@ -196,14 +201,19 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
     },
     {
       title: "Membership",
+      titleKn: S.sectionMembership.kn,
       fields: [
         { label: "Membership no.", labelKn: S.membershipNo.kn, value: member.legacyId },
-        { label: "Member ID", value: member.memberId },
-        { label: "Status", value: member.status },
-        { label: "Fees paid upto", value: member.feesPaidUpto },
+        { label: "Status", labelKn: S.status.kn, value: member.status },
         {
           label: "Death fund",
-          value: member.deathFundCovered ? "Covered" : "Not covered",
+          labelKn: S.deathFund.kn,
+          value: member.deathFundCovered
+            ? S.deathFundCovered.en
+            : S.deathFundNotCovered.en,
+          valueKn: member.deathFundCovered
+            ? S.deathFundCovered.kn
+            : S.deathFundNotCovered.kn,
         },
         {
           // One row, not a section of its own: the layout is sized to fit one
@@ -215,8 +225,11 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
       ],
     },
     {
-      title: "Notes",
-      fields: [{ label: "Notes", value: member.notes }],
+      // "Remarks" in the PDF only — the drawer (member-sections.ts) still
+      // calls this field "Notes".
+      title: S.remarks.en,
+      titleKn: S.remarks.kn,
+      fields: [{ label: S.remarks.en, labelKn: S.remarks.kn, value: member.notes }],
     },
   ];
 }
@@ -380,7 +393,9 @@ const styles = StyleSheet.create({
   labelCell: { width: 150, flexDirection: "row", flexWrap: "wrap" },
   labelEn: { color: MUTED },
   labelKn: { fontFamily: "NotoSansKannada", color: MUTED, marginLeft: 4 },
-  value: { flex: 1, color: INK },
+  valueCell: { flex: 1, flexDirection: "row", flexWrap: "wrap" },
+  valueEn: { color: INK },
+  valueKn: { fontFamily: "NotoSansKannada", color: INK, marginLeft: 4 },
 
   // Footer — "for office use" band, filled in rather than blank (this is a
   // completed record, not an intake form waiting on a signature).
@@ -425,7 +440,10 @@ function Row({ field }: { field: PdfField }) {
         <Text style={styles.labelEn}>{field.label}</Text>
         {field.labelKn ? <Text style={styles.labelKn}>{field.labelKn}</Text> : null}
       </View>
-      <Text style={styles.value}>{display}</Text>
+      <View style={styles.valueCell}>
+        <Text style={styles.valueEn}>{display}</Text>
+        {field.valueKn ? <Text style={styles.valueKn}>{field.valueKn}</Text> : null}
+      </View>
     </View>
   );
 }
@@ -435,7 +453,6 @@ export interface ApplicationPdfData {
    * renders an em-dash rather than the string "null". */
   applicationNo: string | null;
   legacyId: string | null;
-  memberId: string;
   memberName: string;
   reviewedAt: Date | null;
   sections: PdfSection[];
@@ -443,7 +460,7 @@ export interface ApplicationPdfData {
 }
 
 export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
-  const { applicationNo, legacyId, memberId, memberName, reviewedAt, sections, photo } = data;
+  const { applicationNo, legacyId, memberName, reviewedAt, sections, photo } = data;
   const applicationNoDisplay = applicationNo ?? "—";
 
   return (
@@ -488,7 +505,6 @@ export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
             <Text style={styles.applicantName}>{memberName}</Text>
             <Text style={styles.applicantMeta}>Application {applicationNoDisplay}</Text>
             <Text style={styles.applicantMeta}>Membership no. {legacyId ?? "—"}</Text>
-            <Text style={styles.applicantMeta}>Member ID {memberId}</Text>
           </View>
         </View>
 
@@ -546,7 +562,6 @@ export async function renderApplicationPdfForRecord(
   const buffer = await renderApplicationPdf({
     applicationNo: application?.applicationNo ?? null,
     legacyId: member.legacyId,
-    memberId: member.memberId,
     memberName,
     reviewedAt: application?.status === "approved" ? application.reviewedAt : null,
     sections,
