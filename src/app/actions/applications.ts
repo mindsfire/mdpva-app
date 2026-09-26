@@ -108,8 +108,11 @@ export async function approveApplication(
 
   // Photo first: if this fails we'd rather the member row keep its old photo
   // than point at a key that was never written.
+  // Only a pending upload needs promoting. An application reopened after
+  // approval can carry the member's live key itself; copying that onto
+  // itself and then deleting the "source" would destroy the live photo.
   let livePhotoKey: string | undefined;
-  if (claimed.photoKey) {
+  if (claimed.photoKey && isPendingPhotoKey(claimed.photoKey)) {
     livePhotoKey = photoKeyFor(claimed.memberId);
     await r2.send(
       new CopyObjectCommand({
