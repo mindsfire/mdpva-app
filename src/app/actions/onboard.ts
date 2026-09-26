@@ -107,7 +107,6 @@ export async function verifyMemberAction(
       legacyId: members.legacyId,
       normalizedPhone: members.normalizedPhone,
       firstName: members.firstName,
-      lastName: members.lastName,
     })
     .from(members)
     .where(

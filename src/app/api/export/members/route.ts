@@ -79,7 +79,6 @@ export async function GET(request: NextRequest) {
     .select({
       legacyId: members.legacyId,
       firstName: members.firstName,
-      lastName: members.lastName,
       email: members.email,
       phone: members.phone,
       profession: members.profession,
@@ -104,7 +103,7 @@ export async function GET(request: NextRequest) {
     .from(members)
     .where(buildMembersWhere(params))
     // Always membership-number order (1, 2, 3 …), the numberless members last.
-    // The previous `asc(lastName)` collapsed to a random UUID order because
+    // The previous `asc(last_name)` collapsed to a random UUID order because
     // every member has a null surname (Kannada single names, schema.ts:63).
     .orderBy(sql`${MEMBERSHIP_SORT_KEY} asc nulls last`, asc(members.id));
 

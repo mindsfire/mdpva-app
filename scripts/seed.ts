@@ -142,12 +142,14 @@ async function seedDemoMembers(adminId: string): Promise<string[]> {
 
   for (let i = 0; i < 25; i++) {
     const memberId = await nextMemberId();
-    const firstName = DEMO_FIRST_NAMES[i];
-    const lastName = DEMO_LAST_NAMES[i];
+    const givenName = DEMO_FIRST_NAMES[i];
+    const surname = DEMO_LAST_NAMES[i];
+    // Members carry a single full name (stored in first_name).
+    const firstName = `${givenName} ${surname}`;
     const profession = PROFESSIONS[i % PROFESSIONS.length];
     const status = STATUSES[i % STATUSES.length];
     const feesPaidUpto = feesStates[i % feesStates.length];
-    const email = `demo.${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`;
+    const email = `demo.${givenName.toLowerCase()}.${surname.toLowerCase()}@example.com`;
     const phone = `9${String(100000000 + i).padStart(9, "0")}`;
 
     const [inserted] = await db
@@ -155,7 +157,6 @@ async function seedDemoMembers(adminId: string): Promise<string[]> {
       .values({
         memberId,
         firstName,
-        lastName,
         email,
         phone,
         profession,
@@ -247,8 +248,7 @@ async function seedDemoApplication(demoMemberIds: string[]): Promise<void> {
       applicationNo: generateApplicationNo(),
       memberId,
       status: "pending",
-      firstName: "Aarav",
-      lastName: "Sharma",
+      firstName: "Aarav Sharma",
       phone: "9100000000",
       email: "demo.aarav.sharma@example.com",
       addressLine1: "1 MG Road, near the old post office",

@@ -45,7 +45,6 @@ export interface VerifiableMember {
   legacyId: string | null;
   normalizedPhone: string | null;
   firstName: string;
-  lastName: string | null;
 }
 
 /**
@@ -88,6 +87,6 @@ export function decideVerification(
     // Name only. Enough for "is this you?", which a member who mistyped their
     // ledger number needs before overwriting a stranger's record — and nothing
     // beyond it, so a lucky guess yields no address, email or fee status.
-    displayName: fullName(match.firstName, match.lastName),
+    displayName: fullName(match.firstName),
   };
 }

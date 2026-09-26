@@ -77,18 +77,19 @@ export function ProfessionLabel({
 }
 
 /**
- * Members with no surname fall back to the first two letters of their given
- * name, so the avatar never renders a lone letter (see `optionalPersonName`).
- *
- * `lastName` is nullable in the database: many Kannada names have no
- * separable surname. Calling `.charAt` on that null threw, and because every
- * member row renders an avatar it took out the dashboard and the directory
- * through the error boundary.
+ * Initials from the first and last words of the full name ("Kavya Bhat" ->
+ * "KB"). A single-word name falls back to its first two letters so the avatar
+ * never renders a lone letter. Tolerates empty/null input: every member row
+ * renders an avatar, so a throw here would take out the dashboard and the
+ * directory through the error boundary.
  */
-function initials(firstName: string, lastName: string | null): string {
-  const first = (firstName ?? "").trim();
-  const last = (lastName ?? "").trim();
-  const pair = last ? first.charAt(0) + last.charAt(0) : first.slice(0, 2);
+function initials(name: string | null | undefined): string {
+  const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "";
+  const pair =
+    words.length > 1
+      ? words[0]!.charAt(0) + words[words.length - 1]!.charAt(0)
+      : words[0]!.slice(0, 2);
   return pair.toUpperCase();
 }
 

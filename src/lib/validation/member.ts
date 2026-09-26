@@ -22,7 +22,9 @@ const PINCODE_REGEX = /^[0-9]{6}$/;
  * and written into CSV exports.
  */
 export const MAX_LENGTHS = {
-  name: 60,
+  // A single full name (the separate last-name field was folded in), so
+  // wide enough for a merged "first + last" from before that change.
+  name: 120,
   email: 254, // RFC 5321
   businessName: 120,
   addressLine: 120,
@@ -86,13 +88,8 @@ function personName(label: string) {
 }
 
 /**
- * A name part that may legitimately be absent.
- *
- * Kannada names frequently have no separable surname — 484 of the 1360 legacy
- * ledger members are recorded as a single name ("SHIVAKUMAR") or as initials
- * carrying the family part up front ("P.V. ANILKUMAR"). Requiring a last name
- * would mean inventing one for 37% of the membership, so it is optional and
- * normalises to `null` rather than "".
+ * An optional person name (e.g. the nominee). Normalises to `null` rather
+ * than "".
  */
 function optionalPersonName(label: string) {
   return z
@@ -117,8 +114,8 @@ function optionalPersonName(label: string) {
  * excluded — never accept it as user input.
  */
 export const memberInputSchema = z.object({
-  firstName: personName("First name"),
-  lastName: optionalPersonName("Last name"),
+  /** The member's full name. Stored in `first_name`; see `fullName()`. */
+  firstName: personName("Full name"),
 
   email: z
     .string()

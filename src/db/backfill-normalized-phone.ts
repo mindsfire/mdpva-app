@@ -31,7 +31,6 @@ async function main() {
       memberId: members.memberId,
       legacyId: members.legacyId,
       firstName: members.firstName,
-      lastName: members.lastName,
       phone: members.phone,
       normalizedPhone: members.normalizedPhone,
     })
@@ -83,7 +82,7 @@ async function main() {
   if (failed.length > 0) {
     console.log("\n  Unusable phone values (need office follow-up):\n");
     for (const row of failed.slice(0, 50)) {
-      const who = `${row.firstName} ${row.lastName}`.trim();
+      const who = row.firstName.trim();
       console.log(
         `    ${(row.legacyId ?? row.memberId).padEnd(18)} ${who.padEnd(28)} ${JSON.stringify(row.phone)}`,
       );

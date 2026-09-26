@@ -38,7 +38,6 @@ export async function insertValidatedMembers(
     const chunk = validated.slice(i, i + INSERT_CHUNK).map((input, j) => ({
       memberId: memberIds[i + j],
       firstName: input.firstName,
-      lastName: input.lastName,
       email: input.email,
       phone: input.phone,
       // Derived here too: this is the path the scanned ledger arrives through,

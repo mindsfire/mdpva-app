@@ -24,7 +24,6 @@ export default async function OnboardFormPage() {
   const [row] = await db
     .select({
       firstName: members.firstName,
-      lastName: members.lastName,
       phone: members.phone,
     })
     .from(members)
@@ -39,7 +38,6 @@ export default async function OnboardFormPage() {
       verifiedName={session.displayName}
       prefill={{
         firstName: row?.firstName ?? "",
-        lastName: row?.lastName ?? "",
         phone: row?.phone ?? "",
       }}
       existing={
@@ -53,7 +51,6 @@ export default async function OnboardFormPage() {
               photoKey: application.photoKey,
               values: {
                 firstName: application.firstName ?? "",
-                lastName: application.lastName ?? "",
                 phone: application.phone ?? "",
                 email: application.email ?? "",
                 addressLine1: application.addressLine1 ?? "",

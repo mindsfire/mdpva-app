@@ -96,7 +96,7 @@ async function findDuplicates(
     legacyId: new Map<string, number>(),
   };
   for (const { row, input } of rows) {
-    const name = fullName(input.firstName, input.lastName);
+    const name = fullName(input.firstName);
     for (const field of ["email", "phone", "legacyId"] as const) {
       const raw = input[field];
       if (!raw) continue;
@@ -137,7 +137,7 @@ async function findDuplicates(
   const existingLegacy = new Set(existing.map((m) => m.legacyId).filter(Boolean) as string[]);
 
   for (const { row, input } of rows) {
-    const name = fullName(input.firstName, input.lastName);
+    const name = fullName(input.firstName);
     if (input.email && existingEmail.has(input.email.toLowerCase())) {
       duplicates.push({ row, name, field: "email", value: input.email, existing: true });
     }

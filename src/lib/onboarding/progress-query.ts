@@ -76,7 +76,6 @@ export async function listCannotSelfVerify(limit = 200) {
       memberId: members.memberId,
       legacyId: members.legacyId,
       firstName: members.firstName,
-      lastName: members.lastName,
       phone: members.phone,
     })
     .from(members)

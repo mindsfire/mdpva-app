@@ -10,8 +10,7 @@ const member = (over: Partial<VerifiableMember> = {}): VerifiableMember => ({
   id: "m1",
   legacyId: "417",
   normalizedPhone: "9845011234",
-  firstName: "Aarav",
-  lastName: "Sharma",
+  firstName: "Aarav Sharma",
   ...over,
 });
 
@@ -48,9 +47,9 @@ describe("decideVerification", () => {
     });
   });
 
-  it("omits a null last name from displayName rather than showing 'null'", () => {
+  it("normalises whitespace in the displayed full name", () => {
     const result = decideVerification("417", "9845011234", [
-      member({ lastName: null }),
+      member({ firstName: " Aarav  " }),
     ]);
     expect(result).toEqual({
       ok: true,

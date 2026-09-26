@@ -36,21 +36,6 @@ describe("applicationInputSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  describe("lastName", () => {
-    it("is optional — accepts null/empty, unlike first name", () => {
-      for (const override of [
-        { lastName: null },
-        { lastName: "" },
-      ] as const) {
-        const result = applicationInputSchema.safeParse(
-          validInput(override),
-        );
-        expect(result.success).toBe(true);
-        if (result.success) expect(result.data.lastName).toBeNull();
-      }
-    });
-  });
-
   describe("profession", () => {
     it("accepts photographer, videographer, photo_and_video", () => {
       for (const value of [

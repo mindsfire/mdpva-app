@@ -174,14 +174,13 @@ export default async function DashboardPage() {
                   >
                     <MemberAvatar
                       firstName={m.firstName}
-                      lastName={m.lastName}
                       photoKey={m.photoKey}
                       updatedAt={m.updatedAt}
                       size="sm"
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">
-                        {fullName(m.firstName, m.lastName)}
+                        {fullName(m.firstName)}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
                         {m.legacyId ?? m.memberId} · <ProfessionLabel profession={m.profession} />

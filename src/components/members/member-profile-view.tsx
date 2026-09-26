@@ -63,7 +63,6 @@ export function MemberProfileView({
             recognise a face in. */}
         <MemberAvatar
           firstName={member.firstName}
-          lastName={member.lastName}
           photoKey={member.photoKey}
           updatedAt={member.updatedAt}
           size="lg"
@@ -71,13 +70,12 @@ export function MemberProfileView({
         />
         <MemberPortrait
           firstName={member.firstName}
-          lastName={member.lastName}
           photoKey={member.photoKey}
           updatedAt={member.updatedAt}
         />
         <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-1.5 sm:pt-0.5">
           <h2 className="font-serif text-lg font-medium text-foreground sm:text-xl">
-            {fullName(member.firstName, member.lastName)}
+            {fullName(member.firstName)}
           </h2>
           {/* Membership No. is the only identifier shown: it is what members
               quote and what the office looks them up by. Always rendered even
@@ -103,7 +101,7 @@ export function MemberProfileView({
             {canDelete ? (
               <DeleteMemberDialog
                 memberId={member.id}
-                name={fullName(member.firstName, member.lastName)}
+                name={fullName(member.firstName)}
                 onDeleted={onDeleted}
                 trigger={
                   <Button variant="destructive" size="sm">
@@ -171,16 +169,14 @@ export function MemberProfileView({
  */
 function MemberPortrait({
   firstName,
-  lastName,
   photoKey,
   updatedAt,
 }: {
   firstName: string;
-  lastName: string | null;
   photoKey: string | null;
   updatedAt: Date | null;
 }) {
-  const name = fullName(firstName, lastName);
+  const name = fullName(firstName);
   const src = photoUrl(photoKey, updatedAt);
 
   return (
@@ -192,7 +188,7 @@ function MemberPortrait({
         <img src={src} alt={name} className="size-full object-cover" />
       ) : (
         <div className="flex size-full items-center justify-center bg-mdpva-gold/20 font-serif text-2xl text-mdpva-accent dark:text-mdpva-gold">
-          {initials(firstName, lastName)}
+          {initials(firstName)}
         </div>
       )}
     </div>

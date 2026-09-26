@@ -67,7 +67,6 @@ export async function submitApplicationAction(
 
   const parsed = applicationInputSchema.safeParse({
     firstName: formData.get("firstName"),
-    lastName: formData.get("lastName"),
     phone: formData.get("phone"),
     email: formData.get("email"),
     addressLine1: formData.get("addressLine1"),
