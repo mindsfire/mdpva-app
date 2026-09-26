@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import {
   CopyObjectCommand,
-  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
@@ -121,14 +120,9 @@ export async function approveApplication(
         Key: livePhotoKey,
       }),
     );
-    await r2
-      .send(
-        new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: claimed.photoKey }),
-      )
-      .catch(() => {
-        // Leaked pending object; the prefix sweep collects it. Not worth
-        // failing an approval over.
-      });
+    // The pending object is kept: an earlier rejected/superseded row of the
+    // same member can reference the same key (a resubmit that kept the
+    // photo), and those rows still show it to admins.
   }
 
   try {
@@ -188,23 +182,11 @@ export async function rejectApplication(
     return { ok: false, error: "Please give a reason so the member can fix it." };
   }
 
-  // RETURNING yields post-update values, and the update below clears the
-  // key, so read it first. A pending application's key can't change under
-  // us: resubmission is locked until it's rejected.
-  const [current] = await db
-    .select({ photoKey: memberApplications.photoKey })
-    .from(memberApplications)
-    .where(eq(memberApplications.id, applicationId));
-
   const [claimed] = await db
     .update(memberApplications)
     .set({
       status: "rejected",
       rejectionReason: cleanReason,
-      // The pending photo is deleted just below. Clearing the key in the
-      // same write keeps the row from pointing at a dead object; the queue
-      // and detail page show a "discarded" placeholder instead.
-      photoKey: null,
       reviewedBy: sessionUser.id,
       reviewedAt: new Date(),
       updatedAt: new Date(),
@@ -221,12 +203,8 @@ export async function rejectApplication(
     return { ok: false, error: "This application has already been reviewed." };
   }
 
-  const discardedKey = current?.photoKey;
-  if (discardedKey && isPendingPhotoKey(discardedKey)) {
-    await r2
-      .send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: discardedKey }))
-      .catch(() => {});
-  }
+  // The submitted photo is kept, not deleted: admins need to see what was
+  // rejected, and a member fixing the application may keep the same photo.
 
   revalidatePath(QUEUE_PATH);
   return { ok: true };

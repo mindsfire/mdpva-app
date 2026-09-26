@@ -104,12 +104,12 @@ export default async function ReviewApplicationPage({
                 className="w-full max-w-[240px] rounded-lg border border-mdpva-border object-cover dark:border-border"
                 style={{ aspectRatio: "7 / 9" }}
               />
-            ) : submittedPhoto.kind === "discarded" ? (
+            ) : submittedPhoto.kind === "unavailable" ? (
               <div
                 className="flex w-full max-w-[240px] items-center justify-center rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground"
                 style={{ aspectRatio: "7 / 9" }}
               >
-                Photo discarded on rejection.
+                Photo no longer available — removed when this application was rejected.
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">No photo submitted.</p>

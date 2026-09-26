@@ -11,22 +11,21 @@ export function isPendingPhotoKey(key: string): boolean {
 
 export type ApplicationPhoto =
   | { kind: "photo"; src: string }
-  | { kind: "discarded" }
+  | { kind: "unavailable" }
   | { kind: "none" };
 
 /**
  * Decides which image to show for an application in the review queue and on
  * its detail page.
  *
- * The pending photo (`app/pending/<id>.webp`) is deleted from R2 once an
- * application leaves `pending` — promoted to the live key on approve,
- * discarded on reject or supersede — so a reviewed row must never render it:
- *
  * - pending: the submitted photo itself.
  * - approved: the member's live photo (what the approval produced).
- * - rejected/superseded with a live key (an approved application reopened
- *   for resubmit): that live photo, versioned by the member's `updatedAt`.
- * - rejected/superseded with a pending key or none: "discarded" placeholder.
+ * - rejected/superseded: the photo that was submitted with it, so admins can
+ *   see what was rejected. Submitted photos are kept for this; an approved
+ *   application reopened for resubmit carries the live key instead, shown
+ *   versioned by the member's `updatedAt`.
+ * - rejected/superseded with no key: "unavailable" — photos of applications
+ *   rejected before submitted photos were kept were deleted at the time.
  */
 export function applicationPhoto(
   app: { status: string; photoKey: string | null },
@@ -40,9 +39,11 @@ export function applicationPhoto(
     const src = photoUrl(member.photoKey, member.updatedAt);
     return src ? { kind: "photo", src } : { kind: "none" };
   }
-  if (app.photoKey && !isPendingPhotoKey(app.photoKey)) {
-    const src = photoUrl(app.photoKey, member.updatedAt);
+  if (app.photoKey) {
+    const src = isPendingPhotoKey(app.photoKey)
+      ? photoUrl(app.photoKey)
+      : photoUrl(app.photoKey, member.updatedAt);
     if (src) return { kind: "photo", src };
   }
-  return { kind: "discarded" };
+  return { kind: "unavailable" };
 }
