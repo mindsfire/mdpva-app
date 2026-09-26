@@ -101,7 +101,7 @@ describe("buildApplicationPdfSections", () => {
       "Address",
       "Association",
       "Membership",
-      "Notes",
+      "Remarks",
     ]);
   });
 
@@ -127,10 +127,43 @@ describe("buildApplicationPdfSections", () => {
     ).toBe("Not covered");
   });
 
-  it("uses the ledger number as membership no. and includes the system member id", () => {
+  it("uses the ledger number as membership no.", () => {
     const fields = flatten(member());
     expect(fields.find((f) => f.label === "Membership no.")?.value).toBe("42");
-    expect(fields.find((f) => f.label === "Member ID")?.value).toBe("MDPVA-2026-0001");
+  });
+
+  it("has no Member ID row", () => {
+    const fields = flatten(member());
+    expect(fields.find((f) => f.label === "Member ID")).toBeUndefined();
+  });
+
+  it("has no Fees paid upto row", () => {
+    const fields = flatten(member());
+    expect(fields.find((f) => f.label === "Fees paid upto")).toBeUndefined();
+  });
+
+  it("gives every field with a reviewed translation a Kannada label", () => {
+    const fields = flatten(member());
+    for (const label of [
+      "Status",
+      "Death fund",
+      "Remarks",
+      "Membership no.",
+      "Nominee",
+    ]) {
+      expect(fields.find((f) => f.label === label)?.labelKn).toBeTruthy();
+    }
+  });
+
+  it("gives the death fund value a bilingual counterpart", () => {
+    const covered = flatten(member({ deathFundCovered: true })).find(
+      (f) => f.label === "Death fund",
+    );
+    expect(covered?.valueKn).toBeTruthy();
+    const notCovered = flatten(member({ deathFundCovered: false })).find(
+      (f) => f.label === "Death fund",
+    );
+    expect(notCovered?.valueKn).toBeTruthy();
   });
 
   // A sparse ledger-imported member must still show every row — "empty" is
@@ -170,7 +203,7 @@ describe("buildApplicationPdfSections", () => {
 
   it("surfaces empty values as null for the template to render as an em-dash", () => {
     const fields = flatten(member({ notes: null, email: null }));
-    expect(fields.find((f) => f.label === "Notes")?.value).toBeNull();
+    expect(fields.find((f) => f.label === "Remarks")?.value).toBeNull();
     expect(fields.find((f) => f.label === "Email")?.value).toBeNull();
   });
 });
@@ -179,7 +212,6 @@ describe("renderApplicationPdf", () => {
   const baseData: Omit<ApplicationPdfData, "photo"> = {
     applicationNo: "APP-7K4M2X",
     legacyId: "42",
-    memberId: "MDPVA-2026-0001",
     memberName: "Asha Rao",
     reviewedAt: new Date("2026-07-31T10:00:00Z"),
     sections: buildApplicationPdfSections(member()),
@@ -238,7 +270,6 @@ describe("renderApplicationPdfForRecord", () => {
     const buffer = await renderApplicationPdf({
       applicationNo: "APP-7K4M2X",
       legacyId: "42",
-      memberId: "MDPVA-2026-0001",
       memberName: "Asha Rao",
       reviewedAt: new Date("2026-07-31T10:00:00Z"),
       sections: buildApplicationPdfSections(
