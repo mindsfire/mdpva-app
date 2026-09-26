@@ -64,7 +64,7 @@ export const members = pgTable(
     /** The member's single full name (see `fullName()`). */
     firstName: text("first_name").notNull(),
     /**
-     * @deprecated Legacy. Folded into `first_name` by 0009_full_name and
+     * @deprecated Legacy. Folded into `first_name` by 0010_full_name and
      * always NULL since; kept one release for rollback. Do not read or write.
      */
     lastName: text("last_name"),
@@ -200,7 +200,7 @@ export const memberApplications = pgTable(
 
     /** Full name (see `fullName()`). */
     firstName: text("first_name"),
-    /** @deprecated Legacy, always NULL since 0009_full_name. Do not use. */
+    /** @deprecated Legacy, always NULL since 0010_full_name. Do not use. */
     lastName: text("last_name"),
     email: text("email"),
     phone: text("phone"),

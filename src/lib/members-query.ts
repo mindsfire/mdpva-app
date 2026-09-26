@@ -168,7 +168,7 @@ export async function getMemberById(id: string): Promise<MemberDetail | null> {
 /**
  * Name sorting uses the full name. Members now hold a single full name in
  * `first_name` and `last_name` is always NULL (kept one release for rollback,
- * see drizzle/0009_full_name.sql); the expression still mirrors
+ * see drizzle/0010_full_name.sql); the expression still mirrors
  * `members_name_lower_idx` so the index keeps serving the sort until the
  * column and index are dropped together.
  */
