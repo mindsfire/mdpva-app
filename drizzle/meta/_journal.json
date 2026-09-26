@@ -68,8 +68,15 @@
     {
       "idx": 9,
       "version": "7",
-      "when": 1790439757735,
-      "tag": "0009_full_name",
+      "when": 1790439587507,
+      "tag": "0009_clear_dead_application_photo_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790439588507,
+      "tag": "0010_full_name",
       "breakpoints": true
     }
   ]

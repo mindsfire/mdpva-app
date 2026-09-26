@@ -10,7 +10,7 @@ import type { QueueRow } from "@/app/actions/applications";
 import { ReopenForResubmitAction } from "@/components/applications/reopen-action";
 import { Button } from "@/components/ui/button";
 import { maskAadhaar } from "@/lib/validation/aadhaar";
-import { photoUrl } from "@/lib/photo-url";
+import { applicationPhoto } from "@/lib/application-photo";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -163,18 +163,31 @@ export function QueueTable({
                   </TableCell>
                 ) : null}
                 <TableCell>
-                  {row.photoKey ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- auth-gated stream from R2, not a static asset
-                    <img
-                      src={photoUrl(row.photoKey, row.memberUpdatedAt) ?? undefined}
-                      alt=""
-                      className="h-12 w-[37px] rounded-sm object-cover"
-                    />
-                  ) : (
-                    <span className="flex h-12 w-[37px] items-center justify-center rounded-sm border border-dashed border-border text-[9px] text-muted-foreground">
-                      none
-                    </span>
-                  )}
+                  {(() => {
+                    const photo = applicationPhoto(row, {
+                      photoKey: row.memberPhotoKey,
+                      updatedAt: row.memberUpdatedAt,
+                    });
+                    return photo.kind === "photo" ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- auth-gated stream from R2, not a static asset
+                      <img
+                        src={photo.src}
+                        alt=""
+                        className="h-12 w-[37px] rounded-sm object-cover"
+                      />
+                    ) : (
+                      <span
+                        className="flex h-12 w-[37px] items-center justify-center rounded-sm border border-dashed border-border text-center text-[9px] leading-tight text-muted-foreground"
+                        title={
+                          photo.kind === "discarded"
+                            ? "Photo discarded on rejection"
+                            : undefined
+                        }
+                      >
+                        {photo.kind === "discarded" ? "discarded" : "none"}
+                      </span>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell className="font-medium tabular-nums text-foreground">
                   <div className="flex items-center gap-1.5">
