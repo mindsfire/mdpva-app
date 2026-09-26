@@ -34,6 +34,7 @@ import { canSubmitApplication } from "@/lib/onboarding/submit-gate";
 import { isValidAadhaar } from "@/lib/validation/aadhaar";
 import { MAX_LENGTHS } from "@/lib/validation/member";
 import { cn } from "@/lib/utils";
+import { PhotoImg } from "@/components/photo-img";
 
 type Values = Omit<SheetValues, "photoUrl" | "applicationNo">;
 
@@ -508,8 +509,12 @@ export function OnboardForm({
               ) : existingPhotoSrc ? (
                 // Their already-submitted photo. Shown so they know one is on
                 // file and needn't re-take it just to change an address.
-                // eslint-disable-next-line @next/next/no-img-element -- auth-gated stream
-                <img src={existingPhotoSrc} alt="" className="h-full w-full object-cover" />
+                <PhotoImg
+                  src={existingPhotoSrc}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  fallback={S.noPhotoYet.en}
+                />
               ) : (
                 S.noPhotoYet.en
               )}

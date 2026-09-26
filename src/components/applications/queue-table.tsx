@@ -31,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { PhotoImg } from "@/components/photo-img";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-mdpva-gold/25 text-mdpva-accent dark:text-mdpva-gold",
@@ -164,11 +165,18 @@ export function QueueTable({
                       updatedAt: row.memberUpdatedAt,
                     });
                     return photo.kind === "photo" ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- auth-gated stream from R2, not a static asset
-                      <img
+                      <PhotoImg
                         src={photo.src}
                         alt=""
                         className="h-12 w-[37px] rounded-sm object-cover"
+                        fallback={
+                          <span
+                            className="flex h-12 w-[37px] items-center justify-center rounded-sm border border-dashed border-border text-center text-[9px] leading-tight text-muted-foreground"
+                            title="Photo file is missing"
+                          >
+                            missing
+                          </span>
+                        }
                       />
                     ) : (
                       <span
