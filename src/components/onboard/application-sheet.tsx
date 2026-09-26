@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 export interface SheetValues {
   membershipNo: string;
   firstName: string;
-  lastName: string;
   phone: string;
   email: string;
   aadhaar: string;
@@ -120,10 +119,7 @@ function Band({ en, kn }: { en: string; kn: string }) {
  * viewer keeps the document light while the chrome goes dark.
  */
 export function ApplicationSheet({ values }: { values: SheetValues }) {
-  const fullName = [values.firstName, values.lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  const fullName = values.firstName.trim();
 
   return (
     <article className="relative bg-[#fdfdfb] px-5 pt-7 pb-6 font-serif sm:px-11 sm:pt-10 sm:pb-[34px] text-[#45443e] shadow-[0_1px_2px_rgba(22,21,19,.06),0_12px_32px_-8px_rgba(22,21,19,.14)] dark:brightness-[.93]">

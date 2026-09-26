@@ -56,26 +56,6 @@ function personName(label: string) {
     });
 }
 
-/**
- * A name part that may legitimately be absent — see `optionalPersonName` in
- * `member.ts`, which this mirrors. Kannada names frequently have no
- * separable surname.
- */
-function optionalPersonName(label: string) {
-  return z
-    .unknown()
-    .transform((v) => {
-      const cleaned = sanitizeName(typeof v === "string" ? v : "");
-      return cleaned.length > 0 ? cleaned : null;
-    })
-    .refine((v) => v === null || graphemeLength(v) <= MAX_LENGTHS.name, {
-      message: `${label} must be ${MAX_LENGTHS.name} characters or fewer`,
-    })
-    .refine((v) => v === null || isValidPersonName(v), {
-      message: `${label} may only contain letters, spaces and . ' -`,
-    });
-}
-
 function requiredText(max: number, label: string) {
   return z
     .unknown()
@@ -91,8 +71,8 @@ const MIN_AGE = 18;
 const MAX_AGE = 100;
 
 export const applicationInputSchema = z.object({
-  firstName: personName("First name"),
-  lastName: optionalPersonName("Last name"),
+  /** Full name — stored in `first_name`; see `fullName()`. */
+  firstName: personName("Full name"),
 
   phone: z
     .unknown()

@@ -10,14 +10,12 @@ import { photoUrl } from "@/lib/photo-url";
 
 export function MemberAvatar({
   firstName,
-  lastName,
   photoKey,
   updatedAt,
   size,
   className,
 }: {
   firstName: string;
-  lastName: string | null;
   photoKey: string | null;
   updatedAt: Date | null;
   size?: "default" | "sm" | "lg";
@@ -32,9 +30,9 @@ export function MemberAvatar({
         className,
       )}
     >
-      {src ? <AvatarImage src={src} alt={fullName(firstName, lastName)} /> : null}
+      {src ? <AvatarImage src={src} alt={fullName(firstName)} /> : null}
       <AvatarFallback className="bg-mdpva-gold/20 font-serif text-mdpva-accent dark:text-mdpva-gold">
-        {initials(firstName, lastName)}
+        {initials(firstName)}
       </AvatarFallback>
     </Avatar>
   );

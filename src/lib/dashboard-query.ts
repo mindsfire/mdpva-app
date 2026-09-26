@@ -21,7 +21,6 @@ export interface DashboardStats {
     memberId: string;
     legacyId: string | null;
     firstName: string;
-    lastName: string | null;
     profession:
       | "photographer"
       | "videographer"
@@ -65,7 +64,6 @@ export async function getDashboardStats(now = new Date()): Promise<DashboardStat
       // back to the generated id for members who have none yet.
       legacyId: members.legacyId,
       firstName: members.firstName,
-      lastName: members.lastName,
       profession: members.profession,
       photoKey: members.photoKey,
       updatedAt: members.updatedAt,

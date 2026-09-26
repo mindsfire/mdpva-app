@@ -11,7 +11,6 @@ import { sanitizeText } from "@/lib/validation/text-safety";
 
 export const DIFF_FIELDS = [
   "firstName",
-  "lastName",
   "phone",
   "email",
   "addressLine1",
@@ -39,8 +38,7 @@ export const DIFF_FIELDS = [
 export type DiffField = (typeof DIFF_FIELDS)[number];
 
 export const FIELD_LABELS: Record<DiffField, string> = {
-  firstName: "First name",
-  lastName: "Last name",
+  firstName: "Full name",
   phone: "Phone",
   email: "Email",
   addressLine1: "Address line 1",

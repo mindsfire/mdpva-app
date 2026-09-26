@@ -10,7 +10,6 @@ import { escapeCsvCell } from "@/lib/validation/text-safety";
  */
 export const CSV_HEADERS = [
   "first_name",
-  "last_name",
   "email",
   "phone",
   "legacy_id",
@@ -55,8 +54,7 @@ export type CsvHeader = (typeof CSV_HEADERS)[number];
  */
 export const EXPORT_FIELDS = [
   { key: "legacy_id", label: "Membership No. (ledger)" },
-  { key: "first_name", label: "First name" },
-  { key: "last_name", label: "Last name" },
+  { key: "first_name", label: "Full name" },
   { key: "email", label: "Email" },
   { key: "phone", label: "Phone" },
   { key: "profession", label: "Profession" },
@@ -97,7 +95,6 @@ export const ALL_EXPORT_FIELDS: ExportFieldKey[] = EXPORT_FIELDS.map((f) => f.ke
  */
 export const IMPORT_REQUIRED_FIELDS: ExportFieldKey[] = [
   "first_name",
-  "last_name",
   "address_line1",
   "city",
   "state",
@@ -123,6 +120,12 @@ export interface ParseResult {
   missingHeaders: string[];
 }
 
+/**
+ * Pre-"full name" files had a separate `last_name` column. It is still
+ * accepted on import (merged into `first_name`) but never emitted.
+ */
+const LEGACY_LAST_NAME_HEADER = "last_name";
+
 const TRUTHY = new Set(["true", "yes", "y", "1"]);
 const FALSY = new Set(["false", "no", "n", "0", ""]);
 
@@ -139,7 +142,7 @@ function normalizeHeader(header: string): string {
 export function coerceRow(
   record: Record<string, string>,
 ): ReturnType<typeof memberInputSchema.safeParse> {
-  const get = (key: CsvHeader) => record[key]?.trim() ?? "";
+  const get = (key: CsvHeader | typeof LEGACY_LAST_NAME_HEADER) => record[key]?.trim() ?? "";
 
   // `aadhaar_last4` is a recognised header (so it round-trips through export
   // and isn't flagged "unknown") but is deliberately never read here: a
@@ -163,8 +166,12 @@ export function coerceRow(
   const deathRaw = get("death_fund_covered").toLowerCase();
 
   return memberInputSchema.safeParse({
-    firstName: get("first_name"),
-    lastName: get("last_name"),
+    // Members now have a single full name held in `first_name`. Files exported
+    // before that change still carry a `last_name` column; fold it in so an
+    // old export re-imports with the whole name intact.
+    firstName: [get("first_name"), get(LEGACY_LAST_NAME_HEADER)]
+      .filter((part) => part !== "")
+      .join(" "),
     email: get("email"),
     phone: get("phone"),
     legacyId: get("legacy_id"),
@@ -203,9 +210,9 @@ export function parseMembersCsv(text: string): ParseResult {
   });
 
   const fileHeaders = (parsed.meta.fields ?? []).filter((h) => h !== "");
-  const known = new Set<string>(CSV_HEADERS);
+  const known = new Set<string>([...CSV_HEADERS, LEGACY_LAST_NAME_HEADER]);
   const unknownHeaders = fileHeaders.filter((h) => !known.has(h));
-  const missingHeaders = ["first_name", "last_name", "address_line1", "city", "state"].filter(
+  const missingHeaders = ["first_name", "address_line1", "city", "state"].filter(
     (h) => !fileHeaders.includes(h),
   );
 
@@ -234,7 +241,6 @@ export function parseMembersCsv(text: string): ParseResult {
 export interface ExportableMember {
   legacyId: string | null;
   firstName: string;
-  lastName: string | null;
   email: string | null;
   phone: string | null;
   profession:
@@ -276,7 +282,6 @@ export function membersToCsv(
 ): string {
   const data = members.map((m) => ({
     first_name: m.firstName,
-    last_name: m.lastName,
     email: m.email ?? "",
     phone: m.phone ?? "",
     legacy_id: m.legacyId ?? "",
@@ -325,8 +330,7 @@ export function membersToCsv(
 /** Header row + one illustrative example row, for the downloadable template. */
 export function templateCsv(): string {
   const example: Record<CsvHeader, string> = {
-    first_name: "Ramesh",
-    last_name: "Kumar",
+    first_name: "Ramesh Kumar",
     email: "ramesh@example.com",
     // Not 9876543210: the importer rejects sequential runs as placeholder junk,
     // so an example row using one would fail the moment staff filled it in.

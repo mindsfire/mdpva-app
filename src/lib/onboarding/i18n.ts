@@ -82,8 +82,7 @@ export const STRINGS = {
   sectionNominee: t("Nominee", "ನಾಮನಿರ್ದೇಶಿತರು"),
 
   // Fields
-  firstName: t("First name", "ಮೊದಲ ಹೆಸರು"),
-  lastName: t("Last name", "ಕೊನೆಯ ಹೆಸರು"),
+  fullName: t("Full name", "ಪೂರ್ಣ ಹೆಸರು"),
   phone: t("Phone", "ದೂರವಾಣಿ"),
   email: t("Email", "ಇಮೇಲ್"),
   addressLine1: t("Address line 1", "ವಿಳಾಸ ಸಾಲು ೧"),

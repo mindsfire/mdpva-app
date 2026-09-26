@@ -33,7 +33,6 @@ export type MemberActionResult = MemberActionSuccess | MemberActionFailure;
 function toValues(input: MemberInput) {
   return {
     firstName: input.firstName,
-    lastName: input.lastName,
     email: input.email,
     phone: input.phone,
     // Derived on every write so it can never drift from `phone`. Onboarding
@@ -95,7 +94,6 @@ async function describeMembershipConflict(
   const [holder] = await db
     .select({
       firstName: members.firstName,
-      lastName: members.lastName,
       memberId: members.memberId,
     })
     .from(members)
@@ -103,7 +101,7 @@ async function describeMembershipConflict(
     .limit(1);
 
   if (!holder) return null;
-  return `Membership No. ${trimmed} already belongs to ${fullName(holder.firstName, holder.lastName)} (${holder.memberId}).`;
+  return `Membership No. ${trimmed} already belongs to ${fullName(holder.firstName)} (${holder.memberId}).`;
 }
 
 /** Shared catch: enriches a legacyId collision, passes others through. */
@@ -256,7 +254,6 @@ export async function bulkSoftDeleteMembers(
 export interface DuplicateMatch {
   id: string;
   firstName: string;
-  lastName: string | null;
   memberId: string;
   matchedOn: "email" | "phone" | "legacyId";
 }
@@ -298,7 +295,6 @@ export async function checkDuplicates(
     .select({
       id: members.id,
       firstName: members.firstName,
-      lastName: members.lastName,
       memberId: members.memberId,
       email: members.email,
       normalizedPhone: members.normalizedPhone,
@@ -316,7 +312,6 @@ export async function checkDuplicates(
   return rows.map((row) => ({
     id: row.id,
     firstName: row.firstName,
-    lastName: row.lastName,
     memberId: row.memberId,
     matchedOn:
       trimmedEmail && row.email?.toLowerCase() === trimmedEmail.toLowerCase()

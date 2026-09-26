@@ -62,7 +62,6 @@ type MemberFormValues = z.input<typeof memberInputSchema>;
 function toDefaultValues(member?: MemberDetail | null): MemberFormValues {
   return {
     firstName: member?.firstName ?? "",
-    lastName: member?.lastName ?? "",
     email: member?.email ?? null,
     phone: member?.phone ?? null,
     profession: member?.profession ?? null,
@@ -169,7 +168,7 @@ export function MemberForm({
           <div className="rounded-lg border border-mdpva-gold/50 bg-mdpva-gold/10 px-3 py-2 text-sm text-mdpva-accent dark:text-mdpva-gold">
             Possible duplicate:{" "}
             {duplicates
-              .map((d) => `${fullName(d.firstName, d.lastName)} (${d.memberId})`)
+              .map((d) => `${fullName(d.firstName)} (${d.memberId})`)
               .join(", ")}
           </div>
         ) : null}
@@ -192,24 +191,9 @@ export function MemberForm({
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First name</FormLabel>
+                  <FormLabel>Full name</FormLabel>
                   <FormControl>
                     <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="lastName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Last name</FormLabel>
-                  <FormControl>
-                    {/* Optional: many members have no separable surname, and
-                        a null must render as an empty controlled input. */}
-                    <Input {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

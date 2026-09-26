@@ -100,7 +100,6 @@ const JUNK_PHONES = [
 interface SeedRow {
   legacyId: string | null;
   firstName: string;
-  lastName: string;
   phone: string | null;
   area: string;
   businessName: string | null;
@@ -111,8 +110,8 @@ function buildRows(count: number): SeedRow[] {
   const rows: SeedRow[] = [];
 
   for (let i = 0; i < count; i += 1) {
-    const firstName = FIRST[Math.floor(rand() * FIRST.length)]!;
-    const lastName = LAST[Math.floor(rand() * LAST.length)]!;
+    // Single full name, stored in first_name.
+    const firstName = `${FIRST[Math.floor(rand() * FIRST.length)]!} ${LAST[Math.floor(rand() * LAST.length)]!}`;
     const area = AREAS[Math.floor(rand() * AREAS.length)]!;
     let legacyId: string | null = String(i + 1);
     let phone: string | null = messyFormat(syntheticPhone(i), i);
@@ -138,7 +137,6 @@ function buildRows(count: number): SeedRow[] {
     rows.push({
       legacyId,
       firstName,
-      lastName,
       phone,
       area,
       businessName:
@@ -163,7 +161,6 @@ async function list() {
     .select({
       legacyId: members.legacyId,
       firstName: members.firstName,
-      lastName: members.lastName,
       phone: members.phone,
       normalizedPhone: members.normalizedPhone,
     })
@@ -179,7 +176,7 @@ async function list() {
   console.log(`  ${"-".repeat(60)}`);
   for (const r of usable.slice(0, 15)) {
     console.log(
-      `  ${String(r.legacyId).padEnd(12)}${String(r.phone).padEnd(22)}${r.firstName} ${r.lastName}`,
+      `  ${String(r.legacyId).padEnd(12)}${String(r.phone).padEnd(22)}${r.firstName}`,
     );
   }
   if (usable.length > 15) console.log(`  …and ${usable.length - 15} more`);
@@ -209,7 +206,6 @@ async function seed(count: number) {
       memberId: generateMemberId(year, Number(seq.rows[i]!.nextval)),
       legacyId: r.legacyId,
       firstName: r.firstName,
-      lastName: r.lastName,
       phone: r.phone,
       // Same derivation the app uses on every write, so junk lands as null and
       // those members correctly show up as unable to self-verify.

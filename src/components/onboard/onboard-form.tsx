@@ -48,7 +48,6 @@ const DRAFT_KEY_PREFIX = "mdpva.onboard.draft.";
  */
 const FIELD_INPUT_IDS: Partial<Record<keyof Values, string>> = {
   firstName: "f-first",
-  lastName: "f-last",
   phone: "f-phone",
   addressLine1: "f-a1",
   pincode: "f-pin",
@@ -93,7 +92,6 @@ function emptyValues(membershipNo: string, prefill: Partial<Values>): Values {
   return {
     membershipNo,
     firstName: "",
-    lastName: "",
     phone: "",
     email: "",
     addressLine1: "",
@@ -571,7 +569,7 @@ export function OnboardForm({
         <Group s={S.sectionNameContact}>
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <span className="flex flex-col gap-1.5">
-              <Label htmlFor="f-first" s={S.firstName} required />
+              <Label htmlFor="f-first" s={S.fullName} required />
               <Input
                 id="f-first"
                 value={values.firstName}
@@ -581,20 +579,6 @@ export function OnboardForm({
               {fieldErrors.firstName ? (
                 <span role="alert" className="text-[11.5px] text-destructive">
                   {fieldErrors.firstName}
-                </span>
-              ) : null}
-            </span>
-            <span className="flex flex-col gap-1.5">
-              <Label htmlFor="f-last" s={S.lastName} />
-              <Input
-                id="f-last"
-                value={values.lastName}
-                onChange={(e) => set("lastName", e.target.value)}
-                aria-invalid={fieldErrors.lastName != null}
-              />
-              {fieldErrors.lastName ? (
-                <span role="alert" className="text-[11.5px] text-destructive">
-                  {fieldErrors.lastName}
                 </span>
               ) : null}
             </span>
