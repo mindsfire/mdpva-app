@@ -16,8 +16,9 @@ export default function OnboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="force-light flex min-h-svh flex-col bg-mdpva-paper">
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-mdpva-border bg-card px-6 py-3">
+    <div className="force-light flex min-h-svh flex-col bg-mdpva-paper [--onboard-header-h:55px]">
+      {/* Fixed height: the form page's sticky live preview offsets by it. */}
+      <header className="sticky top-0 z-30 flex h-(--onboard-header-h) shrink-0 items-center gap-3 border-b border-mdpva-border bg-card px-6">
         <MdpvaLogo size={30} />
         <span className="font-serif text-lg tracking-wide text-foreground">MDPVA</span>
         <span className="ml-auto hidden text-xs text-muted-foreground sm:block">

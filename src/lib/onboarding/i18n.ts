@@ -110,17 +110,10 @@ export const STRINGS = {
   photoAndVideo: t("Photo & Video", "ಫೋಟೋ ಮತ್ತು ವೀಡಿಯೋ"),
   droneOperator: t("Drone Operator", "ಡ್ರೋನ್ ಆಪರೇಟರ್"),
   otherProfession: t("Other", "ಇತರೆ"),
-  otherProfessionDescribe: t(
-    "Please describe your profession",
-    "ದಯವಿಟ್ಟು ನಿಮ್ಮ ವೃತ್ತಿಯನ್ನು ವಿವರಿಸಿ",
-  ),
+  otherProfessionDescribe: t("Your profession", "ನಿಮ್ಮ ವೃತ್ತಿ"),
   otherProfessionPlaceholder: t(
-    "Type your profession here",
-    "ನಿಮ್ಮ ವೃತ್ತಿಯನ್ನು ಇಲ್ಲಿ ಬರೆಯಿರಿ",
-  ),
-  otherProfessionHelper: t(
-    "↓ Please type your profession below",
-    "↓ ದಯವಿಟ್ಟು ನಿಮ್ಮ ವೃತ್ತಿಯನ್ನು ಕೆಳಗೆ ಬರೆಯಿರಿ",
+    "Type your profession",
+    "ನಿಮ್ಮ ವೃತ್ತಿಯನ್ನು ಬರೆಯಿರಿ",
   ),
 
   optional: t("Optional", "ಐಚ್ಛಿಕ"),
