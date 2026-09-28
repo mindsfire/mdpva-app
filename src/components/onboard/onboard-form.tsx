@@ -416,13 +416,13 @@ export function OnboardForm({
   }
 
   return (
-    <div className="grid min-h-[calc(100svh-53px)] grid-cols-1 items-start lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)]">
+    <div className="grid min-h-[calc(100svh-var(--onboard-header-h))] grid-cols-1 items-start lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)]">
       {/*
         Desktop only. Below lg the preview opens as a dialog instead of
         appearing above the form — inline, it pushed the form off-screen and
         members read it as the page having changed rather than as a preview.
       */}
-      <section className="hidden border-mdpva-border bg-[#eceae4] px-7 pt-7 pb-14 lg:block lg:min-h-full lg:border-r dark:border-border dark:bg-[#0d0d0c]">
+      <section className="hidden border-mdpva-border bg-[#eceae4] px-7 pt-7 pb-14 lg:sticky lg:top-(--onboard-header-h) lg:block lg:h-[calc(100svh-var(--onboard-header-h))] lg:overflow-y-auto lg:border-r dark:border-border dark:bg-[#0d0d0c]">
         <div className="mx-auto w-full max-w-[640px]">
           <p className="mb-3 ml-0.5 flex items-center gap-2 text-[11px] tracking-[0.14em] text-muted-foreground uppercase after:h-px after:flex-1 after:bg-border after:content-['']">
             {S.livePreview.en}
@@ -785,25 +785,16 @@ export function OnboardForm({
                 </span>
               ) : null}
               {values.profession === "other" ? (
-                <p className="-mb-1 flex items-center gap-1 text-[11px] font-medium text-primary">
-                  {S.otherProfessionHelper.en}{" "}
-                  <span className="font-kn">{S.otherProfessionHelper.kn}</span>
-                </p>
-              ) : null}
-              {values.profession === "other" ? (
-                // Rendered as a visual continuation of the select above it —
-                // flush top edge, shared accent border, tinted background —
-                // so it reads as "the rest of that field" rather than an
-                // unrelated box that appeared on the page.
+                // Sits directly under the select as the rest of that answer:
+                // the select's own label already names the field, so this
+                // carries only a short placeholder and a screen-reader label.
                 <span
                   key={otherHighlightKey}
-                  className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-300 -mt-px flex flex-col gap-1.5 rounded-b-lg border border-t-0 border-primary/50 bg-primary/[0.06] p-2.5 pt-2 ring-1 ring-primary/20"
+                  className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1 motion-safe:duration-200 flex flex-col gap-1.5"
                 >
-                  <Label
-                    htmlFor="f-prof-other"
-                    s={S.otherProfessionDescribe}
-                    required
-                  />
+                  <label htmlFor="f-prof-other" className="sr-only">
+                    {S.otherProfessionDescribe.en}
+                  </label>
                   <Input
                     ref={professionOtherRef}
                     id="f-prof-other"
@@ -812,9 +803,8 @@ export function OnboardForm({
                     onChange={(e) =>
                       set("professionOther", e.target.value)
                     }
-                    placeholder={`${S.otherProfessionPlaceholder.en} / ${S.otherProfessionPlaceholder.kn}`}
+                    placeholder={`${S.otherProfessionPlaceholder.en} · ${S.otherProfessionPlaceholder.kn}`}
                     aria-invalid={fieldErrors.professionOther != null}
-                    className="border-primary/60 bg-background focus-visible:border-primary"
                   />
                   {fieldErrors.professionOther ? (
                     <span
