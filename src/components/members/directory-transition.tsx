@@ -7,6 +7,8 @@ import {
   MemberCardsSkeleton,
   MemberTableSkeleton,
 } from "@/components/app-shell/page-skeletons";
+import { useMembersSelection } from "@/components/members/selection";
+import { rowsOnPage } from "@/lib/members-params";
 
 interface DirectoryTransition {
   isPending: boolean;
@@ -77,19 +79,24 @@ export function DirectoryTransitionProvider({
  */
 export function DirectoryResults({
   children,
-  rowCount = 10,
+  total,
 }: {
   children: React.ReactNode;
-  /** Rows to draw while loading — the page size, so the height barely moves. */
-  rowCount?: number;
+  /** Matching members, to size the skeleton for the page being opened. */
+  total: number;
 }) {
-  const { isPending } = useDirectoryTransition();
+  const { isPending, pendingHref } = useDirectoryTransition();
+  // Only admins get the checkbox column, so only their skeleton draws it.
+  const selectable = useMembersSelection() !== null;
 
   if (isPending) {
+    // Exact for page, page-size and sort changes. A filter change alters the
+    // total, which isn't known until it loads, so that's a best estimate.
+    const rows = pendingHref ? rowsOnPage(pendingHref, total) : 10;
     return (
       <div aria-busy>
-        <MemberTableSkeleton rows={rowCount} />
-        <MemberCardsSkeleton rows={rowCount} />
+        <MemberTableSkeleton rows={rows} selectable={selectable} />
+        <MemberCardsSkeleton rows={rows} selectable={selectable} />
       </div>
     );
   }

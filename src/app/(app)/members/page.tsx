@@ -189,7 +189,7 @@ export default async function MembersDirectoryPage({
               </div>
             ) : (
               <div className="flex flex-col gap-5">
-                <DirectoryResults rowCount={perPage}>
+                <DirectoryResults total={total}>
                   <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
                     <MemberTable rows={rows} />
                   </div>

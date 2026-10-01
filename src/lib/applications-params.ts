@@ -6,7 +6,7 @@
  * the members directory — see `members-params`.
  */
 
-import { DEFAULT_PER_PAGE, parsePage, parsePerPage } from "./members-params";
+import { DEFAULT_PER_PAGE, rowsOnPage } from "./members-params";
 
 export type ApplicationTab = "pending" | "approved" | "rejected";
 export const APPLICATION_TABS: readonly ApplicationTab[] = [
@@ -48,12 +48,7 @@ export function queueSkeletonShape(
   href: string,
   counts: Record<ApplicationTab, number>,
 ): { rows: number; selectable: boolean } {
-  const params = new URL(href, "http://x").searchParams;
-  const tab = parseApplicationTab(params.get("status") ?? undefined);
-  const perPage = parsePerPage(params.get("perPage") ?? undefined);
-  const total = counts[tab];
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
-  const page = Math.min(parsePage(params.get("page") ?? undefined), totalPages);
-  const rows = Math.min(perPage, total - (page - 1) * perPage);
-  return { rows: Math.max(rows, 1), selectable: tab === "pending" };
+  const status = new URL(href, "http://x").searchParams.get("status");
+  const tab = parseApplicationTab(status ?? undefined);
+  return { rows: rowsOnPage(href, counts[tab]), selectable: tab === "pending" };
 }

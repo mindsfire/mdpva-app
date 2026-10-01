@@ -64,3 +64,17 @@ export function parsePage(value: string | undefined): number {
   const n = Number(value);
   return Number.isInteger(n) && n >= 1 ? n : 1;
 }
+
+/**
+ * How many rows the list at `href` will show, given `total` matching rows —
+ * read from the destination's `?page=` and `?perPage=`, clamped the way the
+ * queries clamp. Sizes a loading skeleton for the page being navigated to;
+ * at least 1, so an empty result still draws a row.
+ */
+export function rowsOnPage(href: string, total: number): number {
+  const params = new URL(href, "http://x").searchParams;
+  const perPage = parsePerPage(params.get("perPage") ?? undefined);
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const page = Math.min(parsePage(params.get("page") ?? undefined), totalPages);
+  return Math.max(1, Math.min(perPage, total - (page - 1) * perPage));
+}

@@ -1,3 +1,5 @@
+import { ChevronsUpDownIcon } from "lucide-react";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -12,6 +14,11 @@ import {
   QUEUE_COLUMNS,
   QUEUE_TABLE_CLASS,
 } from "@/components/applications/queue-columns";
+import {
+  MEMBER_COLUMN_CLASS,
+  MEMBER_PLAIN_COLUMNS,
+  MEMBER_TABLE_CLASS,
+} from "@/components/members/member-columns";
 
 /**
  * Shared skeleton pieces. Each route's loading.tsx composes these to match
@@ -59,53 +66,128 @@ export function CardSkeleton({
 }
 
 /**
- * Mirrors MemberTable's column widths so rows don't jump on swap.
- *
- * The heights are pinned to the real table's measured geometry rather than
- * derived from padding: header row 40px (`h-10` cells), body rows 49px (a
- * 32px avatar plus 8px above and below plus the 1px bottom border). Every row
- * keeps that border — `TableRow` has no `last:border-0`, so dropping it here
- * would leave the skeleton a pixel short and nudge the pagination on swap.
+ * Mirrors MemberTable. Built from the same Table parts, header labels, row
+ * colours and column widths (`member-columns`), so the 40px header, 49px
+ * rows (a 32px avatar plus cell padding and border) and every column line up
+ * with the table that replaces it.
  */
-export function MemberTableSkeleton({ rows = 8 }: { rows?: number }) {
+export function MemberTableSkeleton({
+  rows = 8,
+  selectable = false,
+}: {
+  rows?: number;
+  selectable?: boolean;
+}) {
   return (
     <div className="hidden rounded-lg border border-mdpva-border dark:border-border md:block">
-      <div className="flex h-10 items-center gap-4 border-b border-mdpva-border px-4 dark:border-border">
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-3 w-20" />
-        <Skeleton className="ml-auto h-3 w-16" />
-      </div>
-      {Array.from({ length: rows }).map((_, i) => (
-        <div
-          key={i}
-          className="flex h-[49px] items-center gap-4 border-b border-mdpva-border px-4 dark:border-border"
-        >
-          <Skeleton className="size-8 shrink-0 rounded-full" />
-          <Skeleton className="h-4 w-32" />
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="hidden h-4 w-24 lg:block" />
-          <div className="ml-auto flex items-center gap-2">
-            <Skeleton className="h-5 w-16 rounded-full" />
-            <Skeleton className="h-5 w-14 rounded-full" />
-          </div>
-        </div>
-      ))}
+      <Table className={MEMBER_TABLE_CLASS}>
+        <TableHeader>
+          <TableRow className="bg-mdpva-paper hover:bg-mdpva-paper dark:bg-background dark:hover:bg-background">
+            {selectable ? (
+              <TableHead className={MEMBER_COLUMN_CLASS.checkbox}>
+                <Skeleton className="size-4 rounded-[4px]" />
+              </TableHead>
+            ) : null}
+            <TableHead className={MEMBER_COLUMN_CLASS.membership}>
+              <SortableLabelSkeleton label="Membership No." />
+            </TableHead>
+            <TableHead>
+              <SortableLabelSkeleton label="Name" />
+            </TableHead>
+            {MEMBER_PLAIN_COLUMNS.map((column) => (
+              <TableHead key={column.label} className={column.className}>
+                {column.label}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: rows }).map((_, i) => (
+            <TableRow
+              key={i}
+              className="bg-mdpva-white hover:bg-mdpva-white dark:bg-card dark:hover:bg-card"
+            >
+              {selectable ? (
+                <TableCell>
+                  <Skeleton className="size-4 rounded-[4px]" />
+                </TableCell>
+              ) : null}
+              <TableCell>
+                <Skeleton className="h-4 w-12" />
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2.5">
+                  <Skeleton className="size-8 shrink-0 rounded-full" />
+                  <Skeleton className="h-4 w-36" />
+                </div>
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-24" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-24" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-14 rounded-full" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
 
-export function MemberCardsSkeleton({ rows = 6 }: { rows?: number }) {
+/** A sortable header's label and its faint up/down icon, as MemberTable draws them. */
+function SortableLabelSkeleton({ label }: { label: string }) {
+  return (
+    <span className="flex items-center gap-1 py-1">
+      {label}
+      <ChevronsUpDownIcon className="size-3.5 opacity-40" />
+    </span>
+  );
+}
+
+/** Mirrors MemberCard: avatar, name and ID, phone and profession, badges. */
+export function MemberCardsSkeleton({
+  rows = 6,
+  selectable = false,
+}: {
+  rows?: number;
+  selectable?: boolean;
+}) {
   return (
     <div className="flex flex-col gap-2.5 md:hidden">
       {Array.from({ length: rows }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 rounded-lg border border-mdpva-border p-3.5 dark:border-border"
+          className="flex items-start gap-3 rounded-lg border border-mdpva-border bg-card p-3.5 dark:border-border"
         >
-          <Skeleton className="size-10 shrink-0 rounded-full" />
-          <div className="flex flex-1 flex-col gap-2">
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="h-3 w-52" />
+          {selectable ? (
+            <div className="-m-1.5 flex p-1.5">
+              <Skeleton className="size-4 rounded-[4px]" />
+            </div>
+          ) : null}
+          <Skeleton className="mt-0.5 size-10 shrink-0 rounded-full" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div className="flex h-6 items-center justify-between gap-2">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-3 w-10" />
+            </div>
+            <div className="flex h-5 items-center">
+              <Skeleton className="h-3.5 w-48" />
+            </div>
+            <div className="flex items-center gap-1.5 pt-0.5">
+              <Skeleton className="h-5 w-14 rounded-full" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
           </div>
         </div>
       ))}
