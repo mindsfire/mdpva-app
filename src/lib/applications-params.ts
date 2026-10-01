@@ -6,7 +6,7 @@
  * the members directory — see `members-params`.
  */
 
-import { DEFAULT_PER_PAGE } from "./members-params";
+import { DEFAULT_PER_PAGE, parsePage, parsePerPage } from "./members-params";
 
 export type ApplicationTab = "pending" | "approved" | "rejected";
 export const APPLICATION_TABS: readonly ApplicationTab[] = [
@@ -36,4 +36,24 @@ export function applicationTabHref(
     params.set("perPage", String(perPage));
   }
   return `/applications?${params.toString()}`;
+}
+
+/**
+ * Shape of the queue the admin is navigating to — which tab, and how many
+ * rows it will hold — read from the destination URL and the tab counts the
+ * page already has. Lets the loading skeleton match the table that replaces
+ * it instead of copying the one being left.
+ */
+export function queueSkeletonShape(
+  href: string,
+  counts: Record<ApplicationTab, number>,
+): { rows: number; selectable: boolean } {
+  const params = new URL(href, "http://x").searchParams;
+  const tab = parseApplicationTab(params.get("status") ?? undefined);
+  const perPage = parsePerPage(params.get("perPage") ?? undefined);
+  const total = counts[tab];
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const page = Math.min(parsePage(params.get("page") ?? undefined), totalPages);
+  const rows = Math.min(perPage, total - (page - 1) * perPage);
+  return { rows: Math.max(rows, 1), selectable: tab === "pending" };
 }

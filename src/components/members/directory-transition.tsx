@@ -10,6 +10,8 @@ import {
 
 interface DirectoryTransition {
   isPending: boolean;
+  /** Where the in-flight navigation is going; meaningful only while pending. */
+  pendingHref: string | null;
   /** Navigate inside a transition so the caller can render pending UI. */
   navigate: (href: string) => void;
 }
@@ -40,9 +42,11 @@ export function DirectoryTransitionProvider({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = React.useTransition();
+  const [pendingHref, setPendingHref] = React.useState<string | null>(null);
 
   const navigate = React.useCallback(
     (href: string) => {
+      setPendingHref(href);
       startTransition(() => {
         router.push(href);
       });
@@ -51,8 +55,8 @@ export function DirectoryTransitionProvider({
   );
 
   const value = React.useMemo(
-    () => ({ isPending, navigate }),
-    [isPending, navigate],
+    () => ({ isPending, pendingHref, navigate }),
+    [isPending, pendingHref, navigate],
   );
 
   return (

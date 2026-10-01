@@ -33,6 +33,11 @@ import {
 import { cn } from "@/lib/utils";
 import { PhotoImg } from "@/components/photo-img";
 import { SearchHighlight } from "@/components/search-highlight";
+import {
+  QUEUE_CHECKBOX_COLUMN_CLASS,
+  QUEUE_COLUMNS,
+  QUEUE_TABLE_CLASS,
+} from "@/components/applications/queue-columns";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-mdpva-gold/25 text-mdpva-accent dark:text-mdpva-gold",
@@ -121,11 +126,11 @@ export function QueueTable({
   return (
     <div className="flex flex-col gap-4">
       <div className="overflow-x-auto rounded-lg border border-mdpva-border dark:border-border">
-        <Table>
+        <Table className={QUEUE_TABLE_CLASS}>
           <TableHeader>
             <TableRow>
               {selectable ? (
-                <TableHead className="w-10">
+                <TableHead className={QUEUE_CHECKBOX_COLUMN_CLASS}>
                   <Checkbox
                     checked={allSelected}
                     indeterminate={someSelected}
@@ -134,13 +139,11 @@ export function QueueTable({
                   />
                 </TableHead>
               ) : null}
-              <TableHead className="w-16">Photo</TableHead>
-              <TableHead>Application</TableHead>
-              <TableHead>Member</TableHead>
-              <TableHead>Ledger no.</TableHead>
-              <TableHead>Aadhaar</TableHead>
-              <TableHead>Submitted</TableHead>
-              <TableHead>Status</TableHead>
+              {QUEUE_COLUMNS.map((column) => (
+                <TableHead key={column.label} className={column.className}>
+                  {column.label}
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -216,7 +219,9 @@ export function QueueTable({
                     ) : null}
                   </div>
                 </TableCell>
-                <TableCell>
+                {/* The one flexible column: long names truncate rather than
+                    spill into the next column under table-fixed. */}
+                <TableCell className="truncate" title={row.submittedName}>
                   <SearchHighlight text={row.submittedName} />
                 </TableCell>
                 <TableCell className="tabular-nums text-muted-foreground">

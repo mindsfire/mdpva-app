@@ -7,7 +7,11 @@ import {
 } from "@/app/actions/applications";
 import { QueueTable } from "@/components/applications/queue-table";
 import { PageBreadcrumb } from "@/components/app-shell/page-breadcrumb";
-import { DirectoryTransitionProvider } from "@/components/members/directory-transition";
+import { QueueResults } from "@/components/applications/queue-results";
+import {
+  DirectoryTransitionProvider,
+  TransitionLink,
+} from "@/components/members/directory-transition";
 import { MembersPagination } from "@/components/members/members-pagination";
 import { SearchInput } from "@/components/members/search-input";
 import { Button } from "@/components/ui/button";
@@ -71,58 +75,63 @@ export default async function ApplicationsPage({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
-        {TABS.map((tab) => (
-          <Link
-            key={tab.key}
-            href={applicationTabHref(tab.key, { q, perPage })}
-            className={cn(
-              "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors",
-              status === tab.key
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            {tab.label}
-            <span className="text-xs tabular-nums opacity-80">
-              {counts[tab.key]}
-            </span>
-          </Link>
-        ))}
-      </div>
-
-      {q && rows.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border">
-          <p className="text-muted-foreground">
-            No {status} applications match &ldquo;{q}&rdquo;.
-          </p>
-          <Button
-            variant="outline"
-            render={<Link href={applicationTabHref(status, { perPage })} />}
-          >
-            Clear search
-          </Button>
+      {/* One transition shared by the tabs and the pagination, so either
+          swaps the table for its skeleton while the next list loads. */}
+      <DirectoryTransitionProvider>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {TABS.map((tab) => (
+            <TransitionLink
+              key={tab.key}
+              href={applicationTabHref(tab.key, { q, perPage })}
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors",
+                status === tab.key
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              {tab.label}
+              <span className="text-xs tabular-nums opacity-80">
+                {counts[tab.key]}
+              </span>
+            </TransitionLink>
+          ))}
         </div>
-      ) : (
-        <DirectoryTransitionProvider>
-          <div className="flex flex-col gap-5">
-            {/* Bulk approve only makes sense on the pending tab. Selection
-                covers the current page only. */}
+
+        <QueueResults counts={counts}>
+          {q && rows.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-mdpva-border py-16 text-center dark:border-border">
+              <p className="text-muted-foreground">
+                No {status} applications match &ldquo;{q}&rdquo;.
+              </p>
+              <Button
+                variant="outline"
+                render={<Link href={applicationTabHref(status, { perPage })} />}
+              >
+                Clear search
+              </Button>
+            </div>
+          ) : (
+            // Bulk approve only makes sense on the pending tab. Selection
+            // covers the current page only.
             <QueueTable rows={rows} selectable={status === "pending"} />
-            {total > 0 ? (
-              <Suspense fallback={null}>
-                <MembersPagination
-                  page={page}
-                  perPage={perPage}
-                  total={total}
-                  totalPages={totalPages}
-                  emptyLabel="No applications"
-                />
-              </Suspense>
-            ) : null}
-          </div>
-        </DirectoryTransitionProvider>
-      )}
+          )}
+        </QueueResults>
+
+        {/* Outside the results, as on Members, so it stays put (with its
+            spinner) while the next page loads. */}
+        {total > 0 ? (
+          <Suspense fallback={null}>
+            <MembersPagination
+              page={page}
+              perPage={perPage}
+              total={total}
+              totalPages={totalPages}
+              emptyLabel="No applications"
+            />
+          </Suspense>
+        ) : null}
+      </DirectoryTransitionProvider>
     </div>
   );
 }

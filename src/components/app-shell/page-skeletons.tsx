@@ -1,4 +1,17 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  QUEUE_CHECKBOX_COLUMN_CLASS,
+  QUEUE_COLUMNS,
+  QUEUE_TABLE_CLASS,
+} from "@/components/applications/queue-columns";
 
 /**
  * Shared skeleton pieces. Each route's loading.tsx composes these to match
@@ -96,6 +109,84 @@ export function MemberCardsSkeleton({ rows = 6 }: { rows?: number }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Mirrors QueueTable. Built from the same Table parts, header labels and
+ * column widths (`queue-columns`), so cell padding, row height (the 48px
+ * photo) and column positions match the table that replaces it.
+ */
+export function QueueTableSkeleton({
+  rows = 8,
+  selectable = false,
+}: {
+  rows?: number;
+  selectable?: boolean;
+}) {
+  return (
+    <div className="overflow-x-auto rounded-lg border border-mdpva-border dark:border-border">
+      <Table className={QUEUE_TABLE_CLASS}>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            {selectable ? (
+              <TableHead className={QUEUE_CHECKBOX_COLUMN_CLASS}>
+                <Skeleton className="size-4 rounded-[4px]" />
+              </TableHead>
+            ) : null}
+            {QUEUE_COLUMNS.map((column) => (
+              <TableHead key={column.label} className={column.className}>
+                {column.label}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: rows }).map((_, i) => (
+            <TableRow key={i} className="hover:bg-transparent">
+              {selectable ? (
+                <TableCell>
+                  <Skeleton className="size-4 rounded-[4px]" />
+                </TableCell>
+              ) : null}
+              <TableCell>
+                <Skeleton className="h-12 w-[37px] rounded-sm" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-24" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-36" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-12" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-28" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-40" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+/** Mirrors MembersPagination's summary line and rows-per-page button. */
+export function PaginationSkeleton() {
+  return (
+    <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-7 w-24 rounded-lg" />
+      </div>
     </div>
   );
 }
