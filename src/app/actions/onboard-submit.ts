@@ -99,29 +99,35 @@ export async function submitApplicationAction(
   // reach `.values()` below. Everything from here on refers only to the
   // encrypted form and the blind index.
   const { aadhaar, ...applicationValues } = parsed.data;
-  const aadhaarHash = blindIndex(aadhaar);
-  const aadhaarFields = {
-    aadhaarEnc: encryptPii(aadhaar),
-    aadhaarHash,
-    aadhaarLast4: aadhaar.slice(-4),
-  };
+  const aadhaarHash = aadhaar ? blindIndex(aadhaar) : null;
+  // Aadhaar is optional; when left blank the application carries no Aadhaar
+  // and approval keeps whatever the member already has on file.
+  const aadhaarFields = aadhaar
+    ? {
+        aadhaarEnc: encryptPii(aadhaar),
+        aadhaarHash,
+        aadhaarLast4: aadhaar.slice(-4),
+      }
+    : {};
 
   // One Aadhaar, one member. Self-resubmission (the member's own existing row)
   // is not a conflict.
-  const [aadhaarConflict] = await db
-    .select({ id: members.id })
-    .from(members)
-    .where(
-      and(
-        eq(members.aadhaarHash, aadhaarHash),
-        ne(members.id, session.memberId),
-        isNull(members.deletedAt),
-      ),
-    )
-    .limit(1);
+  if (aadhaarHash) {
+    const [aadhaarConflict] = await db
+      .select({ id: members.id })
+      .from(members)
+      .where(
+        and(
+          eq(members.aadhaarHash, aadhaarHash),
+          ne(members.id, session.memberId),
+          isNull(members.deletedAt),
+        ),
+      )
+      .limit(1);
 
-  if (aadhaarConflict) {
-    return { ok: false, error: "aadhaar_taken", field: "aadhaar" };
+    if (aadhaarConflict) {
+      return { ok: false, error: "aadhaar_taken", field: "aadhaar" };
+    }
   }
 
   // Photo is required on a first submission; fixing a rejected application,

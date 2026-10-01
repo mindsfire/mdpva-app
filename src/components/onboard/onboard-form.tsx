@@ -283,12 +283,8 @@ export function OnboardForm({
       });
       return;
     }
-    if (!isValidAadhaar(values.aadhaar)) {
-      setAadhaarError(
-        values.aadhaar
-          ? "Enter a valid 12-digit Aadhaar number"
-          : "Aadhaar number is required",
-      );
+    if (values.aadhaar.trim() && !isValidAadhaar(values.aadhaar)) {
+      setAadhaarError("Enter a valid 12-digit Aadhaar number");
       return;
     }
 
@@ -619,7 +615,7 @@ export function OnboardForm({
               />
             </span>
             <span className="flex flex-col gap-1.5">
-              <Label htmlFor="f-aadhaar" s={S.aadhaar} required />
+              <Label htmlFor="f-aadhaar" s={S.aadhaar} />
               <Input
                 id="f-aadhaar"
                 inputMode="numeric"
