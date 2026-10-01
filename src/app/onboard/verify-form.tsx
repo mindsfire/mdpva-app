@@ -112,7 +112,6 @@ export function VerifyForm() {
           id="v-no"
           inputMode="numeric"
           autoComplete="off"
-          placeholder="417"
           value={ledgerId}
           onChange={(e) => setLedgerId(e.target.value)}
         />
@@ -134,7 +133,6 @@ export function VerifyForm() {
           type="tel"
           inputMode="tel"
           autoComplete="tel"
-          placeholder="98450 11234"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />

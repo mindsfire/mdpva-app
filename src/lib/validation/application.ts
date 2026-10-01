@@ -134,18 +134,20 @@ export const applicationInputSchema = z.object({
   bloodGroup: requiredText(MAX_LENGTHS.bloodGroup, "Blood group"),
 
   /**
-   * Required on the public form. Normalized to 12 bare digits here; the
-   * caller (the submit action) is responsible for encrypting it before it
-   * ever reaches the database — this schema must never be the thing that
-   * makes a plaintext Aadhaar easy to log or serialize.
+   * Optional on the public form: blank means "not provided" (null). When
+   * given, it's normalized to 12 bare digits and must be valid. The caller
+   * (the submit action) is responsible for encrypting it before it ever
+   * reaches the database — this schema must never be the thing that makes a
+   * plaintext Aadhaar easy to log or serialize.
    */
   aadhaar: z
     .unknown()
-    .transform((v) => (typeof v === "string" ? normalizeAadhaar(v) : null))
-    .refine((v) => v !== null, { message: "Aadhaar number is required" })
-    .refine((v) => v === null || isValidAadhaar(v), {
+    .optional()
+    .transform((v) => (typeof v === "string" ? v.replace(/[\s-]/g, "") : ""))
+    .refine((v) => v === "" || isValidAadhaar(v), {
       message: "Enter a valid 12-digit Aadhaar number",
-    }),
+    })
+    .transform((v) => (v === "" ? null : normalizeAadhaar(v))),
 
   /** All three required on the public form — see `members.nomineeName`. */
   nomineeName: personName("Nominee name"),

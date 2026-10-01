@@ -199,16 +199,17 @@ describe("applicationInputSchema", () => {
       }
     });
 
-    it("is required — rejects null/empty/missing", () => {
-      expect(
-        applicationInputSchema.safeParse(validInput({ aadhaar: null })).success,
-      ).toBe(false);
-      expect(
-        applicationInputSchema.safeParse(validInput({ aadhaar: "" })).success,
-      ).toBe(false);
+    it("is optional — null/empty/missing become null", () => {
+      for (const aadhaar of [null, "", "   "]) {
+        const result = applicationInputSchema.safeParse(validInput({ aadhaar }));
+        expect(result.success).toBe(true);
+        if (result.success) expect(result.data.aadhaar).toBeNull();
+      }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- discarding aadhaar to build a rest object without it
       const { aadhaar: _drop, ...rest } = validInput();
-      expect(applicationInputSchema.safeParse(rest).success).toBe(false);
+      const result = applicationInputSchema.safeParse(rest);
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.aadhaar).toBeNull();
     });
 
     it("rejects the wrong length", () => {
