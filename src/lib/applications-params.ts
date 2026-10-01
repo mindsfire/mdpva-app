@@ -2,12 +2,11 @@
  * Pure URL-param helpers for the applications queue.
  *
  * Kept free of any `@/db` import for the same reason as `members-params`:
- * the pagination control is a client component.
+ * the pagination control is a client component. Page sizes are shared with
+ * the members directory — see `members-params`.
  */
 
-export const APPLICATION_PER_PAGE_OPTIONS = [100, 200, 500] as const;
-export type ApplicationPerPage = (typeof APPLICATION_PER_PAGE_OPTIONS)[number];
-export const DEFAULT_APPLICATION_PER_PAGE: ApplicationPerPage = 100;
+import { DEFAULT_PER_PAGE } from "./members-params";
 
 export type ApplicationTab = "pending" | "approved" | "rejected";
 export const APPLICATION_TABS: readonly ApplicationTab[] = [
@@ -23,15 +22,6 @@ export function parseApplicationTab(value: string | undefined): ApplicationTab {
     : "pending";
 }
 
-export function parseApplicationPerPage(
-  value: string | undefined,
-): ApplicationPerPage {
-  const n = Number(value);
-  return (APPLICATION_PER_PAGE_OPTIONS as readonly number[]).includes(n)
-    ? (n as ApplicationPerPage)
-    : DEFAULT_APPLICATION_PER_PAGE;
-}
-
 /**
  * The tab link for `tab`, carrying over the search and page size but not the
  * page number — page 3 of Pending means nothing on Approved.
@@ -42,7 +32,7 @@ export function applicationTabHref(
 ): string {
   const params = new URLSearchParams({ status: tab });
   if (q) params.set("q", q);
-  if (perPage && perPage !== DEFAULT_APPLICATION_PER_PAGE) {
+  if (perPage && perPage !== DEFAULT_PER_PAGE) {
     params.set("perPage", String(perPage));
   }
   return `/applications?${params.toString()}`;

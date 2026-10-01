@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { PhotoImg } from "@/components/photo-img";
+import { SearchHighlight } from "@/components/search-highlight";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-mdpva-gold/25 text-mdpva-accent dark:text-mdpva-gold",
@@ -194,7 +195,7 @@ export function QueueTable({
                 </TableCell>
                 <TableCell className="font-medium tabular-nums text-foreground">
                   <div className="flex items-center gap-1.5">
-                    {row.applicationNo}
+                    <SearchHighlight text={row.applicationNo} />
                     {row.status === "approved" ? (
                       <Button
                         variant="ghost"
@@ -215,12 +216,18 @@ export function QueueTable({
                     ) : null}
                   </div>
                 </TableCell>
-                <TableCell>{row.submittedName}</TableCell>
-                <TableCell className="tabular-nums text-muted-foreground">
-                  {row.legacyId ?? "—"}
+                <TableCell>
+                  <SearchHighlight text={row.submittedName} />
                 </TableCell>
                 <TableCell className="tabular-nums text-muted-foreground">
-                  {row.aadhaarLast4 ? maskAadhaar(row.aadhaarLast4) : "—"}
+                  {row.legacyId ? <SearchHighlight text={row.legacyId} /> : "—"}
+                </TableCell>
+                <TableCell className="tabular-nums text-muted-foreground">
+                  {row.aadhaarLast4 ? (
+                    <SearchHighlight text={maskAadhaar(row.aadhaarLast4)} />
+                  ) : (
+                    "—"
+                  )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {formatDateTimeIST(row.createdAt)}

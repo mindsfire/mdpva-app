@@ -6,9 +6,10 @@
  * therefore `dotenv` and the server env schema — into the browser bundle.
  */
 
-export const PER_PAGE_OPTIONS = [10, 25, 100] as const;
+/** Shared by the members directory and the applications queue. */
+export const PER_PAGE_OPTIONS = [100, 200, 500] as const;
 export type PerPage = (typeof PER_PAGE_OPTIONS)[number];
-export const DEFAULT_PER_PAGE: PerPage = 10;
+export const DEFAULT_PER_PAGE: PerPage = 100;
 
 export type MemberStatusFilter = "active" | "inactive" | "suspended";
 export type ProfessionFilter =

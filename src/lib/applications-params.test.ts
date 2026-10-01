@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   applicationTabHref,
-  parseApplicationPerPage,
   parseApplicationTab,
 } from "./applications-params";
 
@@ -17,24 +16,6 @@ describe("parseApplicationTab", () => {
     expect(parseApplicationTab(undefined)).toBe("pending");
     expect(parseApplicationTab("superseded")).toBe("pending");
     expect(parseApplicationTab("")).toBe("pending");
-  });
-});
-
-describe("parseApplicationPerPage", () => {
-  it("defaults to 100", () => {
-    expect(parseApplicationPerPage(undefined)).toBe(100);
-  });
-
-  it("accepts 100, 200 and 500", () => {
-    expect(parseApplicationPerPage("100")).toBe(100);
-    expect(parseApplicationPerPage("200")).toBe(200);
-    expect(parseApplicationPerPage("500")).toBe(500);
-  });
-
-  it("rejects values that aren't offered", () => {
-    expect(parseApplicationPerPage("10")).toBe(100);
-    expect(parseApplicationPerPage("100000")).toBe(100);
-    expect(parseApplicationPerPage("abc")).toBe(100);
   });
 });
 

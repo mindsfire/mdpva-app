@@ -12,6 +12,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from "lucide-react";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { SearchHighlight } from "@/components/search-highlight";
 import type { MemberRow } from "@/lib/members-query";
 import { fullName } from "@/lib/member-name";
 import { MemberAvatar } from "./member-avatar";
@@ -173,7 +174,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                 selection ? "left-10" : "left-0",
               )}
             >
-              {row.legacyId ?? "—"}
+              {row.legacyId ? <SearchHighlight text={row.legacyId} /> : "—"}
             </TableCell>
             <TableCell
               className={cn(
@@ -189,12 +190,12 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                   className="size-8"
                 />
                 <span className="font-medium text-foreground">
-                  {fullName(row.firstName)}
+                  <SearchHighlight text={fullName(row.firstName)} />
                 </span>
               </div>
             </TableCell>
             <TableCell className="text-muted-foreground">
-              {row.phone ?? "—"}
+              {row.phone ? <SearchHighlight text={row.phone} /> : "—"}
             </TableCell>
             <TableCell>
               <ProfessionLabel

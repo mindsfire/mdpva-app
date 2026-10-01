@@ -12,13 +12,11 @@ import { MembersPagination } from "@/components/members/members-pagination";
 import { SearchInput } from "@/components/members/search-input";
 import { Button } from "@/components/ui/button";
 import {
-  APPLICATION_PER_PAGE_OPTIONS,
   applicationTabHref,
-  parseApplicationPerPage,
   parseApplicationTab,
   type ApplicationTab,
 } from "@/lib/applications-params";
-import { parsePage } from "@/lib/members-params";
+import { parsePage, parsePerPage } from "@/lib/members-params";
 import { cn } from "@/lib/utils";
 
 const TABS: { key: ApplicationTab; label: string }[] = [
@@ -39,7 +37,7 @@ export default async function ApplicationsPage({
   const params = await searchParams;
   const status = parseApplicationTab(first(params.status));
   const q = first(params.q)?.trim() || undefined;
-  const perPage = parseApplicationPerPage(first(params.perPage));
+  const perPage = parsePerPage(first(params.perPage));
 
   const [{ rows, total, page, totalPages }, counts] = await Promise.all([
     listApplications({
@@ -118,7 +116,6 @@ export default async function ApplicationsPage({
                   perPage={perPage}
                   total={total}
                   totalPages={totalPages}
-                  perPageOptions={APPLICATION_PER_PAGE_OPTIONS}
                   emptyLabel="No applications"
                 />
               </Suspense>

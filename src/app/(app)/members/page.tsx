@@ -9,7 +9,12 @@ import {
   searchMembers,
   type MembersQueryParams,
 } from "@/lib/members-query";
-import { parsePage, parsePerPage, parseSort } from "@/lib/members-params";
+import {
+  DEFAULT_PER_PAGE,
+  parsePage,
+  parsePerPage,
+  parseSort,
+} from "@/lib/members-params";
 import { Button } from "@/components/ui/button";
 import { MemberFilters } from "@/components/members/filters";
 import { MemberCard } from "@/components/members/member-card";
@@ -109,7 +114,7 @@ export default async function MembersDirectoryPage({
     deathFund: params.deathFund ? "true" : undefined,
     sort: params.sort,
     perPage:
-      params.perPage && params.perPage !== 10 ? String(params.perPage) : undefined,
+      params.perPage && params.perPage !== DEFAULT_PER_PAGE ? String(params.perPage) : undefined,
   };
 
   // Carried into the create form so Cancel returns to this exact filtered view.

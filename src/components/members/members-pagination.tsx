@@ -41,15 +41,12 @@ export function MembersPagination({
   perPage,
   total,
   totalPages,
-  perPageOptions = PER_PAGE_OPTIONS,
   emptyLabel = "No members",
 }: {
   page: number;
   perPage: number;
   total: number;
   totalPages: number;
-  /** Row counts offered in the page-size menu. Defaults to the directory's. */
-  perPageOptions?: readonly number[];
   emptyLabel?: string;
 }) {
   const pathname = usePathname();
@@ -106,7 +103,7 @@ export function MembersPagination({
             }
           />
           <DropdownMenuContent align="start">
-            {perPageOptions.map((option) => (
+            {PER_PAGE_OPTIONS.map((option) => (
               <DropdownMenuItem
                 key={option}
                 onClick={() => setPerPage(option)}
