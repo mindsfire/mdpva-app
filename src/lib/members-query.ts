@@ -1,12 +1,13 @@
 import { and, asc, desc, eq, ilike, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { members, users } from "@/db/schema";
+import { members, users, type StoredProfession } from "@/db/schema";
 import {
   DEFAULT_PER_PAGE,
   DEFAULT_SORT,
   type MembersSort,
   type MemberStatusFilter,
+  type MissingFilter,
   type PerPage,
   type ProfessionFilter,
 } from "@/lib/members-params";
@@ -19,6 +20,7 @@ export interface MembersQueryParams {
   profession?: ProfessionFilter;
   feesDue?: boolean;
   deathFund?: boolean;
+  missing?: MissingFilter;
   sort?: MembersSort;
   page?: number;
   perPage?: PerPage;
@@ -30,13 +32,7 @@ export interface MemberRow {
   legacyId: string | null;
   firstName: string;
   phone: string | null;
-  profession:
-    | "photographer"
-    | "videographer"
-    | "photo_and_video"
-    | "drone_operator"
-    | "other"
-    | null;
+  profession: StoredProfession | null;
   /** Set only when `profession` is `"other"`. */
   professionOther: string | null;
   status: "active" | "inactive" | "suspended";
@@ -61,13 +57,7 @@ export interface MemberDetail {
   firstName: string;
   email: string | null;
   phone: string | null;
-  profession:
-    | "photographer"
-    | "videographer"
-    | "photo_and_video"
-    | "drone_operator"
-    | "other"
-    | null;
+  profession: StoredProfession | null;
   /** Set only when `profession` is `"other"`. */
   professionOther: string | null;
   businessName: string | null;
@@ -265,6 +255,20 @@ function buildSearchCondition(rawQuery: string): SQL | null {
 }
 
 /**
+ * What "missing" means for each `?missing=` value. The dashboard counts with
+ * these same conditions, so its numbers always equal the list a click opens.
+ * Phone is judged on `normalized_phone`: a number that can't be read as 10
+ * digits is as unusable for onboarding verification as none at all.
+ */
+export const MISSING_CONDITIONS: Record<MissingFilter, SQL> = {
+  photo: isNull(members.photoKey),
+  phone: isNull(members.normalizedPhone),
+  dob: isNull(members.dob),
+  nominee: isNull(members.nomineeName),
+  city: sql`length(btrim(${members.city})) < 3`,
+};
+
+/**
  * Pure builder: maps validated query params to a single drizzle `SQL`
  * condition (soft-delete exclusion is always included). Extracted from
  * `searchMembers` so the query-param → SQL-filter mapping is unit testable
@@ -282,8 +286,14 @@ export function buildMembersWhere(params: MembersQueryParams): SQL {
     conditions.push(sql`${members.status} = ${params.status}`);
   }
 
-  if (params.profession) {
+  if (params.profession === "none") {
+    conditions.push(isNull(members.profession));
+  } else if (params.profession) {
     conditions.push(sql`${members.profession} = ${params.profession}`);
+  }
+
+  if (params.missing) {
+    conditions.push(MISSING_CONDITIONS[params.missing]);
   }
 
   if (params.feesDue) {

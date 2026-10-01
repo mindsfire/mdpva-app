@@ -1,4 +1,5 @@
 import type { MemberDetail } from "@/lib/members-query";
+import { professionLabel } from "@/lib/profession";
 
 export interface DetailField {
   label: string;
@@ -10,17 +11,6 @@ export interface MemberSection {
   title: string;
   fields: DetailField[];
 }
-
-export const PROFESSION_LABELS: Record<
-  NonNullable<MemberDetail["profession"]>,
-  string
-> = {
-  photographer: "Photographer",
-  videographer: "Videographer",
-  photo_and_video: "Photo & Video",
-  drone_operator: "Drone Operator",
-  other: "Other",
-};
 
 /** Stable, unambiguous day format — avoids 07/08 being read either way round. */
 function formatDay(value: Date): string {
@@ -69,12 +59,7 @@ export function buildMemberSections(member: MemberDetail): MemberSection[] {
       fields: [
         {
           label: "Profession",
-          value:
-            member.profession === "other"
-              ? (member.professionOther ?? PROFESSION_LABELS.other)
-              : member.profession
-                ? PROFESSION_LABELS[member.profession]
-                : null,
+          value: professionLabel(member.profession, member.professionOther),
         },
         { label: "Business", value: member.businessName },
         { label: "Date of birth", value: member.dob },

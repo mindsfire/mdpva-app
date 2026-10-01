@@ -17,7 +17,7 @@ import { db } from "@/db";
 import { memberApplications, members } from "@/db/schema";
 import { formatDateIST } from "@/lib/format-date";
 import { fullName } from "@/lib/member-name";
-import { PROFESSION_LABELS } from "@/lib/member-sections";
+import { professionLabel } from "@/lib/profession";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
 import { fetchMemberPhotoForPdf, type PdfPhoto } from "@/lib/pdf/photo-for-pdf";
 import { maskAadhaar } from "@/lib/validation/aadhaar";
@@ -190,12 +190,7 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
         {
           label: "Profession",
           labelKn: S.profession.kn,
-          value:
-            member.profession === "other"
-              ? (member.professionOther ?? PROFESSION_LABELS.other)
-              : member.profession
-                ? PROFESSION_LABELS[member.profession]
-                : null,
+          value: professionLabel(member.profession, member.professionOther),
         },
         { label: "Business", labelKn: S.businessName.kn, value: member.businessName },
       ],

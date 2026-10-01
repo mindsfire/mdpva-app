@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { isFeesPaid } from "@/lib/fees";
+import { professionLabel } from "@/lib/profession";
 import type { MemberRow } from "@/lib/members-query";
 
 const STATUS_STYLES: Record<MemberRow["status"], string> = {
@@ -60,20 +61,9 @@ export function ProfessionLabel({
   profession: MemberRow["profession"];
   professionOther?: MemberRow["professionOther"];
 }) {
-  if (!profession) return <span className="text-muted-foreground">—</span>;
-  if (profession === "other") {
-    return <span>{professionOther || "Other"}</span>;
-  }
-  const labels: Record<
-    Exclude<NonNullable<MemberRow["profession"]>, "other">,
-    string
-  > = {
-    photographer: "Photographer",
-    videographer: "Videographer",
-    photo_and_video: "Photo & Video",
-    drone_operator: "Drone Operator",
-  };
-  return <span>{labels[profession]}</span>;
+  const label = professionLabel(profession, professionOther);
+  if (!label) return <span className="text-muted-foreground">—</span>;
+  return <span>{label}</span>;
 }
 
 /**

@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DEFAULT_SORT } from "@/lib/members-params";
+import { PROFESSION_LABELS, PROFESSIONS } from "@/lib/profession";
 import { cn } from "@/lib/utils";
 
 interface FilterOption {
@@ -35,9 +36,22 @@ const STATUS_OPTIONS: FilterOption[] = [
 ];
 
 const PROFESSION_OPTIONS: FilterOption[] = [
-  { label: "Photographer", param: "profession", value: "photographer" },
-  { label: "Videographer", param: "profession", value: "videographer" },
-  { label: "Drone Operator", param: "profession", value: "drone_operator" },
+  ...PROFESSIONS.map((value) => ({
+    label: PROFESSION_LABELS[value],
+    param: "profession",
+    value,
+  })),
+  { label: "Profession not set", param: "profession", value: "none" },
+];
+
+// Labels double as the chip text, so each reads on its own: "No photo" rather
+// than "Photo" under a "Missing" heading.
+const MISSING_OPTIONS: FilterOption[] = [
+  { label: "No photo", param: "missing", value: "photo" },
+  { label: "No phone", param: "missing", value: "phone" },
+  { label: "No date of birth", param: "missing", value: "dob" },
+  { label: "No nominee", param: "missing", value: "nominee" },
+  { label: "City needs fixing", param: "missing", value: "city" },
 ];
 
 const TOGGLE_OPTIONS: FilterOption[] = [
@@ -60,6 +74,7 @@ const ALL_OPTIONS = [
   ...STATUS_OPTIONS,
   ...PROFESSION_OPTIONS,
   ...TOGGLE_OPTIONS,
+  ...MISSING_OPTIONS,
 ];
 
 /** Row inside the filters menu; a tick marks the applied option. */
@@ -168,6 +183,19 @@ export function MemberFilters() {
           {TOGGLE_OPTIONS.map((option) => (
             <MenuOption
               key={option.param}
+              label={option.label}
+              active={searchParams.get(option.param) === option.value}
+              onClick={() => toggle(option)}
+            />
+          ))}
+
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Missing details</DropdownMenuLabel>
+          </DropdownMenuGroup>
+          {MISSING_OPTIONS.map((option) => (
+            <MenuOption
+              key={option.value}
               label={option.label}
               active={searchParams.get(option.param) === option.value}
               onClick={() => toggle(option)}

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { isNomineeRelationship } from "@/lib/nominee";
+import { PROFESSIONS } from "@/lib/profession";
 
 import { isValidAadhaar, normalizeAadhaar } from "./aadhaar";
 import { normalizePhone } from "./phone";
@@ -150,13 +151,7 @@ export const memberInputSchema = z.object({
     .transform((v) => (v === null ? null : normalizePhone(v))),
 
   profession: z
-    .enum([
-      "photographer",
-      "videographer",
-      "photo_and_video",
-      "drone_operator",
-      "other",
-    ])
+    .enum(PROFESSIONS)
     .nullable()
     .default(null),
   /** Set only when `profession` is `"other"`. */

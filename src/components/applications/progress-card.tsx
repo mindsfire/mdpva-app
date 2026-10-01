@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
+import { CountUp } from "@/components/count-up";
 import type { OnboardingProgress } from "@/lib/onboarding/progress-query";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +45,7 @@ export function OnboardingProgressCard({
       </div>
 
       <p className="mt-2 font-serif text-2xl font-medium text-foreground tabular-nums">
-        {approved}
+        <CountUp value={approved} />
         <span className="text-base text-muted-foreground"> of {totalMembers} complete</span>
       </p>
 
@@ -52,7 +53,8 @@ export function OnboardingProgressCard({
         {segments.map((s) => (
           <span
             key={s.key}
-            className={cn("h-full", s.className)}
+            // Segments grow together, so the stack fills in from the left.
+            className={cn("h-full animate-bar-grow motion-reduce:animate-none", s.className)}
             style={{ width: `${pct(s.value)}%` }}
             title={`${s.label}: ${s.value}`}
           />

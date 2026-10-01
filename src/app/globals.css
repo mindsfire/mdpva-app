@@ -35,6 +35,15 @@
 
   /* Light-on-dark text, base color; opacity applied via /NN in usage */
   --color-mdpva-cream: #f4f3ef;
+
+  /* Dashboard bars grow from empty to their inline width on load. `both`
+     holds a staggered bar at empty until its delay runs out. */
+  --animate-bar-grow: bar-grow 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  @keyframes bar-grow {
+    from {
+      width: 0;
+    }
+  }
 }
 
 @theme inline {

@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { fullName } from "@/lib/member-name";
 import { NOMINEE_RELATIONSHIPS } from "@/lib/nominee";
 import type { MemberDetail } from "@/lib/members-query";
+import { isProfession, PROFESSION_LABELS, PROFESSIONS } from "@/lib/profession";
 import {
   MAX_LENGTHS,
   memberInputSchema,
@@ -64,7 +65,9 @@ function toDefaultValues(member?: MemberDetail | null): MemberFormValues {
     firstName: member?.firstName ?? "",
     email: member?.email ?? null,
     phone: member?.phone ?? null,
-    profession: member?.profession ?? null,
+    // A retired stored value (drone_operator) opens as unset, so saving
+    // means picking a current profession.
+    profession: isProfession(member?.profession) ? member.profession : null,
     professionOther: member?.professionOther ?? null,
     businessName: member?.businessName ?? null,
     addressLine1: member?.addressLine1 ?? "",
@@ -386,11 +389,11 @@ export function MemberForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="photographer">Photographer</SelectItem>
-                      <SelectItem value="videographer">Videographer</SelectItem>
-                      <SelectItem value="photo_and_video">Photo &amp; Video</SelectItem>
-                      <SelectItem value="drone_operator">Drone Operator</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {PROFESSIONS.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {PROFESSION_LABELS[value]}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

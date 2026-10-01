@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { isNomineeRelationship, type NomineeRelationship } from "@/lib/nominee";
+import { isProfession, type Profession } from "@/lib/profession";
 
 import { isValidAadhaar, normalizeAadhaar } from "./aadhaar";
 import { normalizePhone } from "./phone";
@@ -102,19 +103,11 @@ export const applicationInputSchema = z.object({
   profession: z
     .unknown()
     .transform((v) => (typeof v === "string" && v !== "" ? v : null))
-    .refine(
-      (v) =>
-        v === null ||
-        ["photographer", "videographer", "photo_and_video", "other"].includes(
-          v,
-        ),
-      { message: "Choose the nature of your work" },
-    )
+    .refine((v) => v === null || isProfession(v), {
+      message: "Choose the nature of your work",
+    })
     .refine((v) => v !== null, { message: "Choose the nature of your work" })
-    .transform(
-      (v) =>
-        v as "photographer" | "videographer" | "photo_and_video" | "other",
-    ),
+    .transform((v) => v as Profession),
 
   /** Set only when `profession` is `"other"` — enforced below. */
   professionOther: optionalText(MAX_LENGTHS.professionOther, "Profession"),

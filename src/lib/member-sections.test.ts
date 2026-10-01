@@ -90,11 +90,11 @@ describe("buildMemberSections", () => {
     expect(value).toBe("Photo & Video");
   });
 
-  it("maps drone_operator to its display label", () => {
+  it("shows a retired drone_operator profession as unset", () => {
     const value = flatten(member({ profession: "drone_operator" })).find(
       (f) => f.label === "Profession",
     )?.value;
-    expect(value).toBe("Drone Operator");
+    expect(value).toBeNull();
   });
 
   it("shows the member's own text for an 'other' profession", () => {

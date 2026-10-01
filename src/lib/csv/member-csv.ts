@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 
+import type { StoredProfession } from "@/db/schema";
 import { NOMINEE_RELATIONSHIPS } from "@/lib/nominee";
 import { memberInputSchema, type MemberInput } from "@/lib/validation/member";
 import { escapeCsvCell } from "@/lib/validation/text-safety";
@@ -243,13 +244,7 @@ export interface ExportableMember {
   firstName: string;
   email: string | null;
   phone: string | null;
-  profession:
-    | "photographer"
-    | "videographer"
-    | "photo_and_video"
-    | "drone_operator"
-    | "other"
-    | null;
+  profession: StoredProfession | null;
   businessName: string | null;
   addressLine1: string | null;
   addressLine2: string | null;
