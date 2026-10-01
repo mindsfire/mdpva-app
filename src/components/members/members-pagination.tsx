@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PER_PAGE_OPTIONS, type PerPage } from "@/lib/members-params";
+import { PER_PAGE_OPTIONS } from "@/lib/members-params";
 import {
   TransitionLink,
   useDirectoryTransition,
@@ -41,11 +41,13 @@ export function MembersPagination({
   perPage,
   total,
   totalPages,
+  emptyLabel = "No members",
 }: {
   page: number;
-  perPage: PerPage;
+  perPage: number;
   total: number;
   totalPages: number;
+  emptyLabel?: string;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -59,7 +61,7 @@ export function MembersPagination({
     return query ? `${pathname}?${query}` : pathname;
   }
 
-  function setPerPage(next: PerPage) {
+  function setPerPage(next: number) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("perPage", String(next));
     // Row count changed, so the old page number is meaningless.
@@ -75,7 +77,7 @@ export function MembersPagination({
       <div className="flex items-center gap-3">
         <p className="text-sm text-muted-foreground">
           {total === 0 ? (
-            "No members"
+            emptyLabel
           ) : (
             <>
               <span className="font-medium text-foreground tabular-nums">

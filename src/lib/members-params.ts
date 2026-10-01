@@ -6,9 +6,10 @@
  * therefore `dotenv` and the server env schema — into the browser bundle.
  */
 
-export const PER_PAGE_OPTIONS = [10, 25, 100] as const;
+/** Shared by the members directory and the applications queue. */
+export const PER_PAGE_OPTIONS = [100, 200, 500] as const;
 export type PerPage = (typeof PER_PAGE_OPTIONS)[number];
-export const DEFAULT_PER_PAGE: PerPage = 10;
+export const DEFAULT_PER_PAGE: PerPage = 100;
 
 export type MemberStatusFilter = "active" | "inactive" | "suspended";
 export type ProfessionFilter =
@@ -62,4 +63,18 @@ export function parsePerPage(value: string | undefined): PerPage {
 export function parsePage(value: string | undefined): number {
   const n = Number(value);
   return Number.isInteger(n) && n >= 1 ? n : 1;
+}
+
+/**
+ * How many rows the list at `href` will show, given `total` matching rows —
+ * read from the destination's `?page=` and `?perPage=`, clamped the way the
+ * queries clamp. Sizes a loading skeleton for the page being navigated to;
+ * at least 1, so an empty result still draws a row.
+ */
+export function rowsOnPage(href: string, total: number): number {
+  const params = new URL(href, "http://x").searchParams;
+  const perPage = parsePerPage(params.get("perPage") ?? undefined);
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const page = Math.min(parsePage(params.get("page") ?? undefined), totalPages);
+  return Math.max(1, Math.min(perPage, total - (page - 1) * perPage));
 }

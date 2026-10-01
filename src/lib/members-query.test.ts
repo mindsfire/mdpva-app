@@ -132,18 +132,19 @@ describe("isUuid", () => {
 
 describe("parsePerPage", () => {
   it("accepts the offered options", () => {
-    expect(parsePerPage("10")).toBe(10);
-    expect(parsePerPage("25")).toBe(25);
     expect(parsePerPage("100")).toBe(100);
+    expect(parsePerPage("200")).toBe(200);
+    expect(parsePerPage("500")).toBe(500);
   });
 
   it("falls back to 10 for anything else", () => {
-    expect(parsePerPage(undefined)).toBe(10);
-    expect(parsePerPage("")).toBe(10);
-    expect(parsePerPage("50")).toBe(10);
-    expect(parsePerPage("99999")).toBe(10);
-    expect(parsePerPage("abc")).toBe(10);
-    expect(parsePerPage("-25")).toBe(10);
+    expect(parsePerPage(undefined)).toBe(100);
+    expect(parsePerPage("")).toBe(100);
+    expect(parsePerPage("10")).toBe(100);
+    expect(parsePerPage("25")).toBe(100);
+    expect(parsePerPage("99999")).toBe(100);
+    expect(parsePerPage("abc")).toBe(100);
+    expect(parsePerPage("-25")).toBe(100);
   });
 });
 

@@ -12,6 +12,12 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowDownIcon, ArrowUpIcon, ChevronsUpDownIcon } from "lucide-react";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { SearchHighlight } from "@/components/search-highlight";
+import {
+  MEMBER_COLUMN_CLASS,
+  MEMBER_PLAIN_COLUMNS,
+  MEMBER_TABLE_CLASS,
+} from "./member-columns";
 import type { MemberRow } from "@/lib/members-query";
 import { fullName } from "@/lib/member-name";
 import { MemberAvatar } from "./member-avatar";
@@ -59,7 +65,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
   // at `left-10`) through which scrolled cells showed. The two must agree.
   return (
     <Table
-      className="min-w-[800px]"
+      className={MEMBER_TABLE_CLASS}
       // Matches the drawer: the horizontal scrollbar's thumb is transparent
       // until the pointer is over the table, and `scrollbar-gutter: stable`
       // holds its track open either way so rows never shift as it appears.
@@ -78,7 +84,12 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
             the sticky cells and let scrolled columns show through. */}
         <TableRow className="bg-mdpva-paper hover:bg-mdpva-paper dark:bg-background dark:hover:bg-background">
           {selection ? (
-            <TableHead className="sticky left-0 z-20 w-10 min-w-10 bg-inherit">
+            <TableHead
+              className={cn(
+                "sticky left-0 z-20 bg-inherit",
+                MEMBER_COLUMN_CLASS.checkbox,
+              )}
+            >
               <Checkbox
                 checked={allSelected}
                 indeterminate={someSelected}
@@ -100,7 +111,8 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
             asc="membership"
             desc="membership_desc"
             className={cn(
-              "sticky z-20 w-36 min-w-36 bg-inherit",
+              "sticky z-20 bg-inherit",
+              MEMBER_COLUMN_CLASS.membership,
               selection ? "left-10" : "left-0",
             )}
           />
@@ -113,11 +125,11 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
               selection ? "left-[184px]" : "left-36",
             )}
           />
-          <TableHead>Phone</TableHead>
-          <TableHead>Profession</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Fees</TableHead>
-          <TableHead>Death Fund</TableHead>
+          {MEMBER_PLAIN_COLUMNS.map((column) => (
+            <TableHead key={column.label} className={column.className}>
+              {column.label}
+            </TableHead>
+          ))}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -173,7 +185,7 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                 selection ? "left-10" : "left-0",
               )}
             >
-              {row.legacyId ?? "—"}
+              {row.legacyId ? <SearchHighlight text={row.legacyId} /> : "—"}
             </TableCell>
             <TableCell
               className={cn(
@@ -181,22 +193,25 @@ export function MemberTable({ rows }: { rows: MemberRow[] }) {
                 selection ? "left-[184px]" : "left-36",
               )}
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex min-w-0 items-center gap-2.5">
                 <MemberAvatar
                   firstName={row.firstName}
                   photoKey={row.photoKey}
                   updatedAt={row.updatedAt}
                   className="size-8"
                 />
-                <span className="font-medium text-foreground">
-                  {fullName(row.firstName)}
+                <span
+                  className="truncate font-medium text-foreground"
+                  title={fullName(row.firstName)}
+                >
+                  <SearchHighlight text={fullName(row.firstName)} />
                 </span>
               </div>
             </TableCell>
             <TableCell className="text-muted-foreground">
-              {row.phone ?? "—"}
+              {row.phone ? <SearchHighlight text={row.phone} /> : "—"}
             </TableCell>
-            <TableCell>
+            <TableCell className="truncate">
               <ProfessionLabel
                 profession={row.profession}
                 professionOther={row.professionOther}

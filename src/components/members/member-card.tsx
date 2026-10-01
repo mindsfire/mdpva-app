@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { SearchHighlight } from "@/components/search-highlight";
 import type { MemberRow } from "@/lib/members-query";
 import { fullName } from "@/lib/member-name";
 import { MemberAvatar } from "./member-avatar";
@@ -47,16 +48,18 @@ export function MemberCard({ row }: { row: MemberRow }) {
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex items-baseline justify-between gap-2">
             <span className="truncate font-serif text-base font-medium text-foreground">
-              {fullName(row.firstName)}
+              <SearchHighlight text={fullName(row.firstName)} />
             </span>
             {/* Legacy ledger number, not the generated member ID — the same
               identifier the table leads with. */}
             <span className="shrink-0 text-xs text-muted-foreground">
-              {row.legacyId ?? row.memberId}
+              <SearchHighlight text={row.legacyId ?? row.memberId} />
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-            <span>{row.phone ?? "—"}</span>
+            <span>
+              {row.phone ? <SearchHighlight text={row.phone} /> : "—"}
+            </span>
             <span aria-hidden="true">·</span>
             <ProfessionLabel
               profession={row.profession}

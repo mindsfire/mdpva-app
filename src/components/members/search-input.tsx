@@ -10,6 +10,15 @@ import { reconcileSearchValue } from "@/lib/search-sync";
 const DEBOUNCE_MS = 300;
 
 /**
+ * Pages whose own list the header search narrows in place. Searching from
+ * anywhere else jumps to the members directory.
+ */
+const SEARCHES_IN_PLACE: Record<string, string> = {
+  "/members": "Search members…",
+  "/applications": "Search applications…",
+};
+
+/**
  * Debounced (300ms) search box that writes `q` to the URL.
  *
  * Deliberately NOT keyed on `q`: a changing key remounts the input, which
@@ -58,10 +67,10 @@ export function SearchInput() {
     params.delete("page");
     setLastPushed(next);
 
-    // Searching from any other page (dashboard, users, profile) jumps to
-    // the directory; on the directory itself it narrows in place,
-    // preserving active filters.
-    if (pathname !== "/members") {
+    // On the directory and the applications queue it narrows in place,
+    // preserving active filters / the current tab. From any other page
+    // (dashboard, users, profile) it jumps to the directory.
+    if (!Object.hasOwn(SEARCHES_IN_PLACE, pathname)) {
       const query = params.toString();
       router.push(query ? `/members?${query}` : "/members");
       return;
@@ -98,6 +107,8 @@ export function SearchInput() {
     };
   }, []);
 
+  const placeholder = SEARCHES_IN_PLACE[pathname] ?? "Search members…";
+
   return (
     <div className="relative w-full max-w-sm">
       <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -106,8 +117,8 @@ export function SearchInput() {
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Search members…"
-        aria-label="Search members"
+        placeholder={placeholder}
+        aria-label={placeholder.replace("…", "")}
         className={value ? "pr-8 pl-8" : "pl-8"}
       />
       {value ? (
