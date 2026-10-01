@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import {
   CopyObjectCommand,
 } from "@aws-sdk/client-s3";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
+import type { ApplicationTab } from "@/lib/applications-params";
 import { memberApplications, members } from "@/db/schema";
 import { isUniqueViolationOn } from "@/lib/db-errors";
 import { fullName } from "@/lib/member-name";
@@ -310,11 +311,77 @@ export interface QueueRow {
   createdAt: Date;
 }
 
-/** Admin only. The review queue, oldest first so nobody waits indefinitely. */
-export async function listApplications(
-  status: "pending" | "approved" | "rejected" | "all" = "pending",
-): Promise<QueueRow[]> {
+/**
+ * Free-text search over what an admin is likely to have in hand when looking
+ * for an application: the name, the application number, the ledger number or
+ * member ID, a phone number, or the last four digits of the Aadhaar.
+ */
+function applicationSearchCondition(rawQuery: string | undefined): SQL | null {
+  const q = rawQuery?.trim();
+  if (!q) return null;
+  const term = `%${q}%`;
+
+  const conditions: SQL[] = [
+    ilike(memberApplications.firstName, term),
+    ilike(memberApplications.applicationNo, term),
+    ilike(members.legacyId, term),
+    ilike(members.memberId, term),
+  ];
+
+  // Phones are stored as typed ("98450 11234", "+91-98450…"), so compare
+  // digits to digits — otherwise a space in either one breaks the match.
+  const digits = q.replace(/\D/g, "");
+  if (digits.length >= 3) {
+    conditions.push(
+      sql`regexp_replace(coalesce(${memberApplications.phone}, ''), '[^0-9]', '', 'g') like ${`%${digits}%`}`,
+    );
+  }
+  if (/^\d{4}$/.test(q)) {
+    conditions.push(eq(memberApplications.aadhaarLast4, q));
+  }
+
+  return or(...conditions) ?? null;
+}
+
+export interface QueuePage {
+  rows: QueueRow[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+/**
+ * Admin only. One page of the review queue. Pending is oldest first so
+ * nobody waits indefinitely; the other tabs are newest first.
+ */
+export async function listApplications({
+  status,
+  q,
+  page: requestedPage = 1,
+  perPage,
+}: {
+  status: ApplicationTab;
+  q?: string;
+  page?: number;
+  perPage: number;
+}): Promise<QueuePage> {
   await requireRole("admin");
+
+  const where = and(
+    eq(memberApplications.status, status),
+    applicationSearchCondition(q) ?? undefined,
+  );
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(memberApplications)
+    .innerJoin(members, eq(members.id, memberApplications.memberId))
+    .where(where);
+  const total = Number(count);
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  // Clamp so a stale or typed-in ?page= past the end shows the last page
+  // rather than an empty one.
+  const page = Math.min(Math.max(1, requestedPage), totalPages);
 
   const rows = await db
     .select({
@@ -333,38 +400,45 @@ export async function listApplications(
     })
     .from(memberApplications)
     .innerJoin(members, eq(members.id, memberApplications.memberId))
-    .where(
-      status === "all"
-        ? undefined
-        : eq(memberApplications.status, status),
-    )
+    .where(where)
     .orderBy(
-      // Pending oldest-first (fairness); everything else newest-first (recency).
       status === "pending"
         ? memberApplications.createdAt
         : desc(memberApplications.createdAt),
-    );
+      // Tie-breaker so rows can't shuffle between pages.
+      memberApplications.id,
+    )
+    .limit(perPage)
+    .offset((page - 1) * perPage);
 
-  return rows.map((r) => ({
-    id: r.id,
-    applicationNo: r.applicationNo,
-    status: r.status,
-    memberId: r.memberId,
-    legacyId: r.legacyId,
-    memberIdCode: r.memberIdCode,
-    submittedName: fullName(r.firstName) || "—",
-    photoKey: r.photoKey,
-    aadhaarLast4: r.aadhaarLast4,
-    memberUpdatedAt: r.memberUpdatedAt,
-    memberPhotoKey: r.memberPhotoKey,
-    createdAt: r.createdAt,
-  }));
+  return {
+    rows: rows.map((r) => ({
+      id: r.id,
+      applicationNo: r.applicationNo,
+      status: r.status,
+      memberId: r.memberId,
+      legacyId: r.legacyId,
+      memberIdCode: r.memberIdCode,
+      submittedName: fullName(r.firstName) || "—",
+      photoKey: r.photoKey,
+      aadhaarLast4: r.aadhaarLast4,
+      memberUpdatedAt: r.memberUpdatedAt,
+      memberPhotoKey: r.memberPhotoKey,
+      createdAt: r.createdAt,
+    })),
+    total,
+    page,
+    totalPages,
+  };
 }
 
-/** Admin only. Counts for the queue tabs and the dashboard card. */
-export async function applicationCounts(): Promise<
-  Record<"pending" | "approved" | "rejected", number>
-> {
+/**
+ * Admin only. Counts for the queue tabs. With a search, each tab counts only
+ * its matches, so the admin can see which tab the person is under.
+ */
+export async function applicationCounts(
+  q?: string,
+): Promise<Record<ApplicationTab, number>> {
   await requireRole("admin");
   const rows = await db
     .select({
@@ -372,6 +446,8 @@ export async function applicationCounts(): Promise<
       count: sql<number>`count(*)`,
     })
     .from(memberApplications)
+    .innerJoin(members, eq(members.id, memberApplications.memberId))
+    .where(applicationSearchCondition(q) ?? undefined)
     .groupBy(memberApplications.status);
 
   const out = { pending: 0, approved: 0, rejected: 0 };
