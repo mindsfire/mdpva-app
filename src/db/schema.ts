@@ -17,6 +17,12 @@ import {
 
 export const roleEnum = pgEnum("user_role", ["viewer", "editor", "admin"]);
 export const userStatusEnum = pgEnum("user_status", ["active", "disabled"]);
+/**
+ * `drone_operator` is retired: replaced by free-text "other" and held by no
+ * row. Postgres can't drop an enum value in place, and listing it here keeps
+ * drizzle-kit's snapshot in step with the database. Nothing offers or accepts
+ * it — the app's own list is `PROFESSIONS` in src/lib/profession.ts.
+ */
 export const professionEnum = pgEnum("profession", [
   "photographer",
   "videographer",
@@ -24,6 +30,8 @@ export const professionEnum = pgEnum("profession", [
   "drone_operator",
   "other",
 ]);
+/** A profession as stored, including the retired value. Read paths only. */
+export type StoredProfession = (typeof professionEnum.enumValues)[number];
 export const memberStatusEnum = pgEnum("member_status", [
   "active",
   "inactive",

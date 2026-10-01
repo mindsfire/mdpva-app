@@ -108,7 +108,6 @@ export const STRINGS = {
   photographer: t("Photographer", "ಛಾಯಾಗ್ರಾಹಕ"),
   videographer: t("Videographer", "ವೀಡಿಯೋಗ್ರಾಹಕ"),
   photoAndVideo: t("Photo & Video", "ಫೋಟೋ ಮತ್ತು ವೀಡಿಯೋ"),
-  droneOperator: t("Drone Operator", "ಡ್ರೋನ್ ಆಪರೇಟರ್"),
   otherProfession: t("Other", "ಇತರೆ"),
   otherProfessionDescribe: t("Your profession", "ನಿಮ್ಮ ವೃತ್ತಿ"),
   otherProfessionPlaceholder: t(

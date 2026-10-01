@@ -1,6 +1,7 @@
 import { MdpvaLogo } from "@/components/brand/mdpva-logo";
 import { Bi } from "@/components/onboard/bilingual";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
+import type { Profession } from "@/lib/profession";
 import { maskAadhaar } from "@/lib/validation/aadhaar";
 import { formatPhone } from "@/lib/validation/phone";
 import { cn } from "@/lib/utils";
@@ -17,13 +18,7 @@ export interface SheetValues {
   pincode: string;
   city: string;
   state: string;
-  profession:
-    | ""
-    | "photographer"
-    | "videographer"
-    | "photo_and_video"
-    | "drone_operator"
-    | "other";
+  profession: "" | Profession;
   /** Set only when `profession` is `"other"`. */
   professionOther: string;
   businessName: string;
@@ -36,11 +31,10 @@ export interface SheetValues {
   applicationNo?: string;
 }
 
-const PROFESSION_LABEL: Record<string, string> = {
+const PROFESSION_LABEL: Record<Exclude<Profession, "other">, string> = {
   photographer: `${S.photographer.en} / ${S.photographer.kn}`,
   videographer: `${S.videographer.en} / ${S.videographer.kn}`,
   photo_and_video: `${S.photoAndVideo.en} / ${S.photoAndVideo.kn}`,
-  drone_operator: `${S.droneOperator.en} / ${S.droneOperator.kn}`,
 };
 
 /** A filled-in value, or a dash placeholder when the member hasn't typed yet. */
@@ -247,7 +241,9 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
           <Val>
             {values.profession === "other"
               ? values.professionOther
-              : (PROFESSION_LABEL[values.profession] ?? "")}
+              : values.profession
+                ? PROFESSION_LABEL[values.profession]
+                : ""}
           </Val>
         </Row>
         <Row num="9." label="Studio / business">

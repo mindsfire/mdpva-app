@@ -6,7 +6,12 @@ import {
   isUuid,
   type MembersQueryParams,
 } from "./members-query";
-import { parsePage, parsePerPage } from "./members-params";
+import {
+  parseMissing,
+  parsePage,
+  parsePerPage,
+  parseProfessionFilter,
+} from "./members-params";
 
 /**
  * `buildMembersWhere` returns a drizzle `SQL` condition tree. We compile it
@@ -80,11 +85,28 @@ describe("buildMembersWhere", () => {
     expect(sql).toContain("profession");
   });
 
-  it("filters by the drone_operator profession", () => {
-    const condition = buildMembersWhere({ profession: "drone_operator" });
+  it("filters by the other profession", () => {
+    const condition = buildMembersWhere({ profession: "other" });
     const query = dialect.sqlToQuery(condition);
     expect(query.sql).toContain("profession");
-    expect(query.params).toContain("drone_operator");
+    expect(query.params).toContain("other");
+  });
+
+  it("filters members with no profession when profession is none", () => {
+    const condition = buildMembersWhere({ profession: "none" });
+    const query = dialect.sqlToQuery(condition);
+    expect(query.sql).toContain('"profession" is null');
+    expect(query.params).not.toContain("none");
+  });
+
+  it.each([
+    ["photo", '"photo_key" is null'],
+    ["phone", '"normalized_phone" is null'],
+    ["dob", '"dob" is null'],
+    ["nominee", '"nominee_name" is null'],
+    ["city", 'length(btrim("members"."city")) < 3'],
+  ] as const)("filters missing=%s", (missing, expected) => {
+    expect(render({ missing })).toContain(expected);
   });
 
   it("filters fees due (feesPaidUpto < current year or null) when feesDue is true", () => {
@@ -160,5 +182,32 @@ describe("parsePage", () => {
     expect(parsePage("-3")).toBe(1);
     expect(parsePage("1.5")).toBe(1);
     expect(parsePage("abc")).toBe(1);
+  });
+});
+
+describe("parseProfessionFilter", () => {
+  it("accepts every current profession and none", () => {
+    for (const value of ["photographer", "videographer", "photo_and_video", "other", "none"]) {
+      expect(parseProfessionFilter(value)).toBe(value);
+    }
+  });
+
+  it("rejects the retired drone_operator and anything unknown", () => {
+    expect(parseProfessionFilter("drone_operator")).toBeUndefined();
+    expect(parseProfessionFilter("chef")).toBeUndefined();
+    expect(parseProfessionFilter(null)).toBeUndefined();
+  });
+});
+
+describe("parseMissing", () => {
+  it("accepts the known missing-detail filters", () => {
+    for (const value of ["photo", "phone", "dob", "nominee", "city"]) {
+      expect(parseMissing(value)).toBe(value);
+    }
+  });
+
+  it("rejects anything else", () => {
+    expect(parseMissing("profession")).toBeUndefined();
+    expect(parseMissing(undefined)).toBeUndefined();
   });
 });

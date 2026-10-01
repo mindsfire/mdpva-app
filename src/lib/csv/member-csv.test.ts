@@ -42,11 +42,11 @@ describe("parseMembersCsv", () => {
     expect(result.rows[0]?.input.profession).toBe("photo_and_video");
   });
 
-  it("accepts drone_operator as a profession value", () => {
+  it("rejects the retired drone_operator profession", () => {
     const row = VALID_ROW.replace("photographer", "drone_operator");
     const result = parseMembersCsv(csv(row));
-    expect(result.errors).toEqual([]);
-    expect(result.rows[0]?.input.profession).toBe("drone_operator");
+    expect(result.rows).toEqual([]);
+    expect(result.errors[0]?.field).toBe("profession");
   });
 
   it("reports row-level validation errors with 1-based row numbers", () => {
@@ -188,7 +188,7 @@ describe("templateCsv / membersToCsv", () => {
         firstName: "Asha Rao",
         email: null,
         phone: "9000000001",
-        profession: "drone_operator",
+        profession: "videographer",
         businessName: null,
         addressLine1: "5 Temple St",
         addressLine2: null,

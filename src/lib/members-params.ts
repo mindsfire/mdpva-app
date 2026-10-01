@@ -6,17 +6,48 @@
  * therefore `dotenv` and the server env schema — into the browser bundle.
  */
 
+import { isProfession, type Profession } from "@/lib/profession";
+
 /** Shared by the members directory and the applications queue. */
 export const PER_PAGE_OPTIONS = [100, 200, 500] as const;
 export type PerPage = (typeof PER_PAGE_OPTIONS)[number];
 export const DEFAULT_PER_PAGE: PerPage = 100;
 
 export type MemberStatusFilter = "active" | "inactive" | "suspended";
-export type ProfessionFilter =
-  | "photographer"
-  | "videographer"
-  | "photo_and_video"
-  | "drone_operator";
+
+/** A profession, or `none` for members who have no profession recorded. */
+export type ProfessionFilter = Profession | "none";
+
+/** Narrows an untrusted `?profession=`. */
+export function parseProfessionFilter(
+  value: string | null | undefined,
+): ProfessionFilter | undefined {
+  return value === "none" || isProfession(value) ? value : undefined;
+}
+
+/**
+ * Profile gaps the directory can list (`?missing=`), matching the dashboard's
+ * profile-completeness card. `city` means a placeholder-looking value ("A",
+ * "1") left by the ledger scan, not an empty one — city is required. A
+ * missing profession is `?profession=none` instead.
+ */
+export const MISSING_FILTERS = [
+  "photo",
+  "phone",
+  "dob",
+  "nominee",
+  "city",
+] as const;
+export type MissingFilter = (typeof MISSING_FILTERS)[number];
+
+/** Narrows an untrusted `?missing=`. */
+export function parseMissing(
+  value: string | null | undefined,
+): MissingFilter | undefined {
+  return MISSING_FILTERS.includes(value as MissingFilter)
+    ? (value as MissingFilter)
+    : undefined;
+}
 
 /**
  * `name` / `name_desc` sort on the displayed full name, `membership` /

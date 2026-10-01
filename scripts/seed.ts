@@ -66,7 +66,6 @@ const PROFESSIONS = [
   "photographer",
   "videographer",
   "photo_and_video",
-  "drone_operator",
 ] as const;
 const STATUSES = ["active", "inactive", "suspended"] as const;
 
@@ -165,9 +164,7 @@ async function seedDemoMembers(adminId: string): Promise<string[]> {
             ? "Studio"
             : profession === "photographer"
               ? "Photography"
-              : profession === "drone_operator"
-                ? "Aerials"
-                : "Films"
+              : "Films"
         }`,
         addressLine1: `${i + 1} MG Road`,
         area: "Central",

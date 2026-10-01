@@ -10,8 +10,8 @@ import {
   MEMBERSHIP_SORT_KEY,
   type MembersQueryParams,
   type MemberStatusFilter,
-  type ProfessionFilter,
-  type MembersSort,
+  parseMissing,
+  parseProfessionFilter,
 } from "@/lib/members-query";
 import {
   ALL_EXPORT_FIELDS,
@@ -37,28 +37,18 @@ function parseFields(raw: string | null): ExportFieldKey[] {
 
 function parseParams(searchParams: URLSearchParams): MembersQueryParams {
   const status = searchParams.get("status");
-  const profession = searchParams.get("profession");
-  const sort = searchParams.get("sort");
   return {
     q: searchParams.get("q") ?? undefined,
     status:
       status === "active" || status === "inactive" || status === "suspended"
         ? (status as MemberStatusFilter)
         : undefined,
-    profession:
-      profession === "photographer" ||
-      profession === "videographer" ||
-      profession === "photo_and_video" ||
-      profession === "drone_operator"
-        ? (profession as ProfessionFilter)
-        : undefined,
+    profession: parseProfessionFilter(searchParams.get("profession")),
     feesDue: searchParams.get("feesDue") === "true",
     deathFund: searchParams.get("deathFund") === "true",
-    sort:
-      sort === "name" || sort === "name_desc" || sort === "newest"
-        ? (sort as MembersSort)
-        : undefined,
-    // cursor deliberately ignored — export always covers the full filtered set
+    missing: parseMissing(searchParams.get("missing")),
+    // `sort` and `page` deliberately ignored — the export always covers the
+    // full filtered set, in membership-number order (see the query below).
   };
 }
 

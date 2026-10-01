@@ -11,8 +11,10 @@ import {
 } from "@/lib/members-query";
 import {
   DEFAULT_PER_PAGE,
+  parseMissing,
   parsePage,
   parsePerPage,
+  parseProfessionFilter,
   parseSort,
 } from "@/lib/members-params";
 import { Button } from "@/components/ui/button";
@@ -57,7 +59,6 @@ function first(value: string | string[] | undefined): string | undefined {
 
 function toQueryParams(searchParams: SearchParams): MembersQueryParams {
   const status = first(searchParams.status);
-  const profession = first(searchParams.profession);
   const sort = first(searchParams.sort);
   return {
     q: first(searchParams.q),
@@ -65,15 +66,10 @@ function toQueryParams(searchParams: SearchParams): MembersQueryParams {
       status === "active" || status === "inactive" || status === "suspended"
         ? status
         : undefined,
-    profession:
-      profession === "photographer" ||
-      profession === "videographer" ||
-      profession === "photo_and_video" ||
-      profession === "drone_operator"
-        ? profession
-        : undefined,
+    profession: parseProfessionFilter(first(searchParams.profession)),
     feesDue: first(searchParams.feesDue) === "true",
     deathFund: first(searchParams.deathFund) === "true",
+    missing: parseMissing(first(searchParams.missing)),
     sort: parseSort(sort),
     page: parsePage(first(searchParams.page)),
     perPage: parsePerPage(first(searchParams.perPage)),
@@ -112,6 +108,7 @@ export default async function MembersDirectoryPage({
     profession: params.profession,
     feesDue: params.feesDue ? "true" : undefined,
     deathFund: params.deathFund ? "true" : undefined,
+    missing: params.missing,
     sort: params.sort,
     perPage:
       params.perPage && params.perPage !== DEFAULT_PER_PAGE ? String(params.perPage) : undefined,
