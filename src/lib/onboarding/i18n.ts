@@ -26,14 +26,23 @@ const t = (en: string, kn: string): Bilingual => ({ en, kn });
  * The seal's Kannada is a *transliteration* of the English
  * ("ಫೋಟೋಗ್ರಾಫರ್ ಅಂಡ್ ವೀಡಿಯೋಗ್ರಾಫರ್"), not a translation — an earlier draft of
  * this file used the translated ಛಾಯಾಗ್ರಾಹಕರ, which doesn't match the
- * registered name. `nameKn` follows the seal.
+ * registered name. `nameKn` follows the seal, except that "District" is
+ * transliterated (ಡಿಸ್ಟ್ರಿಕ್ಟ್) rather than translated (ಜಿಲ್ಲಾ) — MDPVA's
+ * requested correction, consistent with the rest of the name — as is the
+ * plural ಫೋಟೋಗ್ರಾಫರ್ಸ್ / ವೀಡಿಯೋಗ್ರಾಫರ್ಸ್ ("Photographers & Videographers").
  *
  * ⚠️ Still worth one native-speaker check before rollout: this is my reading
  * of a circular seal, and it's the association's name on a form members sign.
  */
 export const ORG = {
   nameEn: "Mysuru District Photographers & Videographers Association (R.)",
-  nameKn: "ಮೈಸೂರು ಜಿಲ್ಲಾ ಫೋಟೋಗ್ರಾಫರ್ ಅಂಡ್ ವೀಡಿಯೋಗ್ರಾಫರ್ ಅಸೋಸಿಯೇಷನ್ (ರಿ)",
+  // "\u200D" (ZWJ) in ರ + ZWJ + ್ + ಸ keeps ರ a full letter with ಸ as its
+  // ottu (ಫರ‍್ಸ್), as MDPVA writes it — without it, ರ becomes an arkavattu.
+  nameKn:
+    "ಮೈಸೂರು ಡಿಸ್ಟ್ರಿಕ್ಟ್ ಫೋಟೋಗ್ರಾಫರ\u200D್ಸ್ ಅಂಡ್ ವೀಡಿಯೋಗ್ರಾಫರ\u200D್ಸ್ ಅಸೋಸಿಯೇಷನ್ (ರಿ)",
+  // Society registration number — printed under the seal on both the
+  // onboard sheet and the downloadable application PDF.
+  regNo: "119",
   place: "Mysuru, Karnataka",
   // Registered office address — shown on the letterhead (onboard sheet and
   // the admin's downloadable application PDF), not to be confused with a

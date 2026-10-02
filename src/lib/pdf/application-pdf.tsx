@@ -6,8 +6,10 @@ import {
   Font,
   Image,
   Page,
+  Path,
   renderToBuffer,
   StyleSheet,
+  Svg,
   Text,
   View,
 } from "@react-pdf/renderer";
@@ -19,6 +21,7 @@ import { formatDateIST } from "@/lib/format-date";
 import { fullName } from "@/lib/member-name";
 import { professionLabel } from "@/lib/profession";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
+import { ORG_NAME_KN_OUTLINE } from "@/lib/pdf/org-name-kn.generated";
 import { fetchMemberPhotoForPdf, type PdfPhoto } from "@/lib/pdf/photo-for-pdf";
 import { maskAadhaar } from "@/lib/validation/aadhaar";
 
@@ -41,7 +44,9 @@ const ASSETS_DIR = path.join(process.cwd(), "src/assets");
  * viewer never substitutes a system font for missing glyphs. Noto Sans
  * Kannada (OFL-licensed, google/fonts) is the only variable instance
  * upstream ships; react-pdf/fontkit embeds it as a single default (Regular)
- * instance, which is all this document needs — no Kannada text here is bold.
+ * instance, which is all the <Text> here needs. The one bold Kannada line,
+ * the letterhead's org name, is drawn from pre-shaped outlines instead (see
+ * `OrgNameKn`).
  */
 Font.register({
   family: "NotoSansKannada",
@@ -127,6 +132,10 @@ export interface PdfField {
    * Only used where the value itself is a fixed, translatable word (e.g.
    * "Covered"), never for freeform member-entered text. */
   valueKn?: string;
+  /** Spans the full row instead of sharing it with a neighbour — for long
+   * freeform text (address lines, remarks) that would wrap badly in half
+   * the width. */
+  wide?: boolean;
 }
 
 export interface PdfSection {
@@ -176,8 +185,18 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
       title: "Address",
       titleKn: S.sectionAddress.kn,
       fields: [
-        { label: "Address line 1", labelKn: S.addressLine1.kn, value: member.addressLine1 },
-        { label: "Address line 2", labelKn: S.addressLine2.kn, value: member.addressLine2 },
+        {
+          label: "Address line 1",
+          labelKn: S.addressLine1.kn,
+          value: member.addressLine1,
+          wide: true,
+        },
+        {
+          label: "Address line 2",
+          labelKn: S.addressLine2.kn,
+          value: member.addressLine2,
+          wide: true,
+        },
         { label: "Area", labelKn: S.area.kn, value: member.area },
         { label: "City", labelKn: S.city.kn, value: member.city },
         { label: "State", labelKn: S.state.kn, value: member.state },
@@ -214,9 +233,11 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
         {
           // One row, not a section of its own: the layout is sized to fit one
           // A4 page (#37) and a separate three-row section pushed it onto two.
+          // Wide: name, relationship and phone break awkwardly in half a row.
           label: "Nominee",
           labelKn: S.sectionNominee.kn,
           value: formatNominee(member),
+          wide: true,
         },
       ],
     },
@@ -225,7 +246,9 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
       // calls this field "Notes".
       title: S.remarks.en,
       titleKn: S.remarks.kn,
-      fields: [{ label: S.remarks.en, labelKn: S.remarks.kn, value: member.notes }],
+      fields: [
+        { label: S.remarks.en, labelKn: S.remarks.kn, value: member.notes, wide: true },
+      ],
     },
   ];
 }
@@ -268,20 +291,22 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 12,
   },
+  logoBlock: { alignItems: "center" },
   logo: { width: 52, height: 52 },
-  letterheadText: { flex: 1, alignItems: "center" },
-  orgNameEn: {
-    fontFamily: "Times-Bold",
-    fontSize: 14,
-    textAlign: "center",
-    color: INK,
+  regNo: {
+    fontFamily: "Helvetica",
+    fontSize: 7,
+    color: MUTED,
+    marginTop: 3,
   },
-  orgNameKn: {
-    fontFamily: "NotoSansKannada",
-    fontSize: 10,
+  letterheadText: { flex: 1, alignItems: "center" },
+  // Kannada leads (see OrgNameKn), English is the subheading.
+  orgNameEn: {
+    fontFamily: "Times-Roman",
+    fontSize: 11,
     textAlign: "center",
     color: BODY,
-    marginTop: 4,
+    marginTop: 3,
   },
   orgPlace: {
     fontFamily: "Helvetica",
@@ -321,9 +346,9 @@ const styles = StyleSheet.create({
   // Applicant block — photo + identity summary
   applicant: {
     flexDirection: "row",
-    marginTop: 12,
-    marginBottom: 4,
-    alignItems: "flex-start",
+    marginTop: 14,
+    // Name and numbers sit level with the middle of the photo, not its top.
+    alignItems: "center",
   },
   photo: {
     width: 92,
@@ -342,55 +367,57 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   photoPlaceholderText: { fontSize: 8, color: MUTED },
-  applicantText: { flex: 1, paddingTop: 4 },
+  applicantText: { flex: 1 },
   applicantName: {
     fontFamily: "Times-Bold",
     fontSize: 16,
-    marginBottom: 4,
+    marginBottom: 6,
     color: INK,
   },
-  applicantMeta: { fontSize: 9, color: MUTED, marginBottom: 1 },
+  applicantMeta: { fontSize: 9, color: MUTED, marginBottom: 2 },
 
-  // Sections
-  section: { marginTop: 4 },
-  bandRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    borderBottomWidth: 0.75,
-    borderBottomColor: RULE,
-    paddingBottom: 3,
-    marginBottom: 3,
-  },
-  bandEn: {
+  // Sections — the two-column grid leaves the page well short of full, so the
+  // sections spread out over whatever height is left (`space-between`), with
+  // the office-use footer at the bottom. On a record long enough to need the
+  // room (wrapped address/remarks) the gaps shrink back to `section`'s floor
+  // instead of spilling onto a second page.
+  sections: { flexGrow: 1, justifyContent: "space-between", marginTop: 6 },
+  section: { marginTop: 10 },
+  // English and Kannada are one <Text> with the Kannada nested inside, never
+  // two sibling <Text>s in a flex row: siblings each top-align their own line
+  // box, and Noto Sans Kannada's is much taller than Times', so the Kannada
+  // rode visibly higher than the English beside it. Nested runs share a
+  // single line and baseline.
+  band: {
     fontFamily: "Helvetica-Bold",
     fontSize: 8,
     letterSpacing: 1.1,
-    textTransform: "uppercase",
     color: MUTED,
+    borderBottomWidth: 0.75,
+    borderBottomColor: RULE,
+    paddingBottom: 4,
+    marginBottom: 2,
   },
-  bandKn: {
-    fontFamily: "NotoSansKannada",
-    fontSize: 8,
-    color: MUTED,
-    marginLeft: 5,
-  },
+  bandKn: { fontFamily: "NotoSansKannada", letterSpacing: 0 },
   row: {
     flexDirection: "row",
+    gap: 16,
     borderBottomWidth: 0.5,
     borderBottomColor: BORDER,
-    paddingVertical: 1.5,
+    paddingVertical: 5,
   },
-  labelCell: { width: 150, flexDirection: "row", flexWrap: "wrap" },
-  labelEn: { color: MUTED },
-  labelKn: { fontFamily: "NotoSansKannada", color: MUTED, marginLeft: 4 },
-  valueCell: { flex: 1, flexDirection: "row", flexWrap: "wrap" },
-  valueEn: { color: INK },
-  valueKn: { fontFamily: "NotoSansKannada", color: INK, marginLeft: 4 },
+  cell: { flex: 1, flexDirection: "row", fontSize: 9.5 },
+  // Same width in a half-row cell and a wide row, so the left column's
+  // values line up all the way down the page.
+  label: { width: 138, paddingRight: 8, color: MUTED },
+  labelKn: { fontFamily: "NotoSansKannada" },
+  value: { flex: 1, color: INK },
+  valueKn: { fontFamily: "NotoSansKannada" },
 
   // Footer — "for office use" band, filled in rather than blank (this is a
   // completed record, not an intake form waiting on a signature).
   footer: {
-    marginTop: 10,
+    marginTop: 18,
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
@@ -412,28 +439,87 @@ const styles = StyleSheet.create({
   footerValue: { fontFamily: "Helvetica-Bold", color: INK },
 });
 
+/**
+ * Kannada org name, the letterhead's headline. Drawn from outlines shaped
+ * by HarfBuzz (scripts/build-org-name-kn.mts) rather than as <Text>:
+ * react-pdf's shaper can't render its ರ + ZWJ + ್ + ಸ spelling (ಫರ‍್ಸ್) and
+ * draws a dotted circle instead.
+ *
+ * 12.5pt keeps it on one line in the ~483pt beside the seal — at 14 it
+ * wrapped, and at 13 it touched the margin.
+ */
+const ORG_NAME_KN_SIZE = 12.5;
+
+function OrgNameKn() {
+  const { upem, width, height, d } = ORG_NAME_KN_OUTLINE;
+  const scale = ORG_NAME_KN_SIZE / upem;
+  return (
+    <Svg
+      viewBox={`0 0 ${width} ${height}`}
+      style={{ width: width * scale, height: height * scale }}
+    >
+      <Path d={d} fill={INK} />
+    </Svg>
+  );
+}
+
 function Band({ en, kn }: { en: string; kn?: string }) {
   return (
-    <View style={styles.bandRow} wrap={false}>
-      <Text style={styles.bandEn}>{en.toUpperCase()}</Text>
-      {kn ? <Text style={styles.bandKn}>{kn}</Text> : null}
+    <Text style={styles.band}>
+      {en.toUpperCase()}
+      {kn ? <Text style={styles.bandKn}>{"  " + kn}</Text> : null}
+    </Text>
+  );
+}
+
+function Cell({ field }: { field: PdfField }) {
+  const display =
+    field.value === null || field.value === "" ? "—" : String(field.value);
+  return (
+    <View style={styles.cell}>
+      <Text style={styles.label}>
+        {field.label}
+        {field.labelKn ? <Text style={styles.labelKn}>{" " + field.labelKn}</Text> : null}
+      </Text>
+      <Text style={styles.value}>
+        {display}
+        {field.valueKn ? <Text style={styles.valueKn}>{" " + field.valueKn}</Text> : null}
+      </Text>
     </View>
   );
 }
 
-function Row({ field }: { field: PdfField }) {
-  const display =
-    field.value === null || field.value === "" ? "—" : String(field.value);
+/** Pairs consecutive fields two to a row; a `wide` field takes a row alone. */
+export function layoutRows(fields: PdfField[]): PdfField[][] {
+  const rows: PdfField[][] = [];
+  let pending: PdfField | null = null;
+  for (const field of fields) {
+    if (field.wide) {
+      if (pending) rows.push([pending]);
+      pending = null;
+      rows.push([field]);
+    } else if (pending) {
+      rows.push([pending, field]);
+      pending = null;
+    } else {
+      pending = field;
+    }
+  }
+  if (pending) rows.push([pending]);
+  return rows;
+}
+
+function Row({ fields }: { fields: PdfField[] }) {
+  const [first, second] = fields;
   return (
     <View style={styles.row} wrap={false}>
-      <View style={styles.labelCell}>
-        <Text style={styles.labelEn}>{field.label}</Text>
-        {field.labelKn ? <Text style={styles.labelKn}>{field.labelKn}</Text> : null}
-      </View>
-      <View style={styles.valueCell}>
-        <Text style={styles.valueEn}>{display}</Text>
-        {field.valueKn ? <Text style={styles.valueKn}>{field.valueKn}</Text> : null}
-      </View>
+      <Cell field={first} />
+      {second ? (
+        <Cell field={second} />
+      ) : first.wide ? null : (
+        // An unpaired half-width field keeps its half, not the whole row.
+        <View style={styles.cell} />
+      )}
     </View>
   );
 }
@@ -461,11 +547,14 @@ export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
     >
       <Page size="A4" style={styles.page}>
         <View style={styles.letterhead}>
-          {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf's <Image>, not an HTML <img>; it has no alt prop */}
-          <Image style={styles.logo} src={{ data: logoBuffer, format: "png" }} />
+          <View style={styles.logoBlock}>
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf's <Image>, not an HTML <img>; it has no alt prop */}
+            <Image style={styles.logo} src={{ data: logoBuffer, format: "png" }} />
+            <Text style={styles.regNo}>Reg No. {ORG.regNo}</Text>
+          </View>
           <View style={styles.letterheadText}>
+            <OrgNameKn />
             <Text style={styles.orgNameEn}>{ORG.nameEn}</Text>
-            <Text style={styles.orgNameKn}>{ORG.nameKn}</Text>
             <Text style={styles.orgPlace}>{ORG.place}</Text>
             <Text style={styles.orgAddress}>{ORG.address}</Text>
           </View>
@@ -498,14 +587,16 @@ export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
           </View>
         </View>
 
-        {sections.map((section) => (
-          <View key={section.title} style={styles.section} wrap={false}>
-            <Band en={section.title} kn={section.titleKn} />
-            {section.fields.map((field) => (
-              <Row key={field.label} field={field} />
-            ))}
-          </View>
-        ))}
+        <View style={styles.sections}>
+          {sections.map((section) => (
+            <View key={section.title} style={styles.section} wrap={false}>
+              <Band en={section.title} kn={section.titleKn} />
+              {layoutRows(section.fields).map((row) => (
+                <Row key={row[0].label} fields={row} />
+              ))}
+            </View>
+          ))}
+        </View>
 
         <View style={styles.footer} wrap={false}>
           <Text style={styles.footerLabel}>{S.officeUse.en}</Text>
