@@ -3,11 +3,14 @@ import sharp from "sharp";
 
 import {
   buildApplicationPdfSections,
+  layoutRows,
   renderApplicationPdf,
   renderApplicationPdfForRecord,
   type ApplicationPdfData,
 } from "./application-pdf";
 import type { memberApplications, members } from "@/db/schema";
+import { ORG } from "@/lib/onboarding/i18n";
+import { ORG_NAME_KN_OUTLINE } from "./org-name-kn.generated";
 
 type Member = typeof members.$inferSelect;
 type Application = typeof memberApplications.$inferSelect;
@@ -205,6 +208,43 @@ describe("buildApplicationPdfSections", () => {
     const fields = flatten(member({ notes: null, email: null }));
     expect(fields.find((f) => f.label === "Remarks")?.value).toBeNull();
     expect(fields.find((f) => f.label === "Email")?.value).toBeNull();
+  });
+});
+
+describe("ORG_NAME_KN_OUTLINE", () => {
+  // The letterhead draws the Kannada name from these pre-shaped outlines, not
+  // from ORG.nameKn directly — a name change must regenerate them.
+  it("was generated from the current ORG.nameKn (run scripts/build-org-name-kn.mts)", () => {
+    expect(ORG_NAME_KN_OUTLINE.text).toBe(ORG.nameKn);
+  });
+});
+
+describe("layoutRows", () => {
+  const f = (label: string, wide = false) => ({ label, value: null, wide });
+  const labels = (rows: ReturnType<typeof layoutRows>) =>
+    rows.map((r) => r.map((x) => x.label));
+
+  it("pairs fields two to a row", () => {
+    expect(labels(layoutRows([f("a"), f("b"), f("c"), f("d")]))).toEqual([
+      ["a", "b"],
+      ["c", "d"],
+    ]);
+  });
+
+  it("gives a wide field a row of its own, flushing an unpaired field first", () => {
+    expect(labels(layoutRows([f("a"), f("w", true), f("b"), f("c"), f("d")]))).toEqual([
+      ["a"],
+      ["w"],
+      ["b", "c"],
+      ["d"],
+    ]);
+  });
+
+  it("keeps the address lines and remarks on full-width rows", () => {
+    const rows = buildApplicationPdfSections(member()).flatMap((s) => layoutRows(s.fields));
+    for (const label of ["Address line 1", "Address line 2", "Remarks", "Nominee"]) {
+      expect(rows.find((r) => r[0].label === label)).toHaveLength(1);
+    }
   });
 });
 

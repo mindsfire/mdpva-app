@@ -119,16 +119,21 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
     <article className="relative bg-[#fdfdfb] px-5 pt-7 pb-6 font-serif sm:px-11 sm:pt-10 sm:pb-[34px] text-[#45443e] shadow-[0_1px_2px_rgba(22,21,19,.06),0_12px_32px_-8px_rgba(22,21,19,.14)] dark:brightness-[.93]">
       {/* Letterhead */}
       <div className="flex items-start gap-4">
-        <span className="mt-0.5 shrink-0">
+        <span className="mt-0.5 flex shrink-0 flex-col items-center">
           {/* The one place the seal is large enough to read properly. */}
           <MdpvaLogo size={64} priority />
+          <span className="mt-1 font-sans text-[9px] whitespace-nowrap text-[#787770] sm:text-[10px]">
+            Reg No. {ORG.regNo}
+          </span>
         </span>
         <div className="min-w-0 flex-1 text-center">
-          <p className="text-balance text-[15px] leading-tight font-semibold text-[#161513] sm:text-[20px]">
-            {ORG.nameEn}
-          </p>
-          <p className="font-kn mt-[5px] text-balance text-[11.5px] leading-snug text-[#45443e] sm:text-[14.5px]">
+          {/* Kannada leads, English is the subheading — same order as the
+              downloadable PDF's letterhead. */}
+          <p className="font-kn text-balance text-[15px] leading-snug font-semibold text-[#161513] sm:text-[20px]">
             {ORG.nameKn}
+          </p>
+          <p className="mt-[5px] text-balance text-[11.5px] leading-snug text-[#45443e] sm:text-[14.5px]">
+            {ORG.nameEn}
           </p>
           <p className="mt-2 font-sans text-[10.5px] tracking-[0.05em] text-[#787770] uppercase">
             {ORG.place}
