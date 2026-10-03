@@ -242,7 +242,7 @@ describe("layoutRows", () => {
 
   it("keeps the address lines and remarks on full-width rows", () => {
     const rows = buildApplicationPdfSections(member()).flatMap((s) => layoutRows(s.fields));
-    for (const label of ["Address line 1", "Address line 2", "Remarks", "Nominee"]) {
+    for (const label of ["Address", "Remarks", "Nominee"]) {
       expect(rows.find((r) => r[0].label === label)).toHaveLength(1);
     }
   });

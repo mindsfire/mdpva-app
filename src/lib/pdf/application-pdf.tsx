@@ -17,6 +17,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db";
 import { memberApplications, members } from "@/db/schema";
+import { joinAddressLines } from "@/lib/address";
 import { formatDateIST } from "@/lib/format-date";
 import { fullName } from "@/lib/member-name";
 import { professionLabel } from "@/lib/profession";
@@ -186,15 +187,11 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
       titleKn: S.sectionAddress.kn,
       fields: [
         {
-          label: "Address line 1",
-          labelKn: S.addressLine1.kn,
-          value: member.addressLine1,
-          wide: true,
-        },
-        {
-          label: "Address line 2",
-          labelKn: S.addressLine2.kn,
-          value: member.addressLine2,
+          label: "Address",
+          labelKn: S.address.kn,
+          // Older records may still carry a line 2; shown as one address,
+          // matching the single field on the form.
+          value: joinAddressLines(member.addressLine1, member.addressLine2) || null,
           wide: true,
         },
         { label: "Area", labelKn: S.area.kn, value: member.area },

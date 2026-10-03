@@ -7,6 +7,7 @@ import { OnboardForm } from "@/components/onboard/onboard-form";
 import { getLatestApplicationForMember } from "@/lib/onboarding/member-application";
 import { readOnboardSession } from "@/lib/onboarding/session";
 import { isoToDisplayableProfession } from "@/lib/onboarding/profession";
+import { joinAddressLines } from "@/lib/address";
 
 /**
  * Step 2 — status if they've already applied, otherwise the form.
@@ -53,8 +54,13 @@ export default async function OnboardFormPage() {
                 firstName: application.firstName ?? "",
                 phone: application.phone ?? "",
                 email: application.email ?? "",
-                addressLine1: application.addressLine1 ?? "",
-                addressLine2: application.addressLine2 ?? "",
+                // The form has a single address field now; an older
+                // application's line 2 is folded in so editing it doesn't
+                // quietly drop that part.
+                addressLine1: joinAddressLines(
+                  application.addressLine1,
+                  application.addressLine2,
+                ),
                 area: application.area ?? "",
                 pincode: application.pincode ?? "",
                 city: application.city ?? "",

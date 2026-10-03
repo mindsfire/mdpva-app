@@ -53,7 +53,10 @@ function applicationToMemberValues(app: typeof memberApplications.$inferSelect) 
     professionOther: keepIfBlank(app.professionOther),
     businessName: keepIfBlank(app.businessName),
     addressLine1: app.addressLine1 ?? undefined,
-    addressLine2: keepIfBlank(app.addressLine2),
+    // Not keepIfBlank: the form has a single address field, so the submitted
+    // line 1 *is* the whole address. Keeping an old ledger line 2 would glue
+    // a stale fragment onto the new address.
+    addressLine2: app.addressLine2 ?? null,
     area: keepIfBlank(app.area),
     city: app.city ?? undefined,
     state: app.state ?? undefined,
