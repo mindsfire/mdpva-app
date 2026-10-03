@@ -18,6 +18,7 @@ const KIND_STYLES: Record<string, string> = {
   added: "text-emerald-700 dark:text-emerald-400",
   changed: "text-mdpva-accent dark:text-mdpva-gold",
   kept: "text-muted-foreground italic",
+  cleared: "text-muted-foreground italic",
   same: "text-muted-foreground",
 };
 
@@ -172,7 +173,7 @@ export default async function ReviewApplicationPage({
                     key={d.field}
                     className={cn(
                       "border-b border-mdpva-border/60 last:border-0 dark:border-border/60",
-                      (d.kind === "added" || d.kind === "changed") &&
+                      (d.kind === "added" || d.kind === "changed" || d.kind === "cleared") &&
                         "bg-mdpva-gold/[0.07]",
                     )}
                   >
@@ -181,7 +182,11 @@ export default async function ReviewApplicationPage({
                       {d.current ?? "—"}
                     </td>
                     <td className={cn("px-3 py-2 font-medium", KIND_STYLES[d.kind])}>
-                      {d.kind === "kept" ? "left blank — current value kept" : (d.submitted ?? "—")}
+                      {d.kind === "kept"
+                        ? "left blank — current value kept"
+                        : d.kind === "cleared"
+                          ? "will be removed — Address above is the full address"
+                          : (d.submitted ?? "—")}
                     </td>
                   </tr>
                 ))}

@@ -13,7 +13,6 @@ export interface SheetValues {
   email: string;
   aadhaar: string;
   addressLine1: string;
-  addressLine2: string;
   area: string;
   pincode: string;
   city: string;
@@ -214,9 +213,6 @@ export function ApplicationSheet({ values }: { values: SheetValues }) {
       <div>
         <Row num="5.">
           <Val>{values.addressLine1}</Val>
-        </Row>
-        <Row>
-          <Val>{values.addressLine2}</Val>
         </Row>
         <Row num="6.">
           <span className="flex flex-1 items-baseline gap-2">

@@ -41,7 +41,7 @@ export const FIELD_LABELS: Record<DiffField, string> = {
   firstName: "Full name",
   phone: "Phone",
   email: "Email",
-  addressLine1: "Address line 1",
+  addressLine1: "Address",
   addressLine2: "Address line 2",
   area: "Area",
   pincode: "Pincode",
@@ -61,8 +61,13 @@ export const FIELD_LABELS: Record<DiffField, string> = {
  * `kept` — the member left an optional field blank while the record holds a
  * value. Approval does *not* clear it (see `applicationToMemberValues`), so
  * labelling this "cleared" would misrepresent what the admin is about to do.
+ *
+ * `cleared` — the one exception: `addressLine2`. The form now takes the whole
+ * address in line 1, so approval does wipe an old line 2.
  */
-export type ChangeKind = "added" | "changed" | "kept" | "same";
+export type ChangeKind = "added" | "changed" | "kept" | "cleared" | "same";
+
+const CLEARED_WHEN_BLANK: ReadonlySet<DiffField> = new Set(["addressLine2"]);
 
 export interface FieldDiff {
   field: DiffField;
@@ -86,10 +91,14 @@ function normalize(value: unknown): string | null {
  * first-time submission entirely as "changed" and make the genuinely edited
  * fields — the ones worth an admin's attention — impossible to spot.
  */
-function classify(current: string | null, submitted: string | null): ChangeKind {
+function classify(
+  field: DiffField,
+  current: string | null,
+  submitted: string | null,
+): ChangeKind {
   if (current === submitted) return "same";
   if (current === null) return "added";
-  if (submitted === null) return "kept";
+  if (submitted === null) return CLEARED_WHEN_BLANK.has(field) ? "cleared" : "kept";
   return "changed";
 }
 
@@ -102,7 +111,7 @@ export function diffApplication(current: Row, submitted: Row): FieldDiff[] {
       label: FIELD_LABELS[field],
       current: a,
       submitted: b,
-      kind: classify(a, b),
+      kind: classify(field, a, b),
     };
   });
 }
@@ -112,5 +121,7 @@ export function diffApplication(current: Row, submitted: Row): FieldDiff[] {
  * happens to those, so counting them would overstate the change.
  */
 export function countChanges(diffs: FieldDiff[]): number {
-  return diffs.filter((d) => d.kind === "added" || d.kind === "changed").length;
+  return diffs.filter(
+    (d) => d.kind === "added" || d.kind === "changed" || d.kind === "cleared",
+  ).length;
 }

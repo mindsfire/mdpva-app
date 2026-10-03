@@ -28,7 +28,7 @@ export const MAX_LENGTHS = {
   name: 120,
   email: 254, // RFC 5321
   businessName: 120,
-  addressLine: 120,
+  addressLine: 200, // one field holds the whole address
   area: 60,
   city: 60,
   state: 60,

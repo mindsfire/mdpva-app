@@ -31,6 +31,7 @@ import {
 } from "@/lib/nominee";
 import { STRINGS as S, type Bilingual } from "@/lib/onboarding/i18n";
 import { canSubmitApplication } from "@/lib/onboarding/submit-gate";
+import { joinAddressLines } from "@/lib/address";
 import { isValidAadhaar } from "@/lib/validation/aadhaar";
 import { MAX_LENGTHS } from "@/lib/validation/member";
 import { cn } from "@/lib/utils";
@@ -96,7 +97,6 @@ function emptyValues(membershipNo: string, prefill: Partial<Values>): Values {
     phone: "",
     email: "",
     addressLine1: "",
-    addressLine2: "",
     area: "",
     pincode: "",
     city: "Mysuru",
@@ -211,7 +211,14 @@ export function OnboardForm({
     try {
       const raw = window.localStorage.getItem(draftKey);
       if (!raw) return;
-      const parsed = JSON.parse(raw) as Partial<Values>;
+      const { addressLine2, ...parsed } = JSON.parse(raw) as Partial<Values> & {
+        addressLine2?: string;
+      };
+      // A draft saved while the form still had two address lines would
+      // otherwise lose line 2 silently, since there's no input left for it.
+      if (addressLine2) {
+        parsed.addressLine1 = joinAddressLines(parsed.addressLine1, addressLine2);
+      }
       // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from localStorage, which cannot be read during render
       setValues((v) => ({ ...v, ...parsed, membershipNo, aadhaar: "" }));
       setRestored(true);
@@ -649,7 +656,7 @@ export function OnboardForm({
         <Group s={S.sectionAddress}>
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <span className="flex flex-col gap-1.5 sm:col-span-2">
-              <Label htmlFor="f-a1" s={S.addressLine1} required />
+              <Label htmlFor="f-a1" s={S.address} required />
               <Input
                 id="f-a1"
                 value={values.addressLine1}
@@ -661,15 +668,6 @@ export function OnboardForm({
                   {fieldErrors.addressLine1}
                 </span>
               ) : null}
-            </span>
-            <span className="flex flex-col gap-1.5 sm:col-span-2">
-              <Label htmlFor="f-a2" s={S.addressLine2} />
-              <Input
-                id="f-a2"
-                placeholder={S.optional.en}
-                value={values.addressLine2}
-                onChange={(e) => set("addressLine2", e.target.value)}
-              />
             </span>
             <span className="flex flex-col gap-1.5">
               <Label htmlFor="f-area" s={S.area} />

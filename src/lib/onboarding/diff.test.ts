@@ -29,6 +29,17 @@ describe("diffApplication", () => {
     expect(diffs.find((d) => d.field === "email")?.kind).toBe("kept");
   });
 
+  it("marks a blank address line 2 as cleared, since approval removes it", () => {
+    // The form has one address field, so an old ledger line 2 would otherwise
+    // be glued onto the member's newly typed address.
+    const diffs = diffApplication(
+      { addressLine1: "No 12, 3rd Cross", addressLine2: "Near Bus Stand" },
+      { addressLine1: "45, Temple Road", addressLine2: null },
+    );
+    expect(diffs.find((d) => d.field === "addressLine2")?.kind).toBe("cleared");
+    expect(countChanges(diffs)).toBe(2);
+  });
+
   it("treats empty string and whitespace as null, not a change", () => {
     const diffs = diffApplication({ area: null }, { area: "   " });
     expect(diffs.find((d) => d.field === "area")?.kind).toBe("same");

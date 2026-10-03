@@ -91,8 +91,9 @@ export const applicationInputSchema = z.object({
       message: "Enter a valid email address",
     }),
 
+  // One address field. `address_line2` is left NULL on new applications; it
+  // only holds values from before the form was simplified.
   addressLine1: requiredText(MAX_LENGTHS.addressLine, "Address"),
-  addressLine2: optionalText(MAX_LENGTHS.addressLine, "Address line 2"),
   area: optionalText(MAX_LENGTHS.area, "Area"),
   pincode: requiredText(6, "Pincode").refine((v) => PINCODE_REGEX.test(v), {
     message: "Pincode must be 6 digits",

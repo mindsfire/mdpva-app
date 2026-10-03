@@ -70,7 +70,6 @@ export async function submitApplicationAction(
     phone: formData.get("phone"),
     email: formData.get("email"),
     addressLine1: formData.get("addressLine1"),
-    addressLine2: formData.get("addressLine2"),
     area: formData.get("area"),
     pincode: formData.get("pincode"),
     city: formData.get("city"),

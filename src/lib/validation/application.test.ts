@@ -13,8 +13,8 @@ function validInput(overrides: Partial<Record<string, unknown>> = {}) {
     profession: "photographer",
     professionOther: "",
     businessName: "Asha Studios",
+    // Matches what the onboard form sends: one address field, no line 2 key.
     addressLine1: "12 MG Road",
-    addressLine2: "",
     area: "Indiranagar",
     city: "Bengaluru",
     state: "Karnataka",
@@ -34,6 +34,46 @@ describe("applicationInputSchema", () => {
   it("accepts a fully valid application", () => {
     const result = applicationInputSchema.safeParse(validInput());
     expect(result.success).toBe(true);
+  });
+
+  describe("address", () => {
+    it("accepts an application with no addressLine2 key at all", () => {
+      // The onboard form has a single address field and doesn't send line 2.
+      // A schema that still declared it rejected every real submission with
+      // "expected nonoptional, received undefined".
+      const input = validInput({ addressLine1: "#85, Allanahalli Layout" });
+      expect("addressLine2" in input).toBe(false);
+      const result = applicationInputSchema.safeParse(input);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.addressLine1).toBe("#85, Allanahalli Layout");
+      }
+    });
+
+    it("drops an addressLine2 a client sends anyway", () => {
+      // Line 2 isn't member-editable any more; approval clears the old one,
+      // so a crafted request mustn't be able to write it back.
+      const result = applicationInputSchema.safeParse(
+        validInput({ addressLine2: "Near temple" }),
+      );
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect("addressLine2" in result.data).toBe(false);
+      }
+    });
+
+    it("accepts a 200-character address but not 201", () => {
+      // One field now holds the whole address, so the cap is wider than the
+      // old per-line 120.
+      expect(
+        applicationInputSchema.safeParse(validInput({ addressLine1: "a".repeat(200) }))
+          .success,
+      ).toBe(true);
+      expect(
+        applicationInputSchema.safeParse(validInput({ addressLine1: "a".repeat(201) }))
+          .success,
+      ).toBe(false);
+    });
   });
 
   describe("profession", () => {
