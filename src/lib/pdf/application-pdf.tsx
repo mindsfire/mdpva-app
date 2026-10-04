@@ -162,7 +162,13 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
       title: "Identity",
       titleKn: S.sectionIdentity.kn,
       fields: [
-        { label: "Full name", labelKn: S.fullName.kn, value: fullName(member.firstName) || null },
+        {
+          label: "Full name",
+          labelKn: S.fullName.kn,
+          // Capitals on the printed form only, so the name reads clearly when
+          // checked against the photo; the stored name keeps its casing.
+          value: fullName(member.firstName).toUpperCase() || null,
+        },
         { label: "Date of birth", labelKn: S.dob.kn, value: member.dob },
         { label: "Blood group", labelKn: S.bloodGroup.kn, value: member.bloodGroup },
         {
@@ -340,7 +346,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Applicant block — photo + identity summary
+  // Applicant block — identity summary + photo. The photo sits on the right:
+  // printed sheets go into a spiral-bound register, and flipping through it
+  // puts the right edge under the thumb, so the photo can be checked against
+  // the member at a glance.
   applicant: {
     flexDirection: "row",
     marginTop: 14,
@@ -350,13 +359,13 @@ const styles = StyleSheet.create({
   photo: {
     width: 92,
     height: 118.3, // 92 * 9/7, the app's 7:9 passport ratio
-    marginRight: 16,
+    marginLeft: 16,
     objectFit: "cover",
   },
   photoPlaceholder: {
     width: 92,
     height: 118.3,
-    marginRight: 16,
+    marginLeft: 16,
     borderWidth: 1,
     borderStyle: "dashed",
     borderColor: "#c9c3b1",
@@ -566,6 +575,12 @@ export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
         </View>
 
         <View style={styles.applicant}>
+          <View style={styles.applicantText}>
+            {/* Capitals, matching the "Full name" row (see buildApplicationPdfSections). */}
+            <Text style={styles.applicantName}>{memberName.toUpperCase()}</Text>
+            <Text style={styles.applicantMeta}>Application {applicationNoDisplay}</Text>
+            <Text style={styles.applicantMeta}>Membership no. {legacyId ?? "—"}</Text>
+          </View>
           {photo ? (
             // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf's <Image>, not an HTML <img>; it has no alt prop
             <Image
@@ -577,11 +592,6 @@ export function ApplicationPdfDocument({ data }: { data: ApplicationPdfData }) {
               <Text style={styles.photoPlaceholderText}>No photo</Text>
             </View>
           )}
-          <View style={styles.applicantText}>
-            <Text style={styles.applicantName}>{memberName}</Text>
-            <Text style={styles.applicantMeta}>Application {applicationNoDisplay}</Text>
-            <Text style={styles.applicantMeta}>Membership no. {legacyId ?? "—"}</Text>
-          </View>
         </View>
 
         <View style={styles.sections}>
