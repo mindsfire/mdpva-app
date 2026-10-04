@@ -61,7 +61,9 @@ export const config = {
     // The app icons (src/app/icon.png, src/app/apple-icon.png) are requested
     // by the browser from the login page itself, before any session exists —
     // without these exclusions those requests get redirected to /login and the
-    // favicon silently never loads.
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|sitemap.xml|robots.txt).*)",
+    // favicon silently never loads. `_vercel` is Vercel Web Analytics' script
+    // and page-view endpoint, hit from /login and /onboard by visitors with no
+    // session — redirecting those would drop every signed-out page view.
+    "/((?!api/auth|_next/static|_next/image|_vercel|favicon.ico|icon.png|apple-icon.png|sitemap.xml|robots.txt).*)",
   ],
 };
