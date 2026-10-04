@@ -130,6 +130,11 @@ describe("buildApplicationPdfSections", () => {
     ).toBe("Not covered");
   });
 
+  it("prints the full name in capitals", () => {
+    const fields = flatten(member({ firstName: "Asha Rao" }));
+    expect(fields.find((f) => f.label === "Full name")?.value).toBe("ASHA RAO");
+  });
+
   it("uses the ledger number as membership no.", () => {
     const fields = flatten(member());
     expect(fields.find((f) => f.label === "Membership no.")?.value).toBe("42");
