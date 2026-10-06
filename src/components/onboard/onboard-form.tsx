@@ -23,7 +23,8 @@ import {
   type SheetValues,
 } from "@/components/onboard/application-sheet";
 import { Button } from "@/components/ui/button";
-import { DateField, isoToDisplay } from "@/components/ui/date-field";
+import { DateField } from "@/components/ui/date-field";
+import { isoToDisplay } from "@/lib/format-date";
 import { Input } from "@/components/ui/input";
 import {
   NOMINEE_RELATIONSHIPS,

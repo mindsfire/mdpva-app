@@ -1,4 +1,5 @@
 import type { MemberDetail } from "@/lib/members-query";
+import { isoToDisplay } from "@/lib/format-date";
 import { professionLabel } from "@/lib/profession";
 
 export interface DetailField {
@@ -62,7 +63,10 @@ export function buildMemberSections(member: MemberDetail): MemberSection[] {
           value: professionLabel(member.profession, member.professionOther),
         },
         { label: "Business", value: member.businessName },
-        { label: "Date of birth", value: member.dob },
+        {
+          label: "Date of birth",
+          value: member.dob ? isoToDisplay(member.dob) : null,
+        },
         { label: "Blood group", value: member.bloodGroup },
         {
           label: "Aadhaar",

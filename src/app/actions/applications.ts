@@ -8,11 +8,12 @@ import { and, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import type { ApplicationTab } from "@/lib/applications-params";
-import { memberApplications, members } from "@/db/schema";
+import { memberApplications, members, users } from "@/db/schema";
 import { isUniqueViolationOn } from "@/lib/db-errors";
 import { fullName } from "@/lib/member-name";
 import { requireRole } from "@/lib/rbac";
 import { isPendingPhotoKey, r2, R2_BUCKET, photoKeyFor } from "@/lib/r2";
+import { applicationCorrectionSchema } from "@/lib/validation/application";
 import { normalizePhone } from "@/lib/validation/phone";
 import { sanitizeText } from "@/lib/validation/text-safety";
 
@@ -170,6 +171,70 @@ export async function approveApplication(
   return { ok: true };
 }
 
+export interface CorrectionResult extends ReviewResult {
+  /** The field the error is about, so the form can mark that input. */
+  field?: string;
+}
+
+/**
+ * Admin only. Corrects a pending application's submitted values in place —
+ * the small spelling and formatting slips that would otherwise cost the member
+ * a reject-and-resubmit round trip. Approval then writes the corrected values
+ * onto the member, so the typo never reaches the directory.
+ *
+ * Overwrites what the member typed (no separate copy is kept); the member sees
+ * the corrected values on their status page. Only `applicationCorrectionSchema`
+ * fields are accepted, and they pass the same rules as the public form.
+ *
+ * Guarded on `status = 'pending'` in the `WHERE`, like approval: if the
+ * application was approved, rejected, or superseded by a resubmission while
+ * the admin was editing, nothing is written and the admin is told to reload.
+ */
+export async function correctPendingApplication(
+  applicationId: string,
+  input: Record<string, unknown>,
+): Promise<CorrectionResult> {
+  const sessionUser = await requireRole("admin");
+
+  const parsed = applicationCorrectionSchema.safeParse(input);
+  if (!parsed.success) {
+    const first = parsed.error.issues[0];
+    return {
+      ok: false,
+      error: first?.message ?? "Please check the details and try again.",
+      field: first?.path[0]?.toString(),
+    };
+  }
+
+  const [updated] = await db
+    .update(memberApplications)
+    .set({
+      ...parsed.data,
+      editedBy: sessionUser.id,
+      editedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(memberApplications.id, applicationId),
+        eq(memberApplications.status, "pending"),
+      ),
+    )
+    .returning({ id: memberApplications.id });
+
+  if (!updated) {
+    return {
+      ok: false,
+      error:
+        "This application is no longer pending — it was reviewed or resubmitted. Reload to see the latest.",
+    };
+  }
+
+  revalidatePath(QUEUE_PATH);
+  revalidatePath(`${QUEUE_PATH}/${applicationId}`);
+  return { ok: true };
+}
+
 /**
  * Admin only. Rejects with a reason the member sees on the status page —
  * without it they have no idea what to fix, and the only way to find out is
@@ -306,10 +371,18 @@ export interface QueueRow {
   legacyId: string | null;
   memberIdCode: string;
   submittedName: string;
+  /**
+   * The member record's name now. Differs from `submittedName` once an admin
+   * corrects the member after approval — the approved tab shows this one, so
+   * the list matches the directory instead of the original typo.
+   */
+  currentName: string;
   photoKey: string | null;
   /** The member's live photo; shown for approved rows (see `applicationPhoto`). */
   memberPhotoKey: string | null;
   aadhaarLast4: string | null;
+  /** Set once an admin corrected the submitted values; see `editedAt` in schema. */
+  editedAt: Date | null;
   memberUpdatedAt: Date;
   createdAt: Date;
 }
@@ -326,6 +399,9 @@ function applicationSearchCondition(rawQuery: string | undefined): SQL | null {
 
   const conditions: SQL[] = [
     ilike(memberApplications.firstName, term),
+    // The member's current name too: after an admin corrects a typo on the
+    // member record, the corrected spelling must still find the application.
+    ilike(members.firstName, term),
     ilike(memberApplications.applicationNo, term),
     ilike(members.legacyId, term),
     ilike(members.memberId, term),
@@ -395,9 +471,11 @@ export async function listApplications({
       firstName: memberApplications.firstName,
       photoKey: memberApplications.photoKey,
       aadhaarLast4: memberApplications.aadhaarLast4,
+      editedAt: memberApplications.editedAt,
       createdAt: memberApplications.createdAt,
       legacyId: members.legacyId,
       memberIdCode: members.memberId,
+      memberName: members.firstName,
       memberUpdatedAt: members.updatedAt,
       memberPhotoKey: members.photoKey,
     })
@@ -423,8 +501,10 @@ export async function listApplications({
       legacyId: r.legacyId,
       memberIdCode: r.memberIdCode,
       submittedName: fullName(r.firstName) || "—",
+      currentName: fullName(r.memberName) || "—",
       photoKey: r.photoKey,
       aadhaarLast4: r.aadhaarLast4,
+      editedAt: r.editedAt,
       memberUpdatedAt: r.memberUpdatedAt,
       memberPhotoKey: r.memberPhotoKey,
       createdAt: r.createdAt,
@@ -462,7 +542,10 @@ export async function applicationCounts(
   return out;
 }
 
-/** Admin only. One application plus the member record it would overwrite. */
+/**
+ * Admin only. One application plus the member record it would overwrite, and
+ * the name of whoever last corrected it (null if never corrected).
+ */
 export async function getApplicationForReview(applicationId: string) {
   await requireRole("admin");
 
@@ -480,7 +563,17 @@ export async function getApplicationForReview(applicationId: string) {
     .limit(1);
   if (!member) return null;
 
-  return { application: app, member };
+  let editedByName: string | null = null;
+  if (app.editedBy) {
+    const [editor] = await db
+      .select({ name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.id, app.editedBy))
+      .limit(1);
+    editedByName = editor ? editor.name?.trim() || editor.email : null;
+  }
+
+  return { application: app, member, editedByName };
 }
 
 /** Admin only. Used by the queue's bulk selection. */

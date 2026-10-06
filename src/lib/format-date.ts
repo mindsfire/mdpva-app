@@ -25,6 +25,18 @@ const dateTimeFmt = new Intl.DateTimeFormat("en-IN", {
   timeZone: "Asia/Kolkata",
 });
 
+/**
+ * A stored `date` (ISO `YYYY-MM-DD`) as `DD-MM-YYYY` — the Indian convention,
+ * and what members type into the onboarding form's date field. Used for birth
+ * dates everywhere they're shown, so the form, the review screen, the member
+ * record and the PDF all read the same way. Anything that isn't a clean ISO
+ * date is returned unchanged rather than guessed at.
+ */
+export function isoToDisplay(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : iso;
+}
+
 /** e.g. "26 Sept 2026" */
 export function formatDateIST(date: Date): string {
   return dateFmt.format(date);

@@ -7,6 +7,7 @@
  * edit or cries wolf on every row.
  */
 
+import { isoToDisplay } from "@/lib/format-date";
 import { sanitizeText } from "@/lib/validation/text-safety";
 
 export const DIFF_FIELDS = [
@@ -85,6 +86,11 @@ function normalize(value: unknown): string | null {
   return s === "" ? null : s;
 }
 
+/** Dates of birth read as `DD-MM-YYYY`, matching the form the member filled. */
+function display(field: DiffField, value: string | null): string | null {
+  return field === "dob" && value !== null ? isoToDisplay(value) : value;
+}
+
 /**
  * `added` is separated from `changed` because during the ledger migration
  * almost every field is empty-to-value. Lumping them together would paint a
@@ -104,8 +110,8 @@ function classify(
 
 export function diffApplication(current: Row, submitted: Row): FieldDiff[] {
   return DIFF_FIELDS.map((field) => {
-    const a = normalize(current[field]);
-    const b = normalize(submitted[field]);
+    const a = display(field, normalize(current[field]));
+    const b = display(field, normalize(submitted[field]));
     return {
       field,
       label: FIELD_LABELS[field],

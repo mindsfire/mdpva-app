@@ -47,6 +47,15 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 /**
+ * The name a queue row shows. Once approved, the member record is the source
+ * of truth — an admin may have corrected a typo there — so the approved tab
+ * shows the live name; until then, what was submitted is what's under review.
+ */
+function queueName(row: QueueRow): string {
+  return row.status === "approved" ? row.currentName : row.submittedName;
+}
+
+/**
  * The review queue.
  *
  * Every row shows the submitted photo, which is what makes bulk approve
@@ -221,8 +230,21 @@ export function QueueTable({
                 </TableCell>
                 {/* The one flexible column: long names truncate rather than
                     spill into the next column under table-fixed. */}
-                <TableCell className="truncate" title={row.submittedName}>
-                  <SearchHighlight text={row.submittedName} />
+                <TableCell className="truncate" title={queueName(row)}>
+                  <SearchHighlight text={queueName(row)} />
+                  {row.editedAt ? (
+                    <span
+                      className="ml-2 rounded-full bg-mdpva-gold/25 px-1.5 py-0.5 align-middle text-[10.5px] font-medium text-mdpva-accent dark:text-mdpva-gold"
+                      title={`Corrected by an admin · ${formatDateTimeIST(row.editedAt)}`}
+                    >
+                      Edited
+                    </span>
+                  ) : null}
+                  {queueName(row) !== row.submittedName ? (
+                    <div className="truncate text-xs text-muted-foreground">
+                      submitted as <SearchHighlight text={row.submittedName} />
+                    </div>
+                  ) : null}
                 </TableCell>
                 <TableCell className="tabular-nums text-muted-foreground">
                   {row.legacyId ? <SearchHighlight text={row.legacyId} /> : "—"}

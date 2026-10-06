@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { applicationInputSchema } from "./application";
+import {
+  applicationCorrectionSchema,
+  applicationInputSchema,
+  CORRECTABLE_FIELDS,
+} from "./application";
 
 function validInput(overrides: Partial<Record<string, unknown>> = {}) {
   return {
@@ -336,5 +340,97 @@ describe("applicationInputSchema", () => {
       expect(result.success).toBe(false);
       expect(result.error?.issues[0]?.path[0]).toBe("nomineePhone");
     });
+  });
+});
+
+describe("applicationCorrectionSchema", () => {
+  function validCorrection(overrides: Partial<Record<string, unknown>> = {}) {
+    return {
+      firstName: "Asha Rao",
+      businessName: "Asha Studios",
+      addressLine1: "12 MG Road",
+      area: "Indiranagar",
+      city: "Bengaluru",
+      state: "Karnataka",
+      pincode: "560038",
+      email: "asha@example.com",
+      nomineeName: "Lakshmi Rao",
+      nomineeRelationship: "Spouse",
+      ...overrides,
+    };
+  }
+
+  it("accepts a valid correction", () => {
+    expect(applicationCorrectionSchema.safeParse(validCorrection()).success).toBe(true);
+  });
+
+  it("tidies spacing but leaves capitalisation as the admin typed it", () => {
+    const result = applicationCorrectionSchema.safeParse(
+      validCorrection({ firstName: "  asha   RAO ", city: " Bengaluru  " }),
+    );
+    expect(result.success && result.data.firstName).toBe("asha RAO");
+    expect(result.success && result.data.city).toBe("Bengaluru");
+  });
+
+  it("applies the public form's rules", () => {
+    expect(
+      applicationCorrectionSchema.safeParse(validCorrection({ firstName: "Asha 2" })).success,
+    ).toBe(false);
+    expect(
+      applicationCorrectionSchema.safeParse(validCorrection({ pincode: "5600" })).success,
+    ).toBe(false);
+    expect(
+      applicationCorrectionSchema.safeParse(validCorrection({ city: "  " })).success,
+    ).toBe(false);
+    expect(
+      applicationCorrectionSchema.safeParse(
+        validCorrection({ nomineeRelationship: "Cousin" }),
+      ).success,
+    ).toBe(false);
+  });
+
+  it("stores a blanked optional field as null", () => {
+    const result = applicationCorrectionSchema.safeParse(
+      validCorrection({ businessName: "", area: " ", email: "" }),
+    );
+    expect(result.success && result.data).toMatchObject({
+      businessName: null,
+      area: null,
+      email: null,
+    });
+  });
+
+  it("never passes through identity fields, even if sent", () => {
+    const result = applicationCorrectionSchema.safeParse(
+      validCorrection({
+        phone: "9845099999",
+        aadhaar: "234567890124",
+        dob: "1980-01-01",
+        photoKey: "members/x.webp",
+        status: "approved",
+      }),
+    );
+    expect(result.success).toBe(true);
+    const keys = Object.keys(result.success ? result.data : {});
+    for (const forbidden of ["phone", "aadhaar", "dob", "photoKey", "status"]) {
+      expect(keys).not.toContain(forbidden);
+    }
+  });
+
+  it("lists exactly the correctable fields", () => {
+    expect([...CORRECTABLE_FIELDS].sort()).toEqual(
+      [
+        "addressLine1",
+        "area",
+        "businessName",
+        "city",
+        "email",
+        "firstName",
+        "nomineeName",
+        "nomineeRelationship",
+        "pincode",
+        "state",
+      ].sort(),
+    );
   });
 });

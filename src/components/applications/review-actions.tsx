@@ -9,6 +9,7 @@ import {
   approveApplication,
   rejectApplication,
 } from "@/app/actions/applications";
+import { useReviewEditing } from "@/components/applications/review-changes";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,6 +40,8 @@ export function ReviewActions({
   const [pending, setPending] = React.useState(false);
   const [rejectOpen, setRejectOpen] = React.useState(false);
   const [reason, setReason] = React.useState("");
+  // Approving mid-edit would write the uncorrected values and drop the edits.
+  const editing = useReviewEditing();
 
   async function onApprove() {
     setPending(true);
@@ -79,12 +82,17 @@ export function ReviewActions({
           variant="destructive"
           size="sm"
           onClick={() => setRejectOpen(true)}
-          disabled={pending}
+          disabled={pending || editing}
         >
           <XIcon />
           Reject
         </Button>
-        <Button size="sm" onClick={onApprove} disabled={pending}>
+        <Button
+          size="sm"
+          onClick={onApprove}
+          disabled={pending || editing}
+          title={editing ? "Save or cancel your corrections first" : undefined}
+        >
           <CheckIcon />
           {pending ? "…" : "Approve"}
         </Button>
