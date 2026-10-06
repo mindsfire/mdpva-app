@@ -357,6 +357,9 @@ const styles = StyleSheet.create({
   applicant: {
     flexDirection: "row",
     marginTop: 14,
+    // Inset from the page margin the rules and bands run to — flush with
+    // them, the name and photo read as sitting on the sheet's edge.
+    paddingHorizontal: 51, // 18mm
     // Name and numbers sit level with the middle of the photo, not its top.
     alignItems: "center",
   },
