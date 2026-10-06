@@ -71,7 +71,7 @@ function requiredText(max: number, label: string) {
 const MIN_AGE = 18;
 const MAX_AGE = 100;
 
-export const applicationInputSchema = z.object({
+const applicationFields = z.object({
   /** Full name — stored in `first_name`; see `fullName()`. */
   firstName: personName("Full name"),
 
@@ -163,7 +163,9 @@ export const applicationInputSchema = z.object({
     // digits can be *extracted*, so keeping the raw text would store anything
     // wrapped around them ("98450<b>22345", or 5,000 characters of padding).
     .transform((v) => normalizePhone(v)),
-})
+});
+
+export const applicationInputSchema = applicationFields
   .refine((v) => v.profession !== "other" || v.professionOther !== null, {
     message: "Please describe your profession",
     path: ["professionOther"],
@@ -192,3 +194,33 @@ function isPlausibleBirthDate(iso: string): boolean {
 }
 
 export type ApplicationInput = z.infer<typeof applicationInputSchema>;
+
+/**
+ * Fields an admin may correct on a pending application before approving it —
+ * spelling, spacing and capitalisation slips that aren't worth a reject and
+ * resubmit round trip.
+ *
+ * Picked from the member's own field rules, so a correction can never store
+ * something the public form would have refused. Phone, Aadhaar, date of birth,
+ * blood group, profession and the photo are deliberately absent: they identify
+ * the person or are facts only the member can vouch for, so a mistake there is
+ * the member's to fix via reject and resubmit.
+ */
+export const applicationCorrectionSchema = applicationFields.pick({
+  firstName: true,
+  businessName: true,
+  addressLine1: true,
+  area: true,
+  city: true,
+  state: true,
+  pincode: true,
+  email: true,
+  nomineeName: true,
+  nomineeRelationship: true,
+});
+
+export type ApplicationCorrection = z.infer<typeof applicationCorrectionSchema>;
+
+export const CORRECTABLE_FIELDS = Object.keys(
+  applicationCorrectionSchema.shape,
+) as (keyof ApplicationCorrection)[];

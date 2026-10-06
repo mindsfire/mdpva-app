@@ -238,6 +238,15 @@ export const memberApplications = pgTable(
     /** `pending/{id}.webp` in R2 until approval promotes it to the live key. */
     photoKey: text("photo_key"),
 
+    /**
+     * Set when an admin corrected the submitted values before approval (see
+     * `correctPendingApplication`). The correction overwrites what the member
+     * typed, so this is the only trace that the values aren't verbatim. Holds
+     * the latest correction when there were several.
+     */
+    editedBy: uuid("edited_by").references(() => users.id),
+    editedAt: timestamp("edited_at", { withTimezone: true }),
+
     rejectionReason: text("rejection_reason"),
     reviewedBy: uuid("reviewed_by").references(() => users.id),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),

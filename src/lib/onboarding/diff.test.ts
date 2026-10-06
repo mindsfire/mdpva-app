@@ -3,6 +3,12 @@ import { describe, expect, it } from "vitest";
 import { countChanges, diffApplication } from "./diff";
 
 describe("diffApplication", () => {
+  it("shows date of birth as DD-MM-YYYY, like the form the member filled", () => {
+    const diffs = diffApplication({ dob: "1980-01-31" }, { dob: "1980-02-01" });
+    const dob = diffs.find((d) => d.field === "dob");
+    expect(dob).toMatchObject({ current: "31-01-1980", submitted: "01-02-1980", kind: "changed" });
+  });
+
   it("marks an unchanged field as same", () => {
     const diffs = diffApplication({ city: "Mysuru" }, { city: "Mysuru" });
     expect(diffs.find((d) => d.field === "city")?.kind).toBe("same");

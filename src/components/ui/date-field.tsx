@@ -6,6 +6,7 @@ import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { isoToDisplay } from "@/lib/format-date";
 import { cn } from "@/lib/utils";
 
 /**
@@ -37,11 +38,6 @@ function pad(n: number): string {
 
 export function toIso(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-export function isoToDisplay(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  return m ? `${m[3]}-${m[2]}-${m[1]}` : iso;
 }
 
 /**

@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { DateField } from "@/components/ui/date-field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -438,8 +439,11 @@ export function MemberForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Date of birth</FormLabel>
+                  {/* DD-MM-YYYY, same control as the onboarding form — a
+                      native date input follows the browser's locale and shows
+                      MM/DD/YYYY on a US-configured machine. */}
                   <FormControl>
-                    <Input {...field} value={field.value ?? ""} type="date" />
+                    <DateField value={field.value ?? ""} onChange={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

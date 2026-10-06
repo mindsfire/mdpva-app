@@ -43,6 +43,8 @@ function application(overrides: Partial<Application> = {}): Application {
     nomineeRelationship: null,
     nomineePhone: null,
     photoKey: null,
+    editedBy: null,
+    editedAt: null,
     rejectionReason: null,
     reviewedBy: null,
     reviewedAt: new Date("2026-07-31T10:00:00Z"),

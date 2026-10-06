@@ -42,6 +42,14 @@ const flatten = (m: MemberDetail) =>
   buildMemberSections(m).flatMap((s) => s.fields);
 
 describe("buildMemberSections", () => {
+  it("shows date of birth as DD-MM-YYYY", () => {
+    const dob = flatten(member()).find((f) => f.label === "Date of birth");
+    expect(dob?.value).toBe("31-01-1980");
+    expect(
+      flatten(member({ dob: null })).find((f) => f.label === "Date of birth")?.value,
+    ).toBeNull();
+  });
+
   it("splits address line 1 and line 2 into separate fields", () => {
     const labels = flatten(member()).map((f) => f.label);
     expect(labels).toContain("Address line 1");

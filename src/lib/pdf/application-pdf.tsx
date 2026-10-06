@@ -18,7 +18,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { memberApplications, members } from "@/db/schema";
 import { joinAddressLines } from "@/lib/address";
-import { formatDateIST } from "@/lib/format-date";
+import { formatDateIST, isoToDisplay } from "@/lib/format-date";
 import { fullName } from "@/lib/member-name";
 import { professionLabel } from "@/lib/profession";
 import { ORG, STRINGS as S } from "@/lib/onboarding/i18n";
@@ -169,7 +169,11 @@ export function buildApplicationPdfSections(member: Member): PdfSection[] {
           // checked against the photo; the stored name keeps its casing.
           value: fullName(member.firstName).toUpperCase() || null,
         },
-        { label: "Date of birth", labelKn: S.dob.kn, value: member.dob },
+        {
+          label: "Date of birth",
+          labelKn: S.dob.kn,
+          value: member.dob ? isoToDisplay(member.dob) : null,
+        },
         { label: "Blood group", labelKn: S.bloodGroup.kn, value: member.bloodGroup },
         {
           label: "Aadhaar",
