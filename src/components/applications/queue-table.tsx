@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { CheckIcon, DownloadIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { bulkApproveApplications } from "@/app/actions/applications";
@@ -10,6 +10,7 @@ import type { QueueRow } from "@/app/actions/applications";
 import { ReopenForResubmitAction } from "@/components/applications/reopen-action";
 import { Button } from "@/components/ui/button";
 import { maskAadhaar } from "@/lib/validation/aadhaar";
+import { formatPhone, normalizePhone } from "@/lib/validation/phone";
 import { applicationPhoto } from "@/lib/application-photo";
 import { formatDateTimeIST } from "@/lib/format-date";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -53,6 +54,41 @@ const STATUS_STYLES: Record<string, string> = {
  */
 function queueName(row: QueueRow): string {
   return row.status === "approved" ? row.currentName : row.submittedName;
+}
+
+/**
+ * Copies a row's phone number without opening the application (the row
+ * itself is a link). Copies the bare 10 digits — what a dialer or WhatsApp
+ * expects — falling back to the stored text for a number that won't
+ * normalize, such as an old ledger landline.
+ */
+function CopyPhoneButton({ phone }: { phone: string }) {
+  const [copied, setCopied] = React.useState(false);
+
+  async function copy(e: React.MouseEvent) {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(normalizePhone(phone) ?? phone.trim());
+      setCopied(true);
+      toast.success("Phone number copied.");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Could not copy the phone number.");
+    }
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-sm"
+      onClick={copy}
+      aria-label={`Copy phone number ${formatPhone(phone)}`}
+      title="Copy phone number"
+    >
+      {copied ? <CheckIcon /> : <CopyIcon />}
+    </Button>
+  );
 }
 
 /**
@@ -245,6 +281,18 @@ export function QueueTable({
                       submitted as <SearchHighlight text={row.submittedName} />
                     </div>
                   ) : null}
+                </TableCell>
+                <TableCell className="tabular-nums text-muted-foreground">
+                  {row.phone ? (
+                    <div className="flex items-center gap-1">
+                      <span className="truncate" title={formatPhone(row.phone)}>
+                        <SearchHighlight text={formatPhone(row.phone)} />
+                      </span>
+                      <CopyPhoneButton phone={row.phone} />
+                    </div>
+                  ) : (
+                    "—"
+                  )}
                 </TableCell>
                 <TableCell className="tabular-nums text-muted-foreground">
                   {row.legacyId ? <SearchHighlight text={row.legacyId} /> : "—"}

@@ -377,6 +377,13 @@ export interface QueueRow {
    * the list matches the directory instead of the original typo.
    */
   currentName: string;
+  /**
+   * Same rule as the name: the member record's number once approved (an
+   * admin may have fixed it there), otherwise the one submitted — each
+   * falling back to the other when blank, so a row shows a number whenever
+   * either record has one.
+   */
+  phone: string | null;
   photoKey: string | null;
   /** The member's live photo; shown for approved rows (see `applicationPhoto`). */
   memberPhotoKey: string | null;
@@ -413,6 +420,8 @@ function applicationSearchCondition(rawQuery: string | undefined): SQL | null {
   if (digits.length >= 3) {
     conditions.push(
       sql`regexp_replace(coalesce(${memberApplications.phone}, ''), '[^0-9]', '', 'g') like ${`%${digits}%`}`,
+      // The member's number as well — the approved tab shows that one.
+      ilike(members.normalizedPhone, `%${digits}%`),
     );
   }
   if (/^\d{4}$/.test(q)) {
@@ -469,6 +478,7 @@ export async function listApplications({
       status: memberApplications.status,
       memberId: memberApplications.memberId,
       firstName: memberApplications.firstName,
+      applicationPhone: memberApplications.phone,
       photoKey: memberApplications.photoKey,
       aadhaarLast4: memberApplications.aadhaarLast4,
       editedAt: memberApplications.editedAt,
@@ -476,6 +486,7 @@ export async function listApplications({
       legacyId: members.legacyId,
       memberIdCode: members.memberId,
       memberName: members.firstName,
+      memberPhone: members.phone,
       memberUpdatedAt: members.updatedAt,
       memberPhotoKey: members.photoKey,
     })
@@ -502,6 +513,10 @@ export async function listApplications({
       memberIdCode: r.memberIdCode,
       submittedName: fullName(r.firstName) || "—",
       currentName: fullName(r.memberName) || "—",
+      phone:
+        r.status === "approved"
+          ? (r.memberPhone ?? r.applicationPhone)
+          : (r.applicationPhone ?? r.memberPhone),
       photoKey: r.photoKey,
       aadhaarLast4: r.aadhaarLast4,
       editedAt: r.editedAt,

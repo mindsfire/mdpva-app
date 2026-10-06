@@ -7,13 +7,14 @@
  * column; the minimum table width keeps it usable on narrow screens, where
  * the table scrolls sideways instead.
  */
-export const QUEUE_TABLE_CLASS = "min-w-[1040px] table-fixed";
+export const QUEUE_TABLE_CLASS = "min-w-[1180px] table-fixed";
 export const QUEUE_CHECKBOX_COLUMN_CLASS = "w-10";
 
 export const QUEUE_COLUMNS = [
   { label: "Photo", className: "w-16" },
   { label: "Application", className: "w-48" },
   { label: "Member", className: undefined },
+  { label: "Phone", className: "w-40" },
   { label: "Ledger no.", className: "w-28" },
   { label: "Aadhaar", className: "w-36" },
   { label: "Submitted", className: "w-56" },
