@@ -1,6 +1,5 @@
 "use server";
 
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { and, eq, isNull, ne } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -13,7 +12,8 @@ import {
 import { getLatestApplicationForMember } from "@/lib/onboarding/member-application";
 import { canResubmit } from "@/lib/onboarding/resubmit";
 import { readOnboardSession } from "@/lib/onboarding/session";
-import { r2, R2_BUCKET, pendingPhotoKeyFor } from "@/lib/r2";
+import { putPhoto } from "@/lib/photo-store";
+import { pendingPhotoKeyFor } from "@/lib/r2";
 import {
   MAX_UPLOAD_BYTES,
   processPassportPhoto,
@@ -202,14 +202,7 @@ export async function submitApplicationAction(
 
   if (processedPhoto) {
     const key = pendingPhotoKeyFor(inserted.id);
-    await r2.send(
-      new PutObjectCommand({
-        Bucket: R2_BUCKET,
-        Key: key,
-        Body: processedPhoto,
-        ContentType: "image/webp",
-      }),
-    );
+    await putPhoto(key, processedPhoto);
     await db
       .update(memberApplications)
       .set({ photoKey: key })

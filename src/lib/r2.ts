@@ -40,5 +40,14 @@ export function pendingPhotoKeyFor(applicationId: string): string {
   return `app/pending/${applicationId}.webp`;
 }
 
+/**
+ * The small rendition stored beside a photo: `app/members/<id>.webp` →
+ * `app/members/<id>.thumb.webp`. Derived rather than stored, so it needs no
+ * column — a missing thumbnail just means the full photo is served instead.
+ */
+export function thumbKeyFor(photoKey: string): string {
+  return photoKey.replace(/\.webp$/, "") + ".thumb.webp";
+}
+
 /** True for keys under the pending prefix; used to gate serving to admins. */
 export { isPendingPhotoKey } from "@/lib/application-photo";

@@ -21,7 +21,7 @@ export function MemberAvatar({
   size?: "default" | "sm" | "lg";
   className?: string;
 }) {
-  const src = photoUrl(photoKey, updatedAt);
+  const src = photoUrl(photoKey, updatedAt, { thumb: true });
   return (
     <Avatar
       size={size}
