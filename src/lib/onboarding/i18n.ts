@@ -162,6 +162,13 @@ export const STRINGS = {
     "ಸಂಘದ ಕಚೇರಿಯು ನಿಮ್ಮ ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸುತ್ತದೆ. ಅನುಮೋದನೆಯ ನಂತರವೇ ನಿಮ್ಮ ಮಾಹಿತಿ ಸದಸ್ಯರ ಪಟ್ಟಿಯಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.",
   ),
   done: t("Done", "ಮುಗಿಯಿತು"),
+  shareCard: t("Share", "ಹಂಚಿಕೊಳ್ಳಿ"),
+  downloadCard: t("Download image", "ಚಿತ್ರ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ"),
+  copyNumber: t("Copy application number", "ಅರ್ಜಿ ಸಂಖ್ಯೆಯನ್ನು ನಕಲಿಸಿ"),
+  shareCardFailed: t(
+    "Could not make the card. Please try again.",
+    "ಕಾರ್ಡ್ ಸಿದ್ಧಪಡಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  ),
 
   // Returning-member status
   statusPendingTitle: t("Awaiting review", "ಪರಿಶೀಲನೆಗೆ ಬಾಕಿ ಇದೆ"),
