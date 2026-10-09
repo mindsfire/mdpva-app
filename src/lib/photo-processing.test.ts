@@ -3,9 +3,11 @@ import sharp from "sharp";
 
 import {
   MAX_UPLOAD_BYTES,
+  makeThumbnail,
   processLegacyPhoto,
   processPhoto,
   sniffImageType,
+  THUMB_MAX_EDGE,
 } from "./photo-processing";
 import { PASSPORT_ASPECT, PASSPORT_HEIGHT, PASSPORT_WIDTH } from "./photo-constants";
 
@@ -115,5 +117,34 @@ describe("processLegacyPhoto", () => {
     const out = await processLegacyPhoto(await makePng(200, 400));
     expect(out.width).toBe(200);
     expect(out.height).toBe(Math.round(200 / PASSPORT_ASPECT));
+  });
+});
+
+describe("makeThumbnail", () => {
+  it("fits a passport photo inside the thumbnail box, keeping its aspect", async () => {
+    const full = await sharp({
+      create: { width: PASSPORT_WIDTH, height: PASSPORT_HEIGHT, channels: 3, background: "#888" },
+    })
+      .webp()
+      .toBuffer();
+    const meta = await sharp(await makeThumbnail(full)).metadata();
+    expect(meta.format).toBe("webp");
+    expect(meta.height).toBe(THUMB_MAX_EDGE);
+    expect(meta.width).toBe(Math.round(THUMB_MAX_EDGE * (PASSPORT_WIDTH / PASSPORT_HEIGHT)));
+  });
+
+  it("never enlarges an already-small legacy photo", async () => {
+    const small = await sharp({
+      create: { width: 161, height: 206, channels: 3, background: "#888" },
+    })
+      .webp()
+      .toBuffer();
+    const meta = await sharp(await makeThumbnail(small)).metadata();
+    expect(meta.width).toBe(161);
+    expect(meta.height).toBe(206);
+  });
+
+  it("throws on bytes that aren't an image", async () => {
+    await expect(makeThumbnail(Buffer.from("not an image"))).rejects.toThrow();
   });
 });

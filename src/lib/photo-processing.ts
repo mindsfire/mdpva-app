@@ -129,3 +129,28 @@ export async function processPhoto(buf: Buffer): Promise<ProcessedPhoto> {
   const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
   return { webp: data, width: info.width, height: info.height };
 }
+
+/**
+ * Longest edge of the small rendition stored beside every photo. Avatars and
+ * list rows draw the photo at 24–48 CSS px; 240 covers that at 3x density and
+ * still lands around 5–10 KB, against 25–60 KB+ for the full photo.
+ */
+export const THUMB_MAX_EDGE = 240;
+const THUMB_QUALITY = 75;
+
+/**
+ * Downscales a stored photo to its thumbnail. Aspect ratio is kept (never
+ * cropped), so `object-cover` frames the thumbnail exactly as it frames the
+ * full photo it stands in for.
+ */
+export async function makeThumbnail(buf: Buffer): Promise<Buffer> {
+  return sharp(buf, { failOn: "error" })
+    .resize({
+      width: THUMB_MAX_EDGE,
+      height: THUMB_MAX_EDGE,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: THUMB_QUALITY })
+    .toBuffer();
+}

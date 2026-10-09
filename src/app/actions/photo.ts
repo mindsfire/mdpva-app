@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { eq, isNull, and } from "drizzle-orm";
 
 import { db } from "@/db";
 import { members } from "@/db/schema";
 import { requireRole } from "@/lib/rbac";
-import { r2, R2_BUCKET, photoKeyFor } from "@/lib/r2";
+import { photoKeyFor } from "@/lib/r2";
+import { deletePhoto, putPhoto } from "@/lib/photo-store";
 import { MAX_UPLOAD_BYTES, processPhoto, sniffImageType } from "@/lib/photo-processing";
 
 export interface PhotoActionResult {
@@ -19,8 +19,8 @@ export interface PhotoActionResult {
 /**
  * Editor+. Replaces a member's photo: validates the upload server-side
  * (size cap, magic-byte sniff, real decode), re-encodes to WebP capped at
- * 1200px, and writes it to a fixed per-member key — so storage never grows
- * per re-upload and a stale object is never left behind.
+ * 1200px, and writes it (plus its thumbnail) to a fixed per-member key — so
+ * storage never grows per re-upload and a stale object is never left behind.
  */
 export async function uploadMemberPhoto(
   memberId: string,
@@ -60,15 +60,7 @@ export async function uploadMemberPhoto(
   }
 
   const key = photoKeyFor(memberId);
-  await r2.send(
-    new PutObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: key,
-      Body: processed.webp,
-      ContentType: "image/webp",
-      CacheControl: "private, max-age=3600",
-    }),
-  );
+  await putPhoto(key, processed.webp);
 
   await db
     .update(members)
@@ -80,7 +72,7 @@ export async function uploadMemberPhoto(
   return { ok: true, photoKey: key };
 }
 
-/** Editor+. Removes a member's photo from R2 and clears `photo_key`. */
+/** Editor+. Removes a member's photo (and thumbnail) from R2 and clears `photo_key`. */
 export async function removeMemberPhoto(memberId: string): Promise<PhotoActionResult> {
   await requireRole("editor");
 
@@ -95,7 +87,7 @@ export async function removeMemberPhoto(memberId: string): Promise<PhotoActionRe
     return { ok: true, photoKey: null };
   }
 
-  await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: member.photoKey }));
+  await deletePhoto(member.photoKey);
   await db.update(members).set({ photoKey: null }).where(eq(members.id, memberId));
 
   revalidatePath("/members");

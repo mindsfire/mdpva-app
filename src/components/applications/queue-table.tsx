@@ -209,10 +209,11 @@ export function QueueTable({
                 ) : null}
                 <TableCell>
                   {(() => {
-                    const photo = applicationPhoto(row, {
-                      photoKey: row.memberPhotoKey,
-                      updatedAt: row.memberUpdatedAt,
-                    });
+                    const photo = applicationPhoto(
+                      row,
+                      { photoKey: row.memberPhotoKey, updatedAt: row.memberUpdatedAt },
+                      { thumb: true },
+                    );
                     return photo.kind === "photo" ? (
                       <PhotoImg
                         src={photo.src}

@@ -1,9 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import {
-  CopyObjectCommand,
-} from "@aws-sdk/client-s3";
 import { and, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -12,7 +9,8 @@ import { memberApplications, members, users } from "@/db/schema";
 import { isUniqueViolationOn } from "@/lib/db-errors";
 import { fullName } from "@/lib/member-name";
 import { requireRole } from "@/lib/rbac";
-import { isPendingPhotoKey, r2, R2_BUCKET, photoKeyFor } from "@/lib/r2";
+import { copyPhoto } from "@/lib/photo-store";
+import { isPendingPhotoKey, photoKeyFor } from "@/lib/r2";
 import { applicationCorrectionSchema } from "@/lib/validation/application";
 import { normalizePhone } from "@/lib/validation/phone";
 import { sanitizeText } from "@/lib/validation/text-safety";
@@ -118,13 +116,7 @@ export async function approveApplication(
   let livePhotoKey: string | undefined;
   if (claimed.photoKey && isPendingPhotoKey(claimed.photoKey)) {
     livePhotoKey = photoKeyFor(claimed.memberId);
-    await r2.send(
-      new CopyObjectCommand({
-        Bucket: R2_BUCKET,
-        CopySource: `${R2_BUCKET}/${claimed.photoKey}`,
-        Key: livePhotoKey,
-      }),
-    );
+    await copyPhoto(claimed.photoKey, livePhotoKey);
     // The pending object is kept: an earlier rejected/superseded row of the
     // same member can reference the same key (a resubmit that kept the
     // photo), and those rows still show it to admins.

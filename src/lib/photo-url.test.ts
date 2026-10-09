@@ -41,4 +41,19 @@ describe("photoUrl", () => {
       "/api/photos/app/members/m-1.webp?v=abc",
     );
   });
+
+  it("asks for the thumbnail rendition when thumb is set", () => {
+    expect(photoUrl("app/pending/app-1.webp", null, { thumb: true })).toBe(
+      "/api/photos/app/pending/app-1.webp?size=thumb",
+    );
+    expect(photoUrl("app/members/m-1.webp", 123, { thumb: true })).toBe(
+      "/api/photos/app/members/m-1.webp?v=123&size=thumb",
+    );
+  });
+
+  it("gives the thumbnail and the full photo different URLs", () => {
+    expect(photoUrl("app/members/m-1.webp", 123, { thumb: true })).not.toBe(
+      photoUrl("app/members/m-1.webp", 123),
+    );
+  });
 });

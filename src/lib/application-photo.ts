@@ -26,23 +26,26 @@ export type ApplicationPhoto =
  *   versioned by the member's `updatedAt`.
  * - rejected/superseded with no key: "unavailable" — photos of applications
  *   rejected before submitted photos were kept were deleted at the time.
+ *
+ * `thumb` requests the small rendition, for the queue's list rows.
  */
 export function applicationPhoto(
   app: { status: string; photoKey: string | null },
   member: { photoKey: string | null; updatedAt: Date },
+  options: { thumb?: boolean } = {},
 ): ApplicationPhoto {
   if (app.status === "pending") {
-    const src = photoUrl(app.photoKey);
+    const src = photoUrl(app.photoKey, null, options);
     return src ? { kind: "photo", src } : { kind: "none" };
   }
   if (app.status === "approved") {
-    const src = photoUrl(member.photoKey, member.updatedAt);
+    const src = photoUrl(member.photoKey, member.updatedAt, options);
     return src ? { kind: "photo", src } : { kind: "none" };
   }
   if (app.photoKey) {
     const src = isPendingPhotoKey(app.photoKey)
-      ? photoUrl(app.photoKey)
-      : photoUrl(app.photoKey, member.updatedAt);
+      ? photoUrl(app.photoKey, null, options)
+      : photoUrl(app.photoKey, member.updatedAt, options);
     if (src) return { kind: "photo", src };
   }
   return { kind: "unavailable" };

@@ -5,8 +5,15 @@ services:
   # member photos again (see incident: approving a test application against
   # a real ledger member overwrote their live R2 photo, because dev and prod
   # pointed at the same bucket while only Postgres was branched).
+  #
+  # Chainguard's builds: MinIO stopped publishing `minio/minio` and
+  # `minio/mc` to Docker Hub (and quay.io requires auth), so those tags no
+  # longer pull.
   minio:
-    image: minio/minio:latest
+    image: cgr.dev/chainguard/minio:latest
+    # The image runs as a non-root user, but a fresh named volume is
+    # root-owned — without this MinIO can't write /data.
+    user: root
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000" # S3 API — R2_ENDPOINT points here
@@ -18,18 +25,20 @@ services:
       - minio-data:/data
 
   # One-shot: creates the dev bucket, then exits. Re-run any time with
-  # `docker compose up minio-init` — `mc mb` is a no-op if the bucket
+  # `docker compose up minio-init` — `mc mb -p` is a no-op if the bucket
   # already exists.
+  #
+  # The image has no shell, so there's no wait-for-MinIO loop: the alias
+  # comes from MC_HOST_local, and `restart: on-failure` retries until MinIO
+  # is accepting connections.
   minio-init:
-    image: minio/mc:latest
+    image: cgr.dev/chainguard/minio-client:latest
     depends_on:
       - minio
-    entrypoint: >
-      /bin/sh -c "
-      until mc alias set local http://minio:9000 minioadmin minioadmin; do sleep 1; done;
-      mc mb -p local/mdpva-dev;
-      echo 'mdpva-dev bucket ready';
-      "
+    environment:
+      MC_HOST_local: http://minioadmin:minioadmin@minio:9000
+    command: ["mb", "-p", "local/mdpva-dev"]
+    restart: on-failure
 
 volumes:
   minio-data:
