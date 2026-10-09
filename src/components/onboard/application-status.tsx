@@ -2,6 +2,9 @@
 
 import * as React from "react";
 import { Bi } from "@/components/onboard/bilingual";
+import { CopyNumberButton } from "@/components/onboard/copy-number-button";
+import { DoneTick } from "@/components/onboard/done-tick";
+import { ShareCardButton } from "@/components/onboard/share-card-button";
 import { useRouter } from "next/navigation";
 
 import { endOnboardSessionAction } from "@/app/actions/onboard";
@@ -11,6 +14,8 @@ import { STRINGS as S } from "@/lib/onboarding/i18n";
 import { cn } from "@/lib/utils";
 
 export interface StatusProps {
+  /** The member's first name as submitted, printed on the share card. */
+  name: string;
   applicationNo: string;
   status: "pending" | "approved" | "rejected";
   submittedAt: Date;
@@ -30,6 +35,7 @@ export interface StatusProps {
  * since MDPVA has no way to email or message them.
  */
 export function ApplicationStatus({
+  name,
   applicationNo,
   status,
   submittedAt,
@@ -70,12 +76,16 @@ export function ApplicationStatus({
       </p>
 
       <div className={cn("mt-6 rounded-lg border px-5 py-5 text-center", copy.tone)}>
-        <p className="text-xs tracking-[0.14em] text-muted-foreground uppercase">
+        {status === "pending" ? <DoneTick size={48} /> : null}
+        <p className="mt-2 text-xs tracking-[0.14em] text-muted-foreground uppercase">
           {S.applicationNo.en}
         </p>
-        <p className="mt-1.5 font-serif text-2xl font-medium tracking-wide text-foreground tabular-nums">
-          {applicationNo}
-        </p>
+        <div className="mt-1.5 flex items-center justify-center gap-1">
+          <p className="font-serif text-2xl font-medium tracking-wide text-foreground tabular-nums">
+            {applicationNo}
+          </p>
+          <CopyNumberButton value={applicationNo} />
+        </div>
         <p className="mt-2 text-xs text-muted-foreground">
           Submitted {formatDateTimeIST(submittedAt)}
           {reviewedAt ? ` · reviewed ${formatDateTimeIST(reviewedAt)}` : ""}
@@ -96,6 +106,12 @@ export function ApplicationStatus({
         <span className="font-kn mt-1.5 block">{copy.body.kn}</span>
       </p>
 
+      {status === "pending" ? (
+        <div className="mt-7">
+          <ShareCardButton name={name} />
+        </div>
+      ) : null}
+
       {status === "rejected" ? (
         <Button className="mt-7 h-10 w-full" onClick={onEdit}>
           <Bi s={S.fixAndResubmit} sep="·" />
@@ -104,7 +120,7 @@ export function ApplicationStatus({
 
       <Button
         variant="outline"
-        className={cn("h-10 w-full", status === "rejected" ? "mt-2.5" : "mt-7")}
+        className={cn("h-10 w-full", status === "approved" ? "mt-7" : "mt-2.5")}
         onClick={async () => {
           await endOnboardSessionAction();
           router.push("/onboard");
