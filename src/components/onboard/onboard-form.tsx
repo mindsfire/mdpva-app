@@ -19,7 +19,6 @@ import { XIcon } from "lucide-react";
 import { ApplicationStatus } from "@/components/onboard/application-status";
 import { CopyNumberButton } from "@/components/onboard/copy-number-button";
 import { DoneTick } from "@/components/onboard/done-tick";
-import { ShareCardButton } from "@/components/onboard/share-card-button";
 
 import {
   ApplicationSheet,
@@ -190,7 +189,6 @@ export function OnboardForm({
   const [submitting, setSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [submitted, setSubmitted] = React.useState<string | null>(null);
-  const [submittedAt, setSubmittedAt] = React.useState<Date | null>(null);
   const [consented, setConsented] = React.useState(false);
   const [aadhaarError, setAadhaarError] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<
@@ -324,7 +322,6 @@ export function OnboardForm({
         return;
       }
       window.localStorage.removeItem(draftKey);
-      setSubmittedAt(new Date());
       setSubmitted(result.applicationNo);
     } catch {
       /*
@@ -415,15 +412,9 @@ export function OnboardForm({
           <span className="font-kn mt-1.5 block">{S.submittedBody.kn}</span>
         </p>
 
-        {submittedAt ? (
-          <div className="mt-7">
-            <ShareCardButton name={values.firstName} />
-          </div>
-        ) : null}
-
         <Button
           variant="outline"
-          className={cn("h-10 w-full", submittedAt ? "mt-2.5" : "mt-7")}
+          className="mt-7 h-10 w-full"
           onClick={async () => {
             await endOnboardSessionAction();
             router.push("/onboard");

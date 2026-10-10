@@ -106,7 +106,11 @@ export function ApplicationStatus({
         <span className="font-kn mt-1.5 block">{copy.body.kn}</span>
       </p>
 
-      {status !== "rejected" ? (
+      {/*
+        Only once an admin has approved. Before that the card would carry a
+        photo that hasn't been checked yet, and members were sharing it.
+      */}
+      {status === "approved" ? (
         <div className="mt-7">
           <ShareCardButton name={name} />
         </div>
@@ -120,7 +124,7 @@ export function ApplicationStatus({
 
       <Button
         variant="outline"
-        className={cn("h-10 w-full", status === "approved" ? "mt-7" : "mt-2.5")}
+        className="mt-7 h-10 w-full"
         onClick={async () => {
           await endOnboardSessionAction();
           router.push("/onboard");
