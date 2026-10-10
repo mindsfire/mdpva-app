@@ -76,7 +76,7 @@ export function ApplicationStatus({
       </p>
 
       <div className={cn("mt-6 rounded-lg border px-5 py-5 text-center", copy.tone)}>
-        {status === "pending" ? <DoneTick size={48} /> : null}
+        {status !== "rejected" ? <DoneTick size={48} /> : null}
         <p className="mt-2 text-xs tracking-[0.14em] text-muted-foreground uppercase">
           {S.applicationNo.en}
         </p>
@@ -106,7 +106,7 @@ export function ApplicationStatus({
         <span className="font-kn mt-1.5 block">{copy.body.kn}</span>
       </p>
 
-      {status === "pending" ? (
+      {status !== "rejected" ? (
         <div className="mt-7">
           <ShareCardButton name={name} />
         </div>
