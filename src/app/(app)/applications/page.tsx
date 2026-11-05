@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { DownloadIcon } from "lucide-react";
 
 import {
   applicationCounts,
@@ -53,6 +54,10 @@ export default async function ApplicationsPage({
     applicationCounts(q),
   ]);
 
+  const exportParams = new URLSearchParams({ status });
+  if (q) exportParams.set("q", q);
+  const exportHref = `/api/export/applications?${exportParams.toString()}`;
+
   return (
     <div className="flex flex-col gap-5">
       <PageBreadcrumb
@@ -96,6 +101,18 @@ export default async function ApplicationsPage({
               </span>
             </TransitionLink>
           ))}
+          {/* Exports the whole tab (every page) with the current search. */}
+          {counts[status] > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto"
+              render={<a href={exportHref} download />}
+            >
+              <DownloadIcon />
+              Export CSV
+            </Button>
+          ) : null}
         </div>
 
         <QueueResults counts={counts}>
