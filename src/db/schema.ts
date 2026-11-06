@@ -319,3 +319,33 @@ export const loginAttempts = pgTable(
     index("login_attempts_ip_created_idx").on(table.ip, table.createdAt),
   ],
 );
+
+/**
+ * Donations recorded by hand by an admin. Donors can be members or the
+ * public, so this deliberately has no link to `members`: it's a standalone
+ * list, and the name and business are stored exactly as the admin typed them.
+ */
+export const donations = pgTable(
+  "donations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    businessName: text("business_name"),
+    /** Whole rupees. */
+    amount: integer("amount").notNull(),
+    photoKey: text("photo_key").notNull(),
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("donations_created_at_idx").on(table.createdAt),
+    check("donations_amount_positive", sql`${table.amount} > 0`),
+  ],
+);

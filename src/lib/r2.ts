@@ -40,6 +40,11 @@ export function pendingPhotoKeyFor(applicationId: string): string {
   return `app/pending/${applicationId}.webp`;
 }
 
+/** Donor photos are admin-only and are not member photos, so they stay apart. */
+export function donationPhotoKeyFor(donationId: string): string {
+  return `app/donations/${donationId}.webp`;
+}
+
 /**
  * The small rendition stored beside a photo: `app/members/<id>.webp` →
  * `app/members/<id>.thumb.webp`. Derived rather than stored, so it needs no

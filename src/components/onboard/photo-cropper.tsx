@@ -25,17 +25,24 @@ import { PASSPORT_ASPECT } from "@/lib/photo-constants";
  * The output here is a convenience only: the server re-crops to exact geometry
  * regardless (see `processPassportPhoto`), because a crafted request can post
  * anything.
+ *
+ * `aspect` and the copy default to the member's passport crop; the donation
+ * card passes its own frame shape.
  */
 export function PhotoCropper({
   file,
   open,
   onCancel,
   onCropped,
+  aspect = PASSPORT_ASPECT,
+  description = "Drag to move, pinch or use the slider to zoom. Keep your face inside the frame.",
 }: {
   file: File | null;
   open: boolean;
   onCancel: () => void;
   onCropped: (blob: Blob) => void;
+  aspect?: number;
+  description?: string;
 }) {
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [crop, setCrop] = React.useState({ x: 0, y: 0 });
@@ -80,10 +87,7 @@ export function PhotoCropper({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Position your photo</DialogTitle>
-          <DialogDescription>
-            Drag to move, pinch or use the slider to zoom. Keep your face inside
-            the frame.
-          </DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <div className="relative h-[320px] w-full overflow-hidden rounded-lg bg-black/80">
@@ -92,7 +96,7 @@ export function PhotoCropper({
               image={imageUrl}
               crop={crop}
               zoom={zoom}
-              aspect={PASSPORT_ASPECT}
+              aspect={aspect}
               onCropChange={setCrop}
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}
@@ -176,8 +180,20 @@ async function cropToBlob(src: string, area: Area): Promise<Blob | null> {
     outH,
   );
 
+  const webp = await toBlob(canvas, "image/webp", 0.85);
+  if (webp?.type === "image/webp") return webp;
+  // iPhone Safari can't encode WebP and quietly hands back a PNG, which for a
+  // photo can pass the server action's 4MB body limit. JPEG stays small.
+  return toBlob(canvas, "image/jpeg", 0.88);
+}
+
+function toBlob(
+  canvas: HTMLCanvasElement,
+  type: string,
+  quality: number,
+): Promise<Blob | null> {
   return new Promise((resolve) =>
-    canvas.toBlob((blob) => resolve(blob), "image/webp", 0.85),
+    canvas.toBlob((blob) => resolve(blob), type, quality),
   );
 }
 

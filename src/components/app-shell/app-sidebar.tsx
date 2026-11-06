@@ -7,6 +7,7 @@ import {
   ContactIcon,
   UsersIcon,
   ArrowDownUpIcon,
+  HandCoinsIcon,
   InboxIcon,
 } from "lucide-react";
 
@@ -34,6 +35,7 @@ const mainNav = [
 
 const adminNav = [
   { title: "Applications", href: "/applications", icon: InboxIcon },
+  { title: "Donations", href: "/donations", icon: HandCoinsIcon },
   { title: "Users", href: "/users", icon: UsersIcon },
   { title: "Import / Export", href: "/import", icon: ArrowDownUpIcon },
 ];
