@@ -1,6 +1,8 @@
 import sharp from "sharp";
 
 import {
+  DONATION_PHOTO_HEIGHT,
+  DONATION_PHOTO_WIDTH,
   MAX_UPLOAD_BYTES,
   PASSPORT_ASPECT,
   PASSPORT_HEIGHT,
@@ -72,6 +74,23 @@ export async function processPassportPhoto(buf: Buffer): Promise<ProcessedPhoto>
     .webp({ quality: PASSPORT_QUALITY });
 
   const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+  return { webp: data, width: info.width, height: info.height };
+}
+
+/**
+ * Crops and re-encodes a donor's photo to the donation card's frame. Same
+ * reasoning as `processPassportPhoto`: the browser's crop is a convenience and
+ * the server decides the final geometry.
+ */
+export async function processDonationPhoto(buf: Buffer): Promise<ProcessedPhoto> {
+  const { data, info } = await sharp(buf, { failOn: "error" })
+    .rotate()
+    .resize(DONATION_PHOTO_WIDTH, DONATION_PHOTO_HEIGHT, {
+      fit: "cover",
+      position: "attention",
+    })
+    .webp({ quality: WEBP_QUALITY })
+    .toBuffer({ resolveWithObject: true });
   return { webp: data, width: info.width, height: info.height };
 }
 

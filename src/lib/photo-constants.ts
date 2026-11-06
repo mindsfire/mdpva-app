@@ -16,3 +16,13 @@ export const PASSPORT_ASPECT = 7 / 9;
 
 /** Upload ceiling. Phone photos run 3–6 MB; the server crops them down. */
 export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+
+/**
+ * The opening in the donation card's silver frame, in the artwork's own
+ * 1296×1013 pixels (printed by `scripts/donation-template.ts`).
+ */
+export const DONATION_SLOT = { x: 760, y: 289, w: 417, h: 511 };
+export const DONATION_PHOTO_ASPECT = DONATION_SLOT.w / DONATION_SLOT.h;
+/** Stored at twice the slot, because the card is exported at 2×. */
+export const DONATION_PHOTO_WIDTH = DONATION_SLOT.w * 2;
+export const DONATION_PHOTO_HEIGHT = DONATION_SLOT.h * 2;

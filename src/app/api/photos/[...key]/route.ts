@@ -38,10 +38,11 @@ export async function GET(
     return new NextResponse("Not found", { status: 404 });
   }
 
-  if (key[1] === "pending") {
-    // Unapproved member submissions. Admin-only: these are photos nobody has
-    // vetted yet, and they must never be reachable as if they were a member's
-    // current directory photo.
+  if (key[1] === "pending" || key[1] === "donations") {
+    // Unapproved member submissions are admin-only: these are photos nobody
+    // has vetted yet, and they must never be reachable as if they were a
+    // member's current directory photo. Donors are often not members at all,
+    // and the donations list is admin-only.
     if (!hasRole(session.user.role, "admin")) {
       return new NextResponse("Not found", { status: 404 });
     }

@@ -19,9 +19,9 @@ const DARK_OLIVE = "#3b3420";
 const INK = "#161513";
 const PAPER = "#fafaf8";
 
-const SANS = 'system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif';
+export const SANS = 'system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif';
 const KANNADA_FAMILY = "MDPVA Kannada";
-const KANNADA = `"${KANNADA_FAMILY}", ${SANS}`;
+export const KANNADA = `"${KANNADA_FAMILY}", ${SANS}`;
 
 let fontLoad: Promise<void> | null = null;
 
@@ -31,7 +31,7 @@ let fontLoad: Promise<void> | null = null;
  * not fatal: the text falls back to the system font rather than blocking the
  * share.
  */
-function loadKannadaFont(): Promise<void> {
+export function loadKannadaFont(): Promise<void> {
   fontLoad ??= (async () => {
     const face = new FontFace(
       KANNADA_FAMILY,
@@ -47,7 +47,7 @@ function loadKannadaFont(): Promise<void> {
   return fontLoad;
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+export function loadImage(src: string): Promise<HTMLImageElement> {
   const img = new Image();
   img.src = src;
   return img.decode().then(() => img);
@@ -64,10 +64,10 @@ async function fetchPhoto(): Promise<ImageBitmap | null> {
   }
 }
 
-type Drawable = HTMLImageElement | ImageBitmap;
+export type Drawable = HTMLImageElement | ImageBitmap;
 
 /** Object-fit: cover, centred, into a box. */
-function drawCover(
+export function drawCover(
   ctx: CanvasRenderingContext2D,
   img: Drawable,
   x: number,
